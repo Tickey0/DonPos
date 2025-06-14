@@ -35,6 +35,7 @@ import com.unicenta.pos.printer.TicketPrinterException;
 import com.unicenta.pos.scripting.ScriptEngine;
 import com.unicenta.pos.scripting.ScriptException;
 import com.unicenta.pos.scripting.ScriptFactory;
+import dev.resolvedor.util.Read;
 import lombok.extern.slf4j.Slf4j;
 
 import java.awt.*;
@@ -653,8 +654,24 @@ public class JPanelCloseMoney extends JPanel implements JPanelView, BeanFactoryA
 
     private void m_jCloseCashActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_m_jCloseCashActionPerformed
 
-        int res = JOptionPane.showConfirmDialog(this, 
+        var cashCollected = JOptionPane.showInputDialog(
+                this, 
+                AppLocal.getIntString("label.cash"), 
                 AppLocal.getIntString("message.wannaclosecash"), 
+                JOptionPane.INFORMATION_MESSAGE);
+                
+        var cash = Read.currency(cashCollected);
+        if(cash == null) {
+            JOptionPane.showMessageDialog(
+                    this, 
+                    AppLocal.getIntString("value.error"), 
+                    "Error", 
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }        
+                
+        int res = JOptionPane.showConfirmDialog(this, 
+                AppLocal.getIntString("message.wannaclosecash") + " = " + cash, 
                 AppLocal.getIntString("message.title"), 
                 JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
         
