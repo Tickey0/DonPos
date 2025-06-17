@@ -76,6 +76,7 @@ public class PaymentsModel {
     private Double m_dSalesBase;
     private Double m_dSalesTaxes;
     private Double m_dSalesTaxNet;
+    private Double cashCollected;
     private java.util.List<SalesLine> m_lsales;
     
     private final static String[] SALEHEADERS = {"label.taxcategory", "label.totaltax", "label.totalnet"};
@@ -602,6 +603,18 @@ public class PaymentsModel {
     public String printCategorySalesTotal() {
         return Formats.CURRENCY.formatValue(m_dCategorySalesTotal);
     }
+    
+    public Double getCashCollected() {
+        return cashCollected;
+    }
+
+    public void setCashCollected(Double cashCollected) {
+        this.cashCollected = cashCollected;
+    }
+    
+    public String printCashCollected() {
+        return Formats.CURRENCY.formatValue(cashCollected);
+    }
 
     /**
      *
@@ -1102,5 +1115,5 @@ public class PaymentsModel {
         public String getReason() {
             return s_PaymentReason;        
     }
-  }
+  }    
 }

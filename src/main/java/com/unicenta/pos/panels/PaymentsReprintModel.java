@@ -77,6 +77,7 @@ public class PaymentsReprintModel {
   private Double m_dSalesBase;
   private Double m_dSalesTaxes;
   private Double m_dSalesTaxNet;
+  private Double cashCollected;
   private java.util.List<SalesLine> m_lsales;
 
   private final static String[] SALEHEADERS = {"label.taxcategory", "label.totaltax", "label.totalnet"};
@@ -141,13 +142,13 @@ public class PaymentsReprintModel {
 
     Object[] ccash;
     ccash = (Object[]) new StaticSentence(app.getSession(),
-            "SELECT money, host, hostsequence, datestart, dateend, nosales " +
+            "SELECT money, host, hostsequence, datestart, dateend, nosales, cash_collected " +
                     "FROM closedcash " +
                     "where hostsequence = ? and dateend is not null " +
                     "AND host = " + "'" + app.getProperties().getHost() + "'"
             , SerializerWriteString.INSTANCE
             , new SerializerReadBasic(new Datas[]{
-            Datas.STRING, Datas.STRING, Datas.INT, Datas.STRING, Datas.STRING, Datas.INT}))
+            Datas.STRING, Datas.STRING, Datas.INT, Datas.STRING, Datas.STRING, Datas.INT, Datas.DOUBLE}))
             .find(sequence);
 
     if (ccash == null) {
@@ -158,6 +159,8 @@ public class PaymentsReprintModel {
     } else {
       p.m_dDateStart = ccash[3].toString();
       p.m_dDateEnd = ccash[4].toString();
+      p.cashCollected = (Double) ccash[6];
+      
 
       // Product category Sales
       Object[] valcategorysales = (Object[]) new StaticSentence(app.getSession()
@@ -623,6 +626,18 @@ public class PaymentsReprintModel {
   public String printCategorySalesTotal() {
     return Formats.CURRENCY.formatValue(m_dCategorySalesTotal);
   }
+  
+  public Double getCashCollected() {
+        return cashCollected;
+    }
+
+    public void setCashCollected(Double cashCollected) {
+        this.cashCollected = cashCollected;
+    }
+    
+    public String printCashCollected() {
+        return Formats.CURRENCY.formatValue(cashCollected);
+    }
 
   /**
    * @return
