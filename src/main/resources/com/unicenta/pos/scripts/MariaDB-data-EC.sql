@@ -142,6 +142,99 @@ FROM
 WHERE
     (`t`.`TICKETTYPE` = 0);
 
+CREATE VIEW `v_ele_credit_notes` as SELECT
+    (cast(ROWNUM() as unsigned)) AS `id`,
+    `t`.`code` AS `code`,
+    `t`.`serie_number` AS `number`,
+    cast('04' as char) AS `code_document`,
+    substr(`t`.`serie_number`, 1, 3) AS `establishment`,
+    substr(`t`.`serie_number`, 4, 3) AS `emission_point`,
+    cast(lpad(`t`.`ticketid`, 9, '0') as char) AS `sequence`,
+    cast(`r`.`datenew` as date) AS `date`,
+    cast('01' as char) AS `updated_code_document`,
+    (
+    select
+            `ut`.`serie_number`
+    from
+            `tickets` `ut`
+    where
+            `ut`.`id` = `t`.`tickets_id`) AS `updated_number_document`,
+    (
+    select
+            (cast(`ur`.`datenew` as date))
+    from
+            `receipts` `ur`
+    where
+            `ur`.`id` = `t`.`tickets_id`) AS `updated_date_document`,
+    abs(round(sum(cast(`tl`.`units` * `tl`.`price` as decimal(19, 2))), 2)) AS `total_without_taxes`,
+    abs(round(sum(cast(`tl`.`units` * `tl`.`price` + if(`tx`.`rate` > 0, `tl`.`units` * `tl`.`price` * `tx`.`rate`, 0) as decimal(19, 2))), 2)) AS `total`,
+    `i`.`legal_code` AS `identification_type`,
+    `c`.`taxid` AS `identification`,
+    `c`.`name` AS `legal_name`,
+    `c`.`address` AS `address`,
+    cast('Devolución' as char(20)) AS `reason`,
+    (
+    select
+            `e`.`address`
+    from
+            `establishments` `e`
+    where
+            `e`.`id` = substr(`t`.`serie_number`, 1, 3)) AS `establishment_address`,
+    `t`.`access_key` AS `access_key`
+from
+	(((((`tickets` `t`
+join `receipts` `r` on
+	(`t`.`id` = `r`.`id`))
+join `customers` `c` on
+	(`c`.`id` = `t`.`customer`))
+join `identification_type` `i` on
+	(`i`.`code` = `c`.`taxid_type`))
+join `ticketlines` `tl` on
+	(`t`.`id` = `tl`.`ticket`))
+join `taxes` `tx` on
+	(`tx`.`category` = `tl`.`taxid`))
+where
+	(`t`.`code` = 'DV')
+	and (`t`.`tickettype` = 1)
+group by
+	(cast(`t`.`ticketid` as unsigned)),
+	`t`.`code`,
+	`t`.`serie_number`,
+	cast('01' as char),
+	substr(`t`.`serie_number`, 1, 3),
+	substr(`t`.`serie_number`, 4, 3),
+	cast(lpad(`t`.`ticketid`, 9, '0') as char),
+	cast(`r`.`datenew` as date),
+	`i`.`legal_code`,
+	`c`.`taxid`,
+	`c`.`name`,
+	`c`.`address`;
+
+CREATE VIEW `v_ele_credit_notes_detail` as select
+    (cast(concat(`t`.`ticketid`, `tl`.`line`) as unsigned)) as `id`,
+    `t`.`code` as `code`,
+    `t`.`serie_number` as `number`,
+    `p`.`reference` as `principal_code`,
+    cast(`tl`.`line` as unsigned) as `line`,
+    `p`.`name` as `name`,
+    cast(abs(`tl`.`units`) as decimal(19, 2)) as `quantity`,
+    cast(`tl`.`price` as decimal(19, 2)) as `unit_price`,
+    cast(`tx`.`legalcode` as char ) AS `tax_code`,
+    cast(`tx`.`rate` * 100 as decimal(19, 2)) as `tax_iva`,
+    cast(abs(`tl`.`units` * `tl`.`price` * `tx`.`rate`) as decimal(19, 2)) as `value_iva`,    
+    cast(0 as decimal(19, 2)) as `discount`,
+    cast(abs(`tl`.`units` * `tl`.`price`) as decimal(19, 2)) as `total_price_without_tax`           
+from
+    (((`tickets` `t`
+join `ticketlines` `tl` on
+    (`t`.`id` = `tl`.`ticket`))
+join `taxes` `tx` on
+    (`tx`.`category` = `tl`.`taxid`))
+join `products` `p` on
+    (`p`.`id` = `tl`.`product`))
+where
+    (`t`.`tickettype` = 1);
+
 CREATE VIEW `v_ele_taxes_detail` as SELECT 
         (CAST(CONCAT(`t`.`TICKETID`, `tl`.`LINE`, '2') AS UNSIGNED)) AS `id`,
         t.code AS `code`,
@@ -231,6 +324,27 @@ from
     `v_ele_invoices` `j`
 order by `j`.`number` desc, `j`.`number` desc;
 
+CREATE  VIEW `v_ele_report_credit_notes` AS select `j`.`id` AS `id`,
+    `j`.`code` AS `code`,
+    `j`.`number` AS `number`,
+    `j`.`access_key` AS `access_key`,
+    `j`.`date` AS `date`,
+    `j`.`total` AS `total`,
+    `j`.`identification` AS `identification`,
+    `j`.`legal_name` AS `legal_name`,
+    (select
+        `i`.`value`
+    from
+        `v_ele_information` `i`
+    where
+        `i`.`name` = 'Email'
+        and `i`.`identification` = `j`.`identification`
+    limit 1) AS `email`,
+    ifnull((select `e`.`status` from `ele_documents` `e` where `e`.`code` = `j`.`code` and `e`.`number` = `j`.`number`), 'NO ENVIADO') AS `status`
+from
+    `v_ele_credit_notes` `j`
+order by `j`.`number` desc, `j`.`number` desc;
+
 CREATE VIEW `v_version` AS select 1 AS `id`,
     version() AS `version_database`;
 
@@ -252,17 +366,25 @@ values (2,'Certificate','Certificate.p12','Certificate name','Certificate');
 Insert into ele_parameters (ID,name,value,observation,type) 
 values (3,'Certificate Password','***************==','Certificate Password','Certificate');
 Insert into ele_parameters (ID,name,value,observation,type) 
-values (4,'Logo','logo.jpeg','URL logo','SRI');
+values (4,'Logo JPEG','logo.jpeg','URL logo JPEG','SRI');
 Insert into ele_parameters (ID,name,value,observation,type) 
-values (5,'Template','plantilla.html','Template for email','Email');
+values (5,'Email SMTP Server','localhost','Email SMTP Server','Email SMTP');
 Insert into ele_parameters (ID,name,value,observation,type) 
-values (6,'Mail Server','mail.server.com','Mail Server','Email');
+values (6,'Port Email SMTP Server','1025','Port Email SMTP Server','Email SMTP');
 Insert into ele_parameters (ID,name,value,observation,type) 
-values (7,'Mail Server Port','465','Mail Server Port','Email');
+values (7,'Email Account','hola@localhost','Account of Email SMTP Server','Email SMTP');
 Insert into ele_parameters (ID,name,value,observation,type) 
-values (8,'Account Mail Server','micuenta@mail.server.com','Account Mail Server','Email');
+values (8,'Email Password Account','','Password Account of Email SMTP Server','Email SMTP');
 Insert into ele_parameters (ID,name,value,observation,type) 
-values (9,'Password Account Mail Server','*********','Password Account Mail Server','Email');
+values (9,'Email Encryption','None','Connection Encryption: None, SSL/TLS ','Email SMTP');
+Insert into ele_parameters (ID,name,value,observation,type) 
+values (10,'Email HTTP Server','https://mail.server.com','Email HTTP Server','Email HTTP');
+Insert into ele_parameters (ID,name,value,observation,type) 
+values (11,'Email HTTP Server Token','**************==','Token Email HTTP Server','Email HTTP');
+Insert into ele_parameters (ID,name,value,observation,type) 
+values (12,'Logo PNG','logo.png','URL Logo PNG','Resource');
+Insert into ele_parameters (ID,name,value,observation,type) 
+values (13,'Template Email','template.html','URL template','Resource');
 Insert into ele_parameters (ID,name,value,observation,type) 
 values (99,'Subscription','**************==','Subscription','Subscription');
 
@@ -335,7 +457,14 @@ INSERT INTO suppliers(id, searchkey, taxid, taxid_type, name) VALUES ('999999999
 -- ADD UOM
 INSERT INTO uom(id, name) VALUES ('u','Unidad');
 
-INSERT INTO subscriptions (id,name,url,token,timeout,status) 
+INSERT INTO subscriptions (id,name,url,authentication_method,token,timeout,status) 
 VALUES ('1', 'ReIdi', 'https://reidi.ec.service.resolvedor.dev', 
+'Token',
 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJyZWlkaS5zZXJ2aWNlLmpvZ3VlbmNvLmRldiIsImlhdCI6MTc0MDM2NjM2OSwiZXhwIjoxNzU1OTE4MzY5LCJhdWQiOiJqb2d1ZW5jby5kZXYiLCJzdWIiOiJqb3JnZWx1aXNAam9ndWVuY28uZGV2IiwiY2xpZW50IjoiOTk5OTk5OTk5OTk5OSIsIm5hbWUiOiJKb3JnZSBMdWlzIiwiZW1haWwiOiJqb3JnZXF1aWd1YW5nb0BvdXRsb29rLmNvbSIsInJvbGUiOiJNYW5hZ2VyIiwic2VydmljZSI6IlJlSWRpIiwibGltaXQiOjB9.X_g2Et9T3P_ZyCZcxB_esNfTlF7PzBYFIYTFSAJgeIo', 
 9, 0);
+INSERT INTO subscriptions (id,name,url,authentication_method,username,password,timeout,status) 
+VALUES ('2', 'Authorize', 'http://localhost:8080', 
+'Password',
+'Administrator',
+'',
+30, 0);

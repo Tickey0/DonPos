@@ -16,10 +16,12 @@
 package dev.joguenco.pos.subscription;
 
 import com.unicenta.basic.BasicException;
+import com.unicenta.data.gui.ComboBoxValModel;
 import com.unicenta.data.user.DirtyManager;
 import com.unicenta.data.user.EditorRecord;
 import com.unicenta.format.Formats;
 import com.unicenta.pos.forms.AppView;
+import com.unicenta.pos.util.AltEncrypter;
 import dev.joguenco.effect.CursorAnimation;
 import dev.joguenco.http.client.ServiceGenerator;
 import dev.joguenco.http.client.ping.PingResponse;
@@ -41,13 +43,25 @@ import retrofit2.Response;
 public class SubscriptionEditor extends JPanel implements EditorRecord {
 
     private Object oId;
+    private ComboBoxValModel modelAuthenticationMethod;
+    private final String key = "cypherkey";
 
     public SubscriptionEditor(AppView app, DirtyManager dirty) {
         initComponents();
 
+        modelAuthenticationMethod = new ComboBoxValModel();
+        modelAuthenticationMethod.add("None");
+        modelAuthenticationMethod.add("Token");
+        modelAuthenticationMethod.add("Password");
+
+        cbxAuthenticationMethod.setModel(modelAuthenticationMethod);
+
         txtName.getDocument().addDocumentListener(dirty);
         txtUrl.getDocument().addDocumentListener(dirty);
+        cbxAuthenticationMethod.addActionListener(dirty);
         txtToken.getDocument().addDocumentListener(dirty);
+        txtUsername.getDocument().addDocumentListener(dirty);
+        txtPassword.getDocument().addDocumentListener(dirty);
         txtTimeout.getDocument().addDocumentListener(dirty);
         chkStatus.addActionListener(dirty);
     }
@@ -57,12 +71,17 @@ public class SubscriptionEditor extends JPanel implements EditorRecord {
         oId = null;
         txtName.setText(null);
         txtUrl.setText(null);
+        modelAuthenticationMethod.setSelectedFirst();
         txtToken.setText(null);
+        txtUsername.setText(null);
+        txtPassword.setText(null);
         txtTimeout.setText(null);
 
         txtName.setEnabled(false);
         txtUrl.setEnabled(false);
         txtToken.setEnabled(false);
+        txtUsername.setEnabled(false);
+        txtPassword.setEnabled(false);
         txtTimeout.setEnabled(false);
         chkStatus.setEnabled(false);
     }
@@ -72,13 +91,18 @@ public class SubscriptionEditor extends JPanel implements EditorRecord {
         oId = null;
         txtName.setText(null);
         txtUrl.setText(null);
+        modelAuthenticationMethod.setSelectedFirst();
         txtToken.setText(null);
+        txtUsername.setText(null);
+        txtPassword.setText(null);
         txtTimeout.setText("0");
         chkStatus.setSelected(true);
 
         txtName.setEnabled(true);
         txtUrl.setEnabled(true);
         txtToken.setEnabled(true);
+        txtUsername.setEnabled(true);
+        txtPassword.setEnabled(true);
         txtTimeout.setEnabled(true);
         chkStatus.setEnabled(true);
     }
@@ -86,17 +110,33 @@ public class SubscriptionEditor extends JPanel implements EditorRecord {
     @Override
     public void writeValueEdit(Object value) {
         Object[] subscription = (Object[]) value;
+        AltEncrypter cypher = new AltEncrypter(key);
 
         oId = subscription[0];
         txtName.setText(Formats.STRING.formatValue(subscription[1]));
         txtUrl.setText(Formats.STRING.formatValue(subscription[2]));
-        txtToken.setText(Formats.STRING.formatValue(subscription[3]));
-        txtTimeout.setText(Formats.INT.formatValue(subscription[4]));
-        chkStatus.setSelected(Boolean.valueOf(Formats.BOOLEAN.formatValue(subscription[5])));
+        modelAuthenticationMethod.setSelectedItem(subscription[3]);
+        txtTimeout.setText(Formats.INT.formatValue(subscription[7]));
+        chkStatus.setSelected(Boolean.valueOf(Formats.BOOLEAN.formatValue(subscription[8])));
 
         txtName.setEnabled(true);
         txtUrl.setEnabled(true);
-        txtToken.setEnabled(true);
+        if ("Token".equals(modelAuthenticationMethod.getSelectedText())) {
+            txtToken.setText(Formats.STRING.formatValue(subscription[4]));
+            txtUsername.setText(null);
+            txtPassword.setText(null);
+            txtToken.setEnabled(true);
+        } else if ("Password".equals(modelAuthenticationMethod.getSelectedText())) {
+            txtToken.setText(null);
+            txtUsername.setText(Formats.STRING.formatValue(subscription[5]));
+            txtPassword.setText(cypher.decrypt(Formats.STRING.formatValue(subscription[6])));
+            txtUsername.setEnabled(true);
+            txtPassword.setEnabled(true);
+        } else {
+            txtToken.setText(null);
+            txtUsername.setText(null);
+            txtPassword.setText(null);
+        }
         txtTimeout.setEnabled(true);
         chkStatus.setEnabled(true);
     }
@@ -104,17 +144,23 @@ public class SubscriptionEditor extends JPanel implements EditorRecord {
     @Override
     public void writeValueDelete(Object value) {
         Object[] subscription = (Object[]) value;
+        AltEncrypter cypher = new AltEncrypter(key);
 
         oId = subscription[0];
         txtName.setText(Formats.STRING.formatValue(subscription[1]));
         txtUrl.setText(Formats.STRING.formatValue(subscription[2]));
-        txtToken.setText(Formats.STRING.formatValue(subscription[3]));
-        txtTimeout.setText(Formats.INT.formatValue(subscription[4]));
-        chkStatus.setSelected(Boolean.valueOf(Formats.BOOLEAN.formatValue(subscription[5])));
+        modelAuthenticationMethod.setSelectedItem(subscription[3]);
+        txtToken.setText(Formats.STRING.formatValue(subscription[4]));
+        txtUsername.setText(Formats.STRING.formatValue(subscription[5]));
+        txtPassword.setText(cypher.decrypt(Formats.STRING.formatValue(subscription[6])));
+        txtTimeout.setText(Formats.INT.formatValue(subscription[7]));
+        chkStatus.setSelected(Boolean.valueOf(Formats.BOOLEAN.formatValue(subscription[8])));
 
         txtName.setEnabled(false);
         txtUrl.setEnabled(false);
         txtToken.setEnabled(false);
+        txtUsername.setEnabled(false);
+        txtPassword.setEnabled(false);
         txtTimeout.setEnabled(false);
         chkStatus.setEnabled(false);
     }
@@ -130,14 +176,20 @@ public class SubscriptionEditor extends JPanel implements EditorRecord {
 
     @Override
     public Object createValue() throws BasicException {
-        Object[] subscription = new Object[6];
+        Object[] subscription = new Object[9];
+        char[] passwordChars = txtPassword.getPassword();
+        String password = new String(passwordChars);
+        AltEncrypter cypher = new AltEncrypter(key);
 
         subscription[0] = oId == null ? UUID.randomUUID().toString() : oId;
         subscription[1] = txtName.getText();
         subscription[2] = txtUrl.getText();
-        subscription[3] = txtToken.getText();
-        subscription[4] = Integer.parseInt(txtTimeout.getText());
-        subscription[5] = chkStatus.isSelected();
+        subscription[3] = modelAuthenticationMethod.getSelectedText();
+        subscription[4] = txtToken.getText();
+        subscription[5] = txtUsername.getText();
+        subscription[6] = cypher.encrypt(password);
+        subscription[7] = Integer.parseInt(txtTimeout.getText());
+        subscription[8] = chkStatus.isSelected();
 
         return subscription;
     }
@@ -162,6 +214,12 @@ public class SubscriptionEditor extends JPanel implements EditorRecord {
         lblStatus = new javax.swing.JLabel();
         chkStatus = new javax.swing.JCheckBox();
         cmdPing = new javax.swing.JButton();
+        lblAuthenticationMethod = new javax.swing.JLabel();
+        cbxAuthenticationMethod = new javax.swing.JComboBox<>();
+        lblUsername = new javax.swing.JLabel();
+        txtUsername = new javax.swing.JTextField();
+        lblPassword = new javax.swing.JLabel();
+        txtPassword = new javax.swing.JPasswordField();
 
         lblName.setDisplayedMnemonic('N');
         lblName.setLabelFor(txtName);
@@ -193,6 +251,21 @@ public class SubscriptionEditor extends JPanel implements EditorRecord {
             }
         });
 
+        lblAuthenticationMethod.setDisplayedMnemonic('U');
+        lblAuthenticationMethod.setText(bundle.getString("label.authenticationMethod")); // NOI18N
+
+        cbxAuthenticationMethod.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cbxAuthenticationMethodActionPerformed(evt);
+            }
+        });
+
+        lblUsername.setDisplayedMnemonic('T');
+        lblUsername.setText(bundle.getString("label.user")); // NOI18N
+
+        lblPassword.setDisplayedMnemonic('T');
+        lblPassword.setText(bundle.getString("label.Password")); // NOI18N
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -205,22 +278,37 @@ public class SubscriptionEditor extends JPanel implements EditorRecord {
                         .addGap(18, 18, 18)
                         .addComponent(txtName, javax.swing.GroupLayout.PREFERRED_SIZE, 300, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(lblUrl, javax.swing.GroupLayout.PREFERRED_SIZE, 180, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(lblToken, javax.swing.GroupLayout.PREFERRED_SIZE, 180, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(lblTimeout, javax.swing.GroupLayout.PREFERRED_SIZE, 180, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addComponent(lblToken, javax.swing.GroupLayout.PREFERRED_SIZE, 180, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(18, 18, 18)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(txtUrl, javax.swing.GroupLayout.PREFERRED_SIZE, 300, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(txtToken, javax.swing.GroupLayout.PREFERRED_SIZE, 300, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                            .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+                                .addComponent(lblAuthenticationMethod, javax.swing.GroupLayout.PREFERRED_SIZE, 180, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addGap(18, 18, 18)
-                                .addComponent(cmdPing))
-                            .addComponent(txtToken, javax.swing.GroupLayout.PREFERRED_SIZE, 300, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(txtTimeout, javax.swing.GroupLayout.PREFERRED_SIZE, 300, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                                .addComponent(cbxAuthenticationMethod, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                            .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+                                .addComponent(lblUrl, javax.swing.GroupLayout.PREFERRED_SIZE, 180, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(18, 18, 18)
+                                .addComponent(txtUrl, javax.swing.GroupLayout.PREFERRED_SIZE, 300, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addGap(18, 18, 18)
+                        .addComponent(cmdPing))
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(lblTimeout, javax.swing.GroupLayout.PREFERRED_SIZE, 180, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(18, 18, 18)
+                        .addComponent(txtTimeout, javax.swing.GroupLayout.PREFERRED_SIZE, 300, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(lblStatus, javax.swing.GroupLayout.PREFERRED_SIZE, 180, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(18, 18, 18)
-                        .addComponent(chkStatus)))
+                        .addComponent(chkStatus))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(lblUsername, javax.swing.GroupLayout.PREFERRED_SIZE, 180, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(lblPassword, javax.swing.GroupLayout.PREFERRED_SIZE, 180, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(18, 18, 18)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(txtUsername)
+                            .addComponent(txtPassword, javax.swing.GroupLayout.PREFERRED_SIZE, 300, javax.swing.GroupLayout.PREFERRED_SIZE))))
                 .addContainerGap(108, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
@@ -236,9 +324,21 @@ public class SubscriptionEditor extends JPanel implements EditorRecord {
                     .addComponent(lblUrl)
                     .addComponent(cmdPing))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(lblAuthenticationMethod)
+                    .addComponent(cbxAuthenticationMethod, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(txtToken, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(lblToken))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(lblUsername)
+                    .addComponent(txtUsername, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(lblPassword)
+                    .addComponent(txtPassword, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(txtTimeout, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -247,7 +347,7 @@ public class SubscriptionEditor extends JPanel implements EditorRecord {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(chkStatus)
                     .addComponent(lblStatus))
-                .addContainerGap(421, Short.MAX_VALUE))
+                .addContainerGap(310, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
 
@@ -278,17 +378,39 @@ public class SubscriptionEditor extends JPanel implements EditorRecord {
         CursorAnimation.stopWaitCursor(getRootPane());
     }//GEN-LAST:event_cmdPingActionPerformed
 
+    private void cbxAuthenticationMethodActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cbxAuthenticationMethodActionPerformed
+        if ("Token".equals(modelAuthenticationMethod.getSelectedText())) {
+            txtToken.setEnabled(true);
+            txtUsername.setEnabled(false);
+            txtPassword.setEnabled(false);
+        } else if ("Password".equals(modelAuthenticationMethod.getSelectedText())) {
+            txtToken.setEnabled(false);
+            txtUsername.setEnabled(true);
+            txtPassword.setEnabled(true);
+        } else {
+            txtToken.setEnabled(false);
+            txtUsername.setEnabled(false);
+            txtPassword.setEnabled(false);
+        }
+    }//GEN-LAST:event_cbxAuthenticationMethodActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JComboBox<String> cbxAuthenticationMethod;
     private javax.swing.JCheckBox chkStatus;
     private javax.swing.JButton cmdPing;
+    private javax.swing.JLabel lblAuthenticationMethod;
     private javax.swing.JLabel lblName;
+    private javax.swing.JLabel lblPassword;
     private javax.swing.JLabel lblStatus;
     private javax.swing.JLabel lblTimeout;
     private javax.swing.JLabel lblToken;
     private javax.swing.JLabel lblUrl;
+    private javax.swing.JLabel lblUsername;
     private javax.swing.JTextField txtName;
+    private javax.swing.JPasswordField txtPassword;
     private javax.swing.JTextField txtTimeout;
     private javax.swing.JTextField txtToken;
     private javax.swing.JTextField txtUrl;
+    private javax.swing.JTextField txtUsername;
     // End of variables declaration//GEN-END:variables
 }

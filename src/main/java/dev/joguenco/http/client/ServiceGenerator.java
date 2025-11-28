@@ -67,6 +67,28 @@ public class ServiceGenerator {
         }
         return retrofit.create(serviceClass);
     }
+    
+    public <S> S createService(Class<S> serviceClass, String userAgent) {
+        httpClient.interceptors().clear();
+        httpClient.addInterceptor(
+                new Interceptor() {
+                    @Override
+                    public Response intercept(Interceptor.Chain chain) throws IOException {
+                        Request original = chain.request();
+                        Request.Builder builder =
+                                original.newBuilder()
+                                        .header("User-Agent", userAgent)
+                                        .header("Content-Type", "application/json")
+                                        .header("Accept", "application/json");
+                        Request request = builder.build();
+                        return chain.proceed(request);
+                    }
+                });
+        builder.client(httpClient.build());
+        retrofit = builder.build();
+
+        return retrofit.create(serviceClass);
+    }
 
     public ErrorResponse parseError(retrofit2.Response<?> response) {
 

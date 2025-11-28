@@ -1100,7 +1100,10 @@ CREATE TABLE `subscriptions` (
   `id` VARCHAR(300) NOT NULL,
   `name` VARCHAR(300) NOT NULL,
   `url` VARCHAR(900) NOT NULL,
+  `authentication_method` VARCHAR(90) DEFAULT 'None' NOT NULL COMMENT 'Password, Token, None',
   `token` VARCHAR(900),
+  `username` VARCHAR(90),
+  `password` VARCHAR(900),
   `timeout` INT NOT NULL DEFAULT 0,
   `status` BOOLEAN DEFAULT true,
   PRIMARY KEY (`id`));

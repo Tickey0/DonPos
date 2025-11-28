@@ -1130,6 +1130,7 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
                         cbxIdentificationType.setBackground(new java.awt.Color(255, 204, 204));
                         modelIdentificationType.setSelectedKey("IE");
                     } else {
+                        cbxIdentificationType.setBackground(new java.awt.Color(255, 255, 255));
                         modelIdentificationType.setSelectedKey("C");
                     }
                     break;
@@ -1142,6 +1143,7 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
                         cbxIdentificationType.setBackground(new java.awt.Color(255, 204, 204));
                         modelIdentificationType.setSelectedKey("IE");
                     } else {
+                        cbxIdentificationType.setBackground(new java.awt.Color(255, 255, 255));
                         modelIdentificationType.setSelectedKey("R");
                     }
                     break;
@@ -1233,6 +1235,7 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
                 txtPhone.setEditable(false);
             }
         }
+        cbxIdentificationType.setBackground(new java.awt.Color(255, 255, 255));
     }//GEN-LAST:event_txtIdentificationActionPerformed
 
     private Boolean getData(String identification) {

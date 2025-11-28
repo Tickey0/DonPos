@@ -601,6 +601,14 @@ public class JTicketsBagTicket extends JTicketsBag {
         } else {
             refundticket.setCode("DE");
         }
+        
+        final var country = this.m_App.getProperties().getProperty("user.country");
+        if ("EC".equals(country)) {
+            final var taxIdCustomer = m_ticket.getCustomer().getTaxid();
+            if ("9999999999999".equals(taxIdCustomer)) {
+                refundticket.setCode("DE");
+            }
+        }
 
         m_panelticketedit.setActiveTicket(refundticket, null);
     }//GEN-LAST:event_m_jRefundActionPerformed

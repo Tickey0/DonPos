@@ -22,7 +22,7 @@ public class ReIdiClient {
     public ReIdiResponse get(String identification, AppView appView) {
         final var serviceName = "ReIdi";
         try {
-            var httpClient = new HttpClientSubscription(appView);
+            var httpClient = new HttpClientSubscription(appView, serviceName);
 
             if (!httpClient.isActive(serviceName)) {
                 return new ReIdiResponse("Service is disable");
@@ -30,7 +30,7 @@ public class ReIdiClient {
 
             final var userAgent = AppLocal.APP_NAME + "/" + AppLocal.APP_VERSION;
 
-            var service = httpClient.generator(serviceName)
+            var service = httpClient.generator()
                     .createService(EntityService.class, httpClient.getToken(), userAgent);
             var callSync = service.getEntity(identification);
 
