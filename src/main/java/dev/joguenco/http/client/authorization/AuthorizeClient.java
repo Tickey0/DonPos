@@ -11,56 +11,100 @@ import lombok.extern.slf4j.Slf4j;
 import retrofit2.Response;
 
 /**
- * @author Jorge Luis from https://joguenco.dev
- * @web jorgeluis@resolvedor.dev
+ * @author <Jorge Luis from https://resolvedor.dev>
  */
 @Slf4j
 public class AuthorizeClient {
 
-    public StatusResponse post(AppView appView, TicketInfo ticket) {
-        final var serviceName = "Authorize";
-        try {
-            var httpClient = new HttpClientSubscription(appView, serviceName);
+    private final String userAgent;
+    private final AppView appView;
+    public static final String SERVICE_NAME = "Authorize";
 
-            if (!httpClient.isActive(serviceName)) {
+    public AuthorizeClient(AppView appView) {
+        this.appView = appView;        
+        this.userAgent = AppLocal.APP_NAME + "/" + AppLocal.APP_VERSION;
+    }
+
+    public StatusResponse post(TicketInfo ticket) {        
+        try {
+            var httpClient = new HttpClientSubscription(appView, SERVICE_NAME);
+
+            if (!httpClient.isActive(SERVICE_NAME)) {
                 return new StatusResponse("Service is disable");
             }
 
-            final var userAgent = AppLocal.APP_NAME + "/" + AppLocal.APP_VERSION;
+            Response<AuthTokens> responseLogin = login(httpClient);
+            if (responseLogin.isSuccessful()) {
+                AuthTokens auth = responseLogin.body();
 
-            var service =
-                    httpClient.generator().createService(AuthorizationService.class, userAgent);
+                final var document = new Document(ticket.getCode(), ticket.getSerieNumber());
+                Response<StatusResponse> response;
+                switch (ticket.getCode()) {                    
+                    case "FV":
+                        response = authorize(
+                                httpClient,
+                                auth.getAccessToken(),
+                                document
+                        );
+                        if (response.isSuccessful()) {
+                            return response.body();
+                        } else {
+                            return new StatusResponse("Error al procesar la factura");
+                        }
 
-            var callSync =
-                    service.login(new Login(httpClient.getUsername(), httpClient.getPassword()));
+                    case "DV":
+                        response =  authorize(
+                                httpClient,
+                                auth.getAccessToken(),
+                                document
+                        );
+                        if (response.isSuccessful()) {
+                            return response.body();
+                        } else {
+                            return new StatusResponse("Error al procesar la nota de crédito");
+                        }
 
-            Response<AuthTokens> response = callSync.execute();
-            if (response.isSuccessful()) {
-                AuthTokens auth = response.body();
+                    default:
+                        return new StatusResponse("Tipo de documento no soportado para autorizar");
 
-                var document = new Document(ticket.getCode(), ticket.getSerieNumber());
-                service =
-                        httpClient
-                                .generator()
-                                .createService(
-                                        AuthorizationService.class,
-                                        auth.getAccessToken(),
-                                        userAgent);
-
-                var callAuthorize = service.autorizeInvoice(document);
-                Response<StatusResponse> responseAuthorize = callAuthorize.execute();
-                if (responseAuthorize.isSuccessful()) {
-                    return responseAuthorize.body();
-                } else {
-                    return new StatusResponse("Unsuccessful response");
                 }
-
             } else {
-                return new StatusResponse("Unsuccessful response");
+                return new StatusResponse("Error al iniciar sesión en el servicio de autorización");
             }
         } catch (IllegalArgumentException | HeadlessException | IOException | BasicException ex) {
             log.error(this.getClass().getName() + " " + ex.getMessage());
             return new StatusResponse(ex.getMessage());
         }
+    }
+
+    private Response<AuthTokens> login(HttpClientSubscription httpClient) throws IOException {
+        final var service = httpClient.generator()
+                .createService(AuthorizationService.class, userAgent);
+
+        final var callSync = service.login(
+                new Login(
+                        httpClient.getUsername(),
+                        httpClient.getPassword())
+        );
+
+        return callSync.execute();
+    }
+
+    private Response<StatusResponse> authorize(HttpClientSubscription httpClient, String accessToken, Document document) throws IOException {
+        var service = httpClient.generator().createService(
+                AuthorizationService.class,
+                accessToken,
+                userAgent);
+
+        if ("FV".equals(document.getCode())) {
+            var callAuthorize = service.autorizeInvoice(document);
+            return callAuthorize.execute();
+        }
+        else if ("DV".equals(document.getCode())) {
+            var callAuthorize = service.autorizeCreditNote(document);
+            return callAuthorize.execute();
+        }
+        
+        return null;
     }
 }

@@ -5,7 +5,7 @@ import com.unicenta.pos.ticket.TicketInfo;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * @author <Jorge Luis from resolvedor.dev>
+ * @author <Jorge Luis from https://resolvedor.dev>
  */
 @Slf4j
 public class ExecuteAuthorization extends Thread {
@@ -25,8 +25,9 @@ public class ExecuteAuthorization extends Thread {
 
     public Boolean send() {
         try {
-            AuthorizeClient a = new AuthorizeClient();
-            a.post(app, ticket);
+            AuthorizeClient a = new AuthorizeClient(app);
+            final var response = a.post(ticket);
+            log.info(ticket.getCode() + " " + ticket.getSerieNumber() + " -> " + response.getStatus());
             return true;
         } catch (Exception ex) {
             log.error(ExecuteAuthorization.class.getName() + " " + ex.getMessage());

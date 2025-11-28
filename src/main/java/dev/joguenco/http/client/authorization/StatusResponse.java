@@ -5,7 +5,6 @@ import lombok.Setter;
 
 /**
  * @author Jorge Luis from https://joguenco.dev
- * @web jorgeluis@resolvedor.dev
  */
 public class StatusResponse {
 

@@ -7,6 +7,9 @@ import dev.joguenco.pos.subscription.DataLogicSubscription;
 import dev.joguenco.pos.subscription.SubscriptionInfo;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * @author <Jorge Luis from https://resolvedor.dev>
+ */
 @Slf4j
 public class HttpClientSubscription {
 

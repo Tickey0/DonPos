@@ -14,4 +14,7 @@ public interface AuthorizationService {
 
     @POST("roqui/v1/invoice/authorize")
     public Call<StatusResponse> autorizeInvoice(@Body Document document);
+    
+    @POST("roqui/v1/credit/note/authorize")
+    public Call<StatusResponse> autorizeCreditNote(@Body Document document);
 }
