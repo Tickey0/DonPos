@@ -706,10 +706,10 @@ CREATE TABLE `taxpayer` (
     `id`                int(11) not null,
     `identification`    varchar(50) not null,
     `legal_name`        varchar(500) not null,
-    `forced_accounting` varchar(5) not null,
-    `special_taxpayer`  varchar(50),
-    `retention_agent`   varchar(50),
-    `other`             varchar(100),
+    `forced_accounting` varchar(5) null,
+    `special_taxpayer`  varchar(50) null,
+    `retention_agent`   varchar(50) null,
+    `other`             varchar(100) null,
     primary key (`id`)
 ) ENGINE = InnoDB DEFAULT CHARSET=utf8 ;
 
@@ -730,6 +730,27 @@ CREATE TABLE `holidays` (
 	`name` varchar(180) NOT NULL,
 	`date` DATE NOT NULL,
 	PRIMARY KEY (`id`)
+) ENGINE = InnoDB DEFAULT CHARSET=utf8 ;
+
+CREATE TABLE `subscriptions` (
+  `id` VARCHAR(300) NOT NULL,
+  `name` VARCHAR(300) NOT NULL,
+  `url` VARCHAR(900) NOT NULL,
+  `authentication_method` VARCHAR(90) DEFAULT 'None' NOT NULL COMMENT 'Password, Token, None',
+  `token` VARCHAR(900),
+  `username` VARCHAR(90),
+  `password` VARCHAR(900),
+  `timeout` INT NOT NULL DEFAULT 0,
+  `status` BOOLEAN DEFAULT true,
+  PRIMARY KEY (`id`)
+) ENGINE = InnoDB DEFAULT CHARSET=utf8 ;
+
+CREATE TABLE `refresh_token` (
+  `id` BIGINT PRIMARY KEY AUTO_INCREMENT,
+  `username` VARCHAR(90) NOT NULL,
+  `refresh_token` VARCHAR(900) NOT NULL,
+  `revoked` BOOLEAN NOT NULL,
+  `date_created` TIMESTAMP(6) DEFAULT NOW(6)
 ) ENGINE = InnoDB DEFAULT CHARSET=utf8 ;
 
 -- Update foreign keys of attributeinstance
@@ -1083,8 +1104,8 @@ INSERT INTO ticketsnum_refund VALUES('DE', '2', '001401', 0, 'alternative', 'Act
 INSERT INTO ticketsnum_payment VALUES(1);
 
 -- ADD taxpayer
-INSERT INTO taxpayer (id, identification, legal_name, forced_accounting, special_taxpayer, retention_agent, other)
-VALUES (1, '9999999999999', 'Mi Empresa', 'SI', '12345', '1', 'RIMPE');
+INSERT INTO taxpayer (id, identification, legal_name)
+VALUES (1, '000000000', 'My Company Name');
 
 -- ADD establishments
 INSERT INTO establishments (id, comercial_name, city, address, phone, email, principal, status) 
@@ -1095,22 +1116,3 @@ VALUES ('002', 'Sucursal', 'Mi otra ciudad', 'Mi otra dirección', '0988 888 888
 
 -- ADD APPLICATION VERSION
 INSERT INTO applications(id, name, version) VALUES($APP_ID{}, $APP_NAME{}, $APP_VERSION{});
-
-CREATE TABLE `subscriptions` (
-  `id` VARCHAR(300) NOT NULL,
-  `name` VARCHAR(300) NOT NULL,
-  `url` VARCHAR(900) NOT NULL,
-  `authentication_method` VARCHAR(90) DEFAULT 'None' NOT NULL COMMENT 'Password, Token, None',
-  `token` VARCHAR(900),
-  `username` VARCHAR(90),
-  `password` VARCHAR(900),
-  `timeout` INT NOT NULL DEFAULT 0,
-  `status` BOOLEAN DEFAULT true,
-  PRIMARY KEY (`id`));
-
-CREATE TABLE `refresh_token` (
-  `id` BIGINT PRIMARY KEY AUTO_INCREMENT,
-  `username` VARCHAR(90) NOT NULL,
-  `refresh_token` VARCHAR(900) NOT NULL,
-  `revoked` BOOLEAN NOT NULL,
-  `date_created` TIMESTAMP(6) DEFAULT NOW(6));

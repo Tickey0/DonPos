@@ -15,7 +15,6 @@
 //    along with Mestizo Pos.  If not, see <http://www.gnu.org/licenses/>.
 package dev.joguenco.pos.taxpayer;
 
-
 import com.unicenta.basic.BasicException;
 import com.unicenta.data.loader.TableDefinition;
 import com.unicenta.pos.forms.AppConfig;
@@ -38,7 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class Taxpayer extends JPanel implements JPanelView, BeanFactoryApp {
 
-    private AppView app;    
+    private AppView app;
     private DataLogicTaxpayer dlTaxpayer;
     private TableDefinition tdTaxpayer;
     private String country;
@@ -57,27 +56,47 @@ public class Taxpayer extends JPanel implements JPanelView, BeanFactoryApp {
 
     @Override
     public void activate() throws BasicException {
-        loadData();
+        if ("EC".equals(this.country)) {
+            ecLoadData();
+            tabContainer.remove(panelAll);
+        } else {            
+            tabContainer.addTab(country, panelAll);
+            allLoadData();
+            tabContainer.remove(panelEcuador);
+        }
     }
 
-    private void loadData() {
+    private void ecLoadData() {
         try {
             TaxpayerInfo taxpayer = (TaxpayerInfo) this.dlTaxpayer.getTaxPayerInfo().find("1");
 
-            txtIdentification.setText(taxpayer.getIdentification());
-            txtLegalName.setText(taxpayer.getLegalName());
+            txtEcIdentification.setText(taxpayer.getIdentification());
+            txtEcLegalName.setText(taxpayer.getLegalName());
 
             if (taxpayer.getForcedAccounting().equals("SI")) {
-                chkForcedAccounting.setText("SI");
-                chkForcedAccounting.setSelected(true);
+                chkEcForcedAccounting.setText("SI");
+                chkEcForcedAccounting.setSelected(true);
             } else {
-                chkForcedAccounting.setText("NO");
-                chkForcedAccounting.setSelected(false);
+                chkEcForcedAccounting.setText("NO");
+                chkEcForcedAccounting.setSelected(false);
             }
 
-            txtSpecialTaxPayer.setText(taxpayer.getSpecialTaxpayer());
-            txtRetentionAgent.setText(taxpayer.getRetentionAgent());
-            txtOther.setText(taxpayer.getOther());
+            txtEcSpecialTaxPayer.setText(taxpayer.getSpecialTaxpayer());
+            txtEcRetentionAgent.setText(taxpayer.getRetentionAgent());
+            txtEcOther.setText(taxpayer.getOther());
+
+        } catch (BasicException ex) {
+            log.error(ex.getMessage());
+        }
+
+    }
+
+    private void allLoadData() {
+        try {
+            TaxpayerInfo taxpayer = (TaxpayerInfo) this.dlTaxpayer.getTaxPayerInfo().find("1");
+
+            txtAllIdentification.setText(taxpayer.getIdentification());
+            txtAllLegalName.setText(taxpayer.getLegalName());
 
         } catch (BasicException ex) {
             log.error(ex.getMessage());
@@ -111,12 +130,17 @@ public class Taxpayer extends JPanel implements JPanelView, BeanFactoryApp {
         Object[] taxPayer = new Object[7];
 
         taxPayer[0] = 1;
-        taxPayer[1] = txtIdentification.getText();
-        taxPayer[2] = txtLegalName.getText();
-        taxPayer[3] = chkForcedAccounting.getText();
-        taxPayer[4] = txtSpecialTaxPayer.getText().isEmpty() ? null : txtSpecialTaxPayer.getText();
-        taxPayer[5] = txtRetentionAgent.getText().isEmpty() ? null : txtRetentionAgent.getText();
-        taxPayer[6] = txtOther.getText().isEmpty() ? null : txtOther.getText();
+        if ("EC".equals(this.country)) {
+            taxPayer[1] = txtEcIdentification.getText();
+            taxPayer[2] = txtEcLegalName.getText();
+            taxPayer[3] = chkEcForcedAccounting.getText();
+            taxPayer[4] = txtEcSpecialTaxPayer.getText().isEmpty() ? null : txtEcSpecialTaxPayer.getText();
+            taxPayer[5] = txtEcRetentionAgent.getText().isEmpty() ? null : txtEcRetentionAgent.getText();
+            taxPayer[6] = txtEcOther.getText().isEmpty() ? null : txtEcOther.getText();
+        } else {
+            taxPayer[1] = txtAllIdentification.getText();
+            taxPayer[2] = txtAllLegalName.getText();
+        }
 
         return taxPayer;
     }
@@ -131,20 +155,28 @@ public class Taxpayer extends JPanel implements JPanelView, BeanFactoryApp {
     private void initComponents() {
 
         jPanelMain = new javax.swing.JPanel();
+        tabContainer = new javax.swing.JTabbedPane();
+        panelEcuador = new javax.swing.JPanel();
         jPanelInformation = new javax.swing.JPanel();
-        txtIdentification = new javax.swing.JTextField();
         lblIdentification = new javax.swing.JLabel();
+        txtEcIdentification = new javax.swing.JTextField();
         lblLegalName = new javax.swing.JLabel();
-        txtLegalName = new javax.swing.JTextField();
+        txtEcLegalName = new javax.swing.JTextField();
         jPanelData = new javax.swing.JPanel();
         lblForcedAccounting = new javax.swing.JLabel();
-        chkForcedAccounting = new javax.swing.JCheckBox();
+        chkEcForcedAccounting = new javax.swing.JCheckBox();
         lblSpecialTaxPayer = new javax.swing.JLabel();
-        txtRetentionAgent = new javax.swing.JTextField();
+        txtEcRetentionAgent = new javax.swing.JTextField();
         lblRetentionAgent = new javax.swing.JLabel();
-        txtSpecialTaxPayer = new javax.swing.JTextField();
+        txtEcSpecialTaxPayer = new javax.swing.JTextField();
         lblOther = new javax.swing.JLabel();
-        txtOther = new javax.swing.JTextField();
+        txtEcOther = new javax.swing.JTextField();
+        panelAll = new javax.swing.JPanel();
+        jPanelInformation1 = new javax.swing.JPanel();
+        lblAllIdentification = new javax.swing.JLabel();
+        txtAllIdentification = new javax.swing.JTextField();
+        lblAllLegalName = new javax.swing.JLabel();
+        txtAllLegalName = new javax.swing.JTextField();
         cmdOk = new javax.swing.JButton();
 
         setPreferredSize(new java.awt.Dimension(700, 510));
@@ -153,16 +185,16 @@ public class Taxpayer extends JPanel implements JPanelView, BeanFactoryApp {
 
         jPanelInformation.setBorder(javax.swing.BorderFactory.createEtchedBorder());
 
-        txtIdentification.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
-
         lblIdentification.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         java.util.ResourceBundle bundle = java.util.ResourceBundle.getBundle("pos_messages"); // NOI18N
         lblIdentification.setText(bundle.getString("label.taxid")); // NOI18N
 
+        txtEcIdentification.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
+
         lblLegalName.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         lblLegalName.setText(bundle.getString("label.namem")); // NOI18N
 
-        txtLegalName.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
+        txtEcLegalName.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
 
         javax.swing.GroupLayout jPanelInformationLayout = new javax.swing.GroupLayout(jPanelInformation);
         jPanelInformation.setLayout(jPanelInformationLayout);
@@ -171,16 +203,13 @@ public class Taxpayer extends JPanel implements JPanelView, BeanFactoryApp {
             .addGroup(jPanelInformationLayout.createSequentialGroup()
                 .addGap(47, 47, 47)
                 .addGroup(jPanelInformationLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(txtIdentification, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(txtEcIdentification, javax.swing.GroupLayout.PREFERRED_SIZE, 180, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(lblIdentification))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanelInformationLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanelInformationLayout.createSequentialGroup()
-                        .addGap(39, 39, 39)
-                        .addComponent(lblLegalName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(jPanelInformationLayout.createSequentialGroup()
-                        .addGap(37, 37, 37)
-                        .addComponent(txtLegalName, javax.swing.GroupLayout.PREFERRED_SIZE, 360, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addGap(30, 30, 30))
+                    .addComponent(txtEcLegalName, javax.swing.GroupLayout.PREFERRED_SIZE, 450, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(lblLegalName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(243, Short.MAX_VALUE))
         );
         jPanelInformationLayout.setVerticalGroup(
             jPanelInformationLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -191,9 +220,9 @@ public class Taxpayer extends JPanel implements JPanelView, BeanFactoryApp {
                     .addComponent(lblLegalName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(jPanelInformationLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(txtIdentification, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(txtLegalName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(44, Short.MAX_VALUE))
+                    .addComponent(txtEcIdentification, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(txtEcLegalName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(32, Short.MAX_VALUE))
         );
 
         jPanelData.setBorder(javax.swing.BorderFactory.createEtchedBorder());
@@ -201,28 +230,28 @@ public class Taxpayer extends JPanel implements JPanelView, BeanFactoryApp {
         lblForcedAccounting.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         lblForcedAccounting.setText(bundle.getString("label.forcedAccounting")); // NOI18N
 
-        chkForcedAccounting.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
-        chkForcedAccounting.setText(bundle.getString("label.yesNo")); // NOI18N
-        chkForcedAccounting.addChangeListener(new javax.swing.event.ChangeListener() {
+        chkEcForcedAccounting.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
+        chkEcForcedAccounting.setText(bundle.getString("label.yesNo")); // NOI18N
+        chkEcForcedAccounting.addChangeListener(new javax.swing.event.ChangeListener() {
             public void stateChanged(javax.swing.event.ChangeEvent evt) {
-                chkForcedAccountingStateChanged(evt);
+                chkEcForcedAccountingStateChanged(evt);
             }
         });
 
         lblSpecialTaxPayer.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         lblSpecialTaxPayer.setText(bundle.getString("label.specialTaxpayer")); // NOI18N
 
-        txtRetentionAgent.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
+        txtEcRetentionAgent.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
 
         lblRetentionAgent.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         lblRetentionAgent.setText(bundle.getString("label.retentionAgent")); // NOI18N
 
-        txtSpecialTaxPayer.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
+        txtEcSpecialTaxPayer.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
 
         lblOther.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         lblOther.setText(bundle.getString("label.other")); // NOI18N
 
-        txtOther.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
+        txtEcOther.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
 
         javax.swing.GroupLayout jPanelDataLayout = new javax.swing.GroupLayout(jPanelData);
         jPanelData.setLayout(jPanelDataLayout);
@@ -231,13 +260,13 @@ public class Taxpayer extends JPanel implements JPanelView, BeanFactoryApp {
             .addGroup(jPanelDataLayout.createSequentialGroup()
                 .addGap(50, 50, 50)
                 .addGroup(jPanelDataLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(txtOther, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(txtEcOther, javax.swing.GroupLayout.PREFERRED_SIZE, 180, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(lblOther)
                     .addComponent(lblForcedAccounting)
-                    .addComponent(chkForcedAccounting)
+                    .addComponent(chkEcForcedAccounting)
                     .addComponent(lblSpecialTaxPayer)
-                    .addComponent(txtSpecialTaxPayer, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(txtRetentionAgent, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(txtEcSpecialTaxPayer, javax.swing.GroupLayout.PREFERRED_SIZE, 180, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(txtEcRetentionAgent, javax.swing.GroupLayout.PREFERRED_SIZE, 180, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(lblRetentionAgent))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
@@ -247,21 +276,104 @@ public class Taxpayer extends JPanel implements JPanelView, BeanFactoryApp {
                 .addContainerGap()
                 .addComponent(lblForcedAccounting)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(chkForcedAccounting)
+                .addComponent(chkEcForcedAccounting)
                 .addGap(18, 18, 18)
                 .addComponent(lblSpecialTaxPayer)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(txtSpecialTaxPayer, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(txtEcSpecialTaxPayer, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
                 .addComponent(lblRetentionAgent)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(txtRetentionAgent, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(txtEcRetentionAgent, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
                 .addComponent(lblOther)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(txtOther, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(65, Short.MAX_VALUE))
+                .addComponent(txtEcOther, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(14, Short.MAX_VALUE))
         );
+
+        javax.swing.GroupLayout panelEcuadorLayout = new javax.swing.GroupLayout(panelEcuador);
+        panelEcuador.setLayout(panelEcuadorLayout);
+        panelEcuadorLayout.setHorizontalGroup(
+            panelEcuadorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(panelEcuadorLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(panelEcuadorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(jPanelData, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jPanelInformation, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+        panelEcuadorLayout.setVerticalGroup(
+            panelEcuadorLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(panelEcuadorLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jPanelInformation, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jPanelData, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(20, Short.MAX_VALUE))
+        );
+
+        tabContainer.addTab("EC", panelEcuador);
+
+        jPanelInformation1.setBorder(javax.swing.BorderFactory.createEtchedBorder());
+
+        lblAllIdentification.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
+        lblAllIdentification.setText(bundle.getString("label.taxid")); // NOI18N
+
+        txtAllIdentification.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
+
+        lblAllLegalName.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
+        lblAllLegalName.setText(bundle.getString("label.namem")); // NOI18N
+
+        txtAllLegalName.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
+
+        javax.swing.GroupLayout jPanelInformation1Layout = new javax.swing.GroupLayout(jPanelInformation1);
+        jPanelInformation1.setLayout(jPanelInformation1Layout);
+        jPanelInformation1Layout.setHorizontalGroup(
+            jPanelInformation1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelInformation1Layout.createSequentialGroup()
+                .addGap(47, 47, 47)
+                .addGroup(jPanelInformation1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(txtAllIdentification, javax.swing.GroupLayout.PREFERRED_SIZE, 180, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(lblAllIdentification))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanelInformation1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(txtAllLegalName, javax.swing.GroupLayout.PREFERRED_SIZE, 450, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(lblAllLegalName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(243, Short.MAX_VALUE))
+        );
+        jPanelInformation1Layout.setVerticalGroup(
+            jPanelInformation1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelInformation1Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanelInformation1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(lblAllIdentification)
+                    .addComponent(lblAllLegalName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(jPanelInformation1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(txtAllIdentification, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(txtAllLegalName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(32, Short.MAX_VALUE))
+        );
+
+        javax.swing.GroupLayout panelAllLayout = new javax.swing.GroupLayout(panelAll);
+        panelAll.setLayout(panelAllLayout);
+        panelAllLayout.setHorizontalGroup(
+            panelAllLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelAllLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jPanelInformation1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addContainerGap())
+        );
+        panelAllLayout.setVerticalGroup(
+            panelAllLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(panelAllLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jPanelInformation1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(306, Short.MAX_VALUE))
+        );
+
+        tabContainer.addTab("ALL", panelAll);
 
         cmdOk.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         cmdOk.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/unicenta/images/ok.png"))); // NOI18N
@@ -276,56 +388,54 @@ public class Taxpayer extends JPanel implements JPanelView, BeanFactoryApp {
         jPanelMainLayout.setHorizontalGroup(
             jPanelMainLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelMainLayout.createSequentialGroup()
+                .addGap(812, 812, 812)
+                .addComponent(cmdOk, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(58, Short.MAX_VALUE))
+            .addGroup(jPanelMainLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanelMainLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jPanelData, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jPanelInformation, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addGroup(jPanelMainLayout.createSequentialGroup()
-                        .addGap(0, 0, Short.MAX_VALUE)
-                        .addComponent(cmdOk, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addComponent(tabContainer, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
         jPanelMainLayout.setVerticalGroup(
             jPanelMainLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanelMainLayout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jPanelInformation, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(tabContainer, javax.swing.GroupLayout.PREFERRED_SIZE, 464, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
-                .addComponent(jPanelData, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(cmdOk, javax.swing.GroupLayout.PREFERRED_SIZE, 53, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(12, 12, 12))
+                .addComponent(cmdOk, javax.swing.GroupLayout.PREFERRED_SIZE, 53, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanelMain, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(jPanelMain, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanelMain, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addGroup(layout.createSequentialGroup()
+                .addComponent(jPanelMain, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(0, 38, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
 
-    private void chkForcedAccountingStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_chkForcedAccountingStateChanged
-        if (chkForcedAccounting.isSelected()) {
-            chkForcedAccounting.setText("SI");
+    private void chkEcForcedAccountingStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_chkEcForcedAccountingStateChanged
+        if (chkEcForcedAccounting.isSelected()) {
+            chkEcForcedAccounting.setText("SI");
         } else {
-            chkForcedAccounting.setText("NO");
+            chkEcForcedAccounting.setText("NO");
         }
-    }//GEN-LAST:event_chkForcedAccountingStateChanged
+    }//GEN-LAST:event_chkEcForcedAccountingStateChanged
 
     private void cmdOkActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmdOkActionPerformed
         ErrorMessage validate = validateData();
 
         if (validate.getIsError()) {
             JOptionPane.showMessageDialog(this, validate.getMessage(),
-                        "Error", JOptionPane.ERROR_MESSAGE);
+                    "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
-        
+
         try {
             Object taxPayer = createValue();
             int status = this.tdTaxpayer.getUpdateSentence().exec(taxPayer);
@@ -344,16 +454,16 @@ public class Taxpayer extends JPanel implements JPanelView, BeanFactoryApp {
 
     private ErrorMessage validateData() {
 
-        if (txtIdentification.getText().trim().isEmpty()) {
+        if ("EC".equals(this.country) && txtEcIdentification.getText().trim().isEmpty()) {
             return new ErrorMessage(AppLocal.getIntString("message.identification"));
         }
 
-        if (txtLegalName.getText().trim().isEmpty()) {
+        if ("EC".equals(this.country) && txtEcLegalName.getText().trim().isEmpty()) {
             return new ErrorMessage(AppLocal.getIntString("message.name"));
         }
-        
+
         if ("EC".equals(this.country)) {
-            if (txtIdentification.getText().length() != 13) {
+            if (txtEcIdentification.getText().length() != 13) {
                 return new ErrorMessage("La identificación debe tener 13 dígitos");
             }
         }
@@ -362,22 +472,30 @@ public class Taxpayer extends JPanel implements JPanelView, BeanFactoryApp {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JCheckBox chkForcedAccounting;
+    private javax.swing.JCheckBox chkEcForcedAccounting;
     private javax.swing.JButton cmdOk;
     private javax.swing.JPanel jPanelData;
     private javax.swing.JPanel jPanelInformation;
+    private javax.swing.JPanel jPanelInformation1;
     private javax.swing.JPanel jPanelMain;
+    private javax.swing.JLabel lblAllIdentification;
+    private javax.swing.JLabel lblAllLegalName;
     private javax.swing.JLabel lblForcedAccounting;
     private javax.swing.JLabel lblIdentification;
     private javax.swing.JLabel lblLegalName;
     private javax.swing.JLabel lblOther;
     private javax.swing.JLabel lblRetentionAgent;
     private javax.swing.JLabel lblSpecialTaxPayer;
-    private javax.swing.JTextField txtIdentification;
-    private javax.swing.JTextField txtLegalName;
-    private javax.swing.JTextField txtOther;
-    private javax.swing.JTextField txtRetentionAgent;
-    private javax.swing.JTextField txtSpecialTaxPayer;
+    private javax.swing.JPanel panelAll;
+    private javax.swing.JPanel panelEcuador;
+    private javax.swing.JTabbedPane tabContainer;
+    private javax.swing.JTextField txtAllIdentification;
+    private javax.swing.JTextField txtAllLegalName;
+    private javax.swing.JTextField txtEcIdentification;
+    private javax.swing.JTextField txtEcLegalName;
+    private javax.swing.JTextField txtEcOther;
+    private javax.swing.JTextField txtEcRetentionAgent;
+    private javax.swing.JTextField txtEcSpecialTaxPayer;
     // End of variables declaration//GEN-END:variables
 
 }
