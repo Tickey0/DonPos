@@ -16,7 +16,6 @@
 //
 //    You should have received a copy of the GNU General Public License
 //    along with uniCenta oPOS.  If not, see <http://www.gnu.org/licenses/>.
-
 package com.unicenta.pos.payment;
 
 import com.unicenta.basic.BasicException;
@@ -67,7 +66,7 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
     private double m_dTotal;
     private CustomerInfoExt customerext;
     private DataLogicSystem dlSystem;
-    private DataLogicCustomers dlCustomers    ;
+    private DataLogicCustomers dlCustomers;
     DataLogicSales dlSales;
 
     // JG 16 May 12 use diamond inference
@@ -98,7 +97,6 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
         JPaymentSelect.returnPayment = returnPayment;
     }
 
-
     /**
      * Creates new form JPaymentSelect
      *
@@ -114,10 +112,13 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
 
     }
 
-    /** Creates new form JPaymentSelect
+    /**
+     * Creates new form JPaymentSelect
+     *
      * @param parent
      * @param modal
-     * @param o */
+     * @param o
+     */
     protected JPaymentSelect(java.awt.Dialog parent, boolean modal, ComponentOrientation o) {
         super(parent, modal);
         initComponents();
@@ -135,14 +136,14 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
         final var config = new AppConfig(new File((System.getProperty("user.home")), AppLocal.APP_ID + ".properties"));
         config.load();
         country = config.getProperty("user.country");
-        
+
         this.app = app;
         dlSystem = (DataLogicSystem) app.getBean("com.unicenta.pos.forms.DataLogicSystem");
-        dlCustomers= (DataLogicCustomers) app.getBean("com.unicenta.pos.customers.DataLogicCustomers");
+        dlCustomers = (DataLogicCustomers) app.getBean("com.unicenta.pos.customers.DataLogicCustomers");
         dlSales = (DataLogicSales) app.getBean("com.unicenta.pos.forms.DataLogicSales");
 
         txtIdentification.setFocusTraversalKeysEnabled(false);
-        
+
         printselected = false;
         if (printselected) {
             jlblPrinterStatus.setText("Printer ON");
@@ -166,7 +167,7 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
         return m_aPaymentInfo.getPayments();
     }
 
-    public boolean showDialog(double total, CustomerInfoExt customerext,double deposit) {
+    public boolean showDialog(double total, CustomerInfoExt customerext, double deposit) {
         m_aPaymentInfo = new PaymentInfoList();
         accepted = false;
         total -= deposit;
@@ -226,7 +227,7 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
             txtPhone.setText(customer.getPhone());
 
             m_jButtonOK.requestFocus();
-            
+
             if (customer.getType().equals("CF")) {
                 requestFinalConsumer();
             }
@@ -241,9 +242,9 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
             }
         } else {
             JOptionPane.showMessageDialog(this,
-                            AppLocal.getIntString("message.default.customer"),
-                            "Warning",
-                            JOptionPane.WARNING_MESSAGE);
+                    AppLocal.getIntString("message.default.customer"),
+                    "Warning",
+                    JOptionPane.WARNING_MESSAGE);
             return false;
         }
 
@@ -254,7 +255,7 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
                 setAddressWhenIsEmpty(serie);
             }
         }
-        
+
         cmdUnderground.setSelected(false);
 
         if (printselected) {
@@ -294,7 +295,9 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
     }
 
     protected abstract void addTabs();
+
     protected abstract void setStatusPanel(boolean isPositive, boolean isComplete);
+
     protected abstract PaymentInfo getDefaultPayment(double total);
 
     protected void setOKEnabled(boolean value) {
@@ -322,93 +325,126 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
         }
     }
 
-
     public interface JPaymentCreator {
+
         public JPaymentInterface createJPayment();
+
         public String getKey();
+
         public String getLabelKey();
+
         public String getIconKey();
     }
 
     public class JPaymentCashCreator implements JPaymentCreator {
+
         @Override
         public JPaymentInterface createJPayment() {
             return new JPaymentCashPos(JPaymentSelect.this, dlSystem);
         }
+
         @Override
         public String getKey() {
-            return "payment.cash"; }
+            return "payment.cash";
+        }
+
         @Override
         public String getLabelKey() {
-            return "tab.cash"; }
+            return "tab.cash";
+        }
+
         @Override
         public String getIconKey() {
-            return "/com/unicenta/images/cash.png"; }
+            return "/com/unicenta/images/cash.png";
+        }
     }
 
     public class JPaymentChequeCreator implements JPaymentCreator {
+
         @Override
         public JPaymentInterface createJPayment() {
             return new JPaymentCheque(JPaymentSelect.this);
         }
+
         @Override
         public String getKey() {
-            return "payment.cheque"; }
+            return "payment.cheque";
+        }
+
         @Override
         public String getLabelKey() {
-            return "tab.cheque"; }
+            return "tab.cheque";
+        }
+
         @Override
         public String getIconKey() {
-            return "/com/unicenta/images/cheque.png"; }
+            return "/com/unicenta/images/cheque.png";
+        }
     }
 
     public class JPaymentVoucherCreator implements JPaymentCreator {
+
         @Override
         public JPaymentInterface createJPayment() {
             return new JPaymentVoucher(app, JPaymentSelect.this, "voucherin");
         }
+
         @Override
         public String getKey() {
-            return "payment.voucher"; }
+            return "payment.voucher";
+        }
+
         @Override
         public String getLabelKey() {
-            return "tab.voucher"; }
+            return "tab.voucher";
+        }
+
         @Override
         public String getIconKey() {
-            return "/com/unicenta/images/voucher.png"; }
+            return "/com/unicenta/images/voucher.png";
+        }
     }
 
     public class JPaymentMagcardCreator implements JPaymentCreator {
+
         @Override
         public JPaymentInterface createJPayment() {
             return new JPaymentMagcard(app, JPaymentSelect.this);
         }
+
         @Override
         public String getKey() {
-            return "payment.magcard"; }
+            return "payment.magcard";
+        }
+
         @Override
         public String getLabelKey() {
-            return "tab.magcard"; }
+            return "tab.magcard";
+        }
+
         @Override
         public String getIconKey() {
-            return "/com/unicenta/images/ccard.png"; }
+            return "/com/unicenta/images/ccard.png";
+        }
     }
 
-
-
     public class JPaymentFreeCreator implements JPaymentCreator {
+
         @Override
         public JPaymentInterface createJPayment() {
             return new JPaymentFree(JPaymentSelect.this);
         }
+
         @Override
         public String getKey() {
             return "payment.free";
         }
+
         @Override
         public String getLabelKey() {
             return "tab.free";
         }
+
         @Override
         public String getIconKey() {
             return "/com/unicenta/images/wallet.png";
@@ -416,18 +452,22 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
     }
 
     public class JPaymentDebtCreator implements JPaymentCreator {
+
         @Override
         public JPaymentInterface createJPayment() {
             return new JPaymentDebt(JPaymentSelect.this);
         }
+
         @Override
         public String getKey() {
             return "payment.debt";
         }
+
         @Override
         public String getLabelKey() {
             return "tab.debt";
         }
+
         @Override
         public String getIconKey() {
             return "/com/unicenta/images/customer.png";
@@ -435,18 +475,22 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
     }
 
     public class JPaymentCashRefundCreator implements JPaymentCreator {
+
         @Override
         public JPaymentInterface createJPayment() {
             return new JPaymentRefund(JPaymentSelect.this, "cashrefund");
         }
+
         @Override
         public String getKey() {
             return "refund.cash";
         }
+
         @Override
         public String getLabelKey() {
             return "tab.cashrefund";
         }
+
         @Override
         public String getIconKey() {
             return "/com/unicenta/images/cash.png";
@@ -454,18 +498,22 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
     }
 
     public class JPaymentChequeRefundCreator implements JPaymentCreator {
+
         @Override
         public JPaymentInterface createJPayment() {
             return new JPaymentRefund(JPaymentSelect.this, "chequerefund");
         }
+
         @Override
         public String getKey() {
             return "refund.cheque";
         }
+
         @Override
         public String getLabelKey() {
             return "tab.chequerefund";
         }
+
         @Override
         public String getIconKey() {
             return "/com/unicenta/images/cheque.png";
@@ -473,18 +521,22 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
     }
 
     public class JPaymentVoucherRefundCreator implements JPaymentCreator {
+
         @Override
         public JPaymentInterface createJPayment() {
             return new JPaymentRefund(JPaymentSelect.this, "voucherout");
         }
+
         @Override
         public String getKey() {
             return "refund.voucher";
         }
+
         @Override
         public String getLabelKey() {
             return "tab.voucher";
         }
+
         @Override
         public String getIconKey() {
             return "/com/unicenta/images/voucher.png";
@@ -492,18 +544,22 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
     }
 
     public class JPaymentMagcardRefundCreator implements JPaymentCreator {
+
         @Override
         public JPaymentInterface createJPayment() {
             return new JPaymentMagcard(app, JPaymentSelect.this);
         }
+
         @Override
         public String getKey() {
             return "refund.magcard";
         }
+
         @Override
         public String getLabelKey() {
             return "tab.magcard";
         }
+
         @Override
         public String getIconKey() {
             return "/com/unicenta/images/ccard.png";
@@ -511,18 +567,22 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
     }
 
     public class JPaymentBankCreator implements JPaymentCreator {
+
         @Override
         public JPaymentInterface createJPayment() {
             return new JPaymentBank(JPaymentSelect.this);
         }
+
         @Override
         public String getKey() {
             return "payment.bank";
         }
+
         @Override
         public String getLabelKey() {
             return "tab.bank";
         }
+
         @Override
         public String getIconKey() {
             return "/com/unicenta/images/bank.png";
@@ -530,24 +590,28 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
     }
 
     public class JPaymentSlipCreator implements JPaymentCreator {
+
         @Override
         public JPaymentInterface createJPayment() {
             return new JPaymentSlip(JPaymentSelect.this);
         }
+
         @Override
         public String getKey() {
             return "payment.slip";
         }
+
         @Override
         public String getLabelKey() {
             return "tab.slip";
         }
+
         @Override
         public String getIconKey() {
             return "/com/unicenta/images/slip.png";
         }
     }
-    
+
     public class JPaymentDeunaCreator implements JPaymentCreator {
 
         @Override
@@ -579,15 +643,15 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
         m_jTabPayment.setSelectedIndex(0);
         ((JPaymentInterface) m_jTabPayment.getSelectedComponent())
                 .activate(customerext,
-                        m_dTotal - m_aPaymentInfo.getTotal()
-                        , m_sTransactionID);
+                        m_dTotal - m_aPaymentInfo.getTotal(),
+                         m_sTransactionID);
     }
 
     protected static Window getWindow(Component parent) {
         if (parent == null) {
             return new JFrame();
         } else if (parent instanceof Frame || parent instanceof Dialog) {
-            return (Window)parent;
+            return (Window) parent;
         } else {
             return getWindow(parent.getParent());
         }
@@ -599,14 +663,14 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
         setStatusPanel(isPositive, isComplete);
     }
 
-    public void setTransactionID(String tID){
+    public void setTransactionID(String tID) {
         this.m_sTransactionID = tID;
     }
 
-    /** This method is called from within the constructor to
-     * initialize the form.
-     * WARNING: Do NOT modify this code. The content of this method is
-     * always regenerated by the Form Editor.
+    /**
+     * This method is called from within the constructor to initialize the form.
+     * WARNING: Do NOT modify this code. The content of this method is always
+     * regenerated by the Form Editor.
      */
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
@@ -967,8 +1031,7 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
 
     private void m_jButtonAddActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_m_jButtonAddActionPerformed
 
-        PaymentInfo returnPayment = (
-                (JPaymentInterface) m_jTabPayment.getSelectedComponent())
+        PaymentInfo returnPayment = ((JPaymentInterface) m_jTabPayment.getSelectedComponent())
                 .executePayment();
         if (returnPayment != null) {
             m_aPaymentInfo.add(returnPayment);
@@ -992,17 +1055,21 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
                             Formats.CURRENCY.formatValue(
                                     m_dTotal - m_aPaymentInfo.getTotal()));
                 } else {
-                    JOptionPane.showMessageDialog(this,
-                            "El Consumidor Final solo puede facturar en efectivo",
-                            "Error",
-                            JOptionPane.ERROR_MESSAGE);
-                    setOKEnabled(false);
+                    if ("EC".equals(country) && !"cashrefund".equals(tab.getNameComponent())) {
+                        JOptionPane.showMessageDialog(this,
+                                "Al Consumidor Final solo en dinero en efectivo",
+                                "Error",
+                                JOptionPane.ERROR_MESSAGE);
+                        setOKEnabled(false);
+                    } else {
+                        setOKEnabled(true);
+                    }
                 }
             } else {
                 ((JPaymentInterface) m_jTabPayment.getSelectedComponent())
-                        .activate(customerext
-                                , m_dTotal - m_aPaymentInfo.getTotal()
-                                , m_sTransactionID);
+                        .activate(customerext,
+                                 m_dTotal - m_aPaymentInfo.getTotal(),
+                                 m_sTransactionID);
                 m_jRemaininglEuros.setText(
                         Formats.CURRENCY.formatValue(
                                 m_dTotal - m_aPaymentInfo.getTotal()));
@@ -1069,7 +1136,7 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
                     JOptionPane.ERROR_MESSAGE);
             return;
         }
-        
+
         SwingWorker worker = new SwingWorker() {
             @Override
             protected Object doInBackground() throws Exception {
@@ -1108,9 +1175,9 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
 
     private void m_jTabPaymentKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_m_jTabPaymentKeyPressed
 
-        if( evt.getKeyCode() == KeyEvent.VK_F1 ) {
+        if (evt.getKeyCode() == KeyEvent.VK_F1) {
 
-        } else if ( evt.getKeyCode() == KeyEvent.VK_F2 ) {
+        } else if (evt.getKeyCode() == KeyEvent.VK_F2) {
 
         }
     }//GEN-LAST:event_m_jTabPaymentKeyPressed
@@ -1123,7 +1190,7 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
             switch (txtIdentification.getText().length()) {
                 case 10: {
                     final var error = validator.identification("C",
-                        txtIdentification.getText()
+                            txtIdentification.getText()
                     );
                     if (error.getIsError()) {
                         System.err.println("Validation -> " + error.getMessage());
@@ -1137,7 +1204,7 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
                 }
                 case 13: {
                     final var error = validator.identification("R",
-                        txtIdentification.getText()
+                            txtIdentification.getText()
                     );
                     if (error.getIsError()) {
                         cbxIdentificationType.setBackground(new java.awt.Color(255, 204, 204));
@@ -1149,8 +1216,8 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
                     break;
                 }
                 default:
-                modelIdentificationType.setSelectedKey("IE");
-                break;
+                    modelIdentificationType.setSelectedKey("IE");
+                    break;
             }
         }
     }//GEN-LAST:event_cbxIdentificationTypeFocusGained
@@ -1165,9 +1232,9 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
                 var error = validateIdentification();
                 if (error.getIsError()) {
                     JOptionPane.showMessageDialog(this,
-                        error.getMessage(),
-                        "Advertencia",
-                        JOptionPane.WARNING_MESSAGE);
+                            error.getMessage(),
+                            "Advertencia",
+                            JOptionPane.WARNING_MESSAGE);
 
                     txtIdentification.requestFocus();
                     return;
@@ -1188,7 +1255,7 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
 
         if (existCustomerByTaxId(txtIdentification.getText())) {
             CustomerInfoBasic customer = getCustomerByTaxId(
-                txtIdentification.getText());
+                    txtIdentification.getText());
 
             modelIdentificationType.setSelectedKey(customer.getType());
             txtName.setText(customer.getName());
@@ -1208,10 +1275,10 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
             }
         } else {
             var status = getData(txtIdentification.getText());
-            if(!status) {
+            if (!status) {
                 txtName.setText("");
             }
-            modelIdentificationType.setSelectedKey(null);            
+            modelIdentificationType.setSelectedKey(null);
             txtEmail.setText("");
             txtAddress.setText(cityWhenAddressIsEmpty);
             txtPhone.setText("");
@@ -1227,7 +1294,7 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
         }
         //cbxIdentificationType.requestFocus();
         if (modelIdentificationType.getSelectedKey() != null) {
-        var type = modelIdentificationType.getSelectedKey().toString();
+            var type = modelIdentificationType.getSelectedKey().toString();
             if ("CF".equals(type)) {
                 requestFinalConsumer();
                 txtPhone.setEditable(true);
@@ -1239,25 +1306,25 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
     }//GEN-LAST:event_txtIdentificationActionPerformed
 
     private Boolean getData(String identification) {
-        
+
         if (identification.equals(dlSystem.getResourceAsText("Customer.Default"))) {
             return false;
         }
-        
+
         final var validator = new Validator(country);
-        
+
         final var error = validator.identification(
-                (String) modelIdentificationType.getSelectedKey(), 
+                (String) modelIdentificationType.getSelectedKey(),
                 identification
         );
-        
+
         if (error.getIsError()) {
             return false;
         }
-        
+
         CursorAnimation.startWaitCursor(getRootPane());
         final var reidiResponse = new ReIdiClient().get(identification, this.app);
-        
+
         if (!reidiResponse.getError()) {
             txtName.setText(reidiResponse.getData().getName());
             CursorAnimation.stopWaitCursor(getRootPane());
@@ -1265,11 +1332,11 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
         } else {
             log.warn(this.getClass().getName() + " " + reidiResponse.getMessage());
         }
-        
+
         CursorAnimation.stopWaitCursor(getRootPane());
         return false;
     }
-    
+
     private void txtNameFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_txtNameFocusGained
         txtName.selectAll();
     }//GEN-LAST:event_txtNameFocusGained
@@ -1318,17 +1385,17 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
         }
         return true;
     }
-    
-    private ErrorMessage validateIdentification() {        
+
+    private ErrorMessage validateIdentification() {
         final var validator = new Validator(country);
 
         return validator.identification(getIdentificationType(), txtIdentification.getText());
     }
-    
+
     private String getIdentificationType() {
         return modelIdentificationType.getSelectedKey().toString();
     }
-    
+
     private void requestIdentification() {
         if (txtIdentification.getText().isEmpty()) {
             txtIdentification.requestFocus();
@@ -1341,7 +1408,7 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
         txtAddress.setEditable(true);
         txtPhone.setEditable(true);
     }
-    
+
     private void requestFinalConsumer() {
         txtIdentification.setText(customerDefault);
         txtName.setEditable(false);
@@ -1349,7 +1416,7 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
         txtAddress.setEditable(false);
         txtPhone.setEditable(false);
     }
-    
+
     private Boolean existCustomerByTaxId(String identification) {
         try {
             int count = 0;
@@ -1372,7 +1439,7 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
             return false;
         }
     }
-    
+
     private CustomerInfoBasic getCustomerById(String customerId) {
         CustomerInfoBasic customer;
         try {
@@ -1387,7 +1454,7 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
             return null;
         }
     }
-    
+
     /**
      * Search customer by identification
      */
@@ -1405,7 +1472,7 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
             return null;
         }
     }
-    
+
     private Boolean isBlank(String text, String message) {
         final var validate = new Validator(country);
 
@@ -1421,7 +1488,7 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
 
         return false;
     }
-    
+
     /**
      * Validate the value of sale of the Final Consumer
      */
@@ -1436,7 +1503,7 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
             return false;
         }
     }
-    
+
     private Boolean existCustomerByTaxIdAndTaxIdType(String identification, String identificationType) {
         try {
             int count = 0;
@@ -1454,7 +1521,7 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
             return false;
         }
     }
-    
+
     /**
      * Search customer by taxid, return if exist return true else false
      */
@@ -1472,7 +1539,7 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
             return false;
         }
     }
-    
+
     /**
      * Save customer
      */
@@ -1512,7 +1579,7 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
             log.error(ex.getMessage());
         }
     }
-    
+
     void setAddressWhenIsEmpty(String establishmentId) {
         DataLogicEstablishment dlEstablishment = (DataLogicEstablishment) app.getBean("dev.joguenco.pos.establishment.DataLogicEstablishment");
 
@@ -1534,7 +1601,7 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
             txtAddress.setText("No definida");
         }
     }
-    
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JComboBox<String> cbxIdentificationType;
     private javax.swing.JToggleButton cmdUnderground;

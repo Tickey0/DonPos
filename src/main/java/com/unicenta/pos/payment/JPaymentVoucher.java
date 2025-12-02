@@ -120,6 +120,11 @@ public class JPaymentVoucher extends javax.swing.JPanel implements JPaymentInter
   public Component getComponent() {
     return this;
   }
+  
+  @Override
+    public String getNameComponent() {
+        return this.m_sVoucher;
+    } 
 
   /**
    * @return

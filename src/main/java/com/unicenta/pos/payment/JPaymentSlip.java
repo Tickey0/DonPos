@@ -84,6 +84,11 @@ public class JPaymentSlip extends javax.swing.JPanel implements JPaymentInterfac
     public Component getComponent() {
         return this;
     }
+    
+    @Override
+    public String getNameComponent() {
+        return this.toString();
+    } 
 
     private void printState() {
         

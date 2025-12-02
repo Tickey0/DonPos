@@ -123,6 +123,10 @@ public class JPaymentPaper extends javax.swing.JPanel implements JPaymentInterfa
         return this;
     }
     
+    @Override
+    public String getNameComponent() {
+        return this.m_sPaper;
+    } 
     /**
      *
      * @return

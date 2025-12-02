@@ -130,6 +130,11 @@ public class JPaymentCashPos extends javax.swing.JPanel implements JPaymentInter
         return this;
     }
     
+    @Override
+    public String getNameComponent() {
+        return this.toString();
+    } 
+    
     private void printState() {
 
         Double value = m_jTendered.getDoubleValue();

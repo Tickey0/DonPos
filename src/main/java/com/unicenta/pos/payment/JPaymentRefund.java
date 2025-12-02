@@ -76,6 +76,8 @@ public class JPaymentRefund extends javax.swing.JPanel implements JPaymentInterf
         return this;
     } 
     
+    
+    
     /** This method is called from within the constructor to
      * initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is
@@ -111,5 +113,10 @@ public class JPaymentRefund extends javax.swing.JPanel implements JPaymentInterf
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel jLabel1;
     // End of variables declaration//GEN-END:variables
+
+    @Override
+    public String getNameComponent() {
+        return this.m_sName;
+    } 
     
 }

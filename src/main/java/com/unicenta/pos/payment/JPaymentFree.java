@@ -73,6 +73,11 @@ public class JPaymentFree extends javax.swing.JPanel implements JPaymentInterfac
         return this;
     }
     
+    @Override
+    public String getNameComponent() {
+        return this.toString();
+    } 
+    
     /** This method is called from within the constructor to
      * initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is

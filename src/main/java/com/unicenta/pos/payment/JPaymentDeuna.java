@@ -87,6 +87,11 @@ public class JPaymentDeuna extends javax.swing.JPanel implements JPaymentInterfa
     public Component getComponent() {
         return this;
     }
+    
+    @Override
+    public String getNameComponent() {
+        return this.toString();
+    } 
 
     private void printState() {
         

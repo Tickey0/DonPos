@@ -101,6 +101,11 @@ public class JPaymentCheque extends javax.swing.JPanel implements JPaymentInterf
     public Component getComponent() {
         return this;
     }
+    
+    @Override
+    public String getNameComponent() {
+        return this.toString();
+    } 
 
     private void printState() {
         

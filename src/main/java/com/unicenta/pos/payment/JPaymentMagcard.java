@@ -105,7 +105,11 @@ public class JPaymentMagcard extends javax.swing.JPanel implements JPaymentInter
     public Component getComponent() {
         return this;
     }
-    
+        
+    @Override
+    public String getNameComponent() {
+        return this.toString();
+    } 
     /**
      *
      * @param transid
