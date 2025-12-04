@@ -23,7 +23,7 @@ Set JAVA_HOME and set jdk path. Not set jre path.
 docker pull mariadb:11.4
 ```
 ```
-docker run --name mariadb -e MYSQL_ROOT_PASSWORD=N0Cr4ck -p 3306:3306 -d mariadb:11.4
+docker run --name mariadb -e MYSQL_ROOT_PASSWORD=R00t -p 3306:3306 -d mariadb:11.4
 ```
 ## Create database and user
 ```
@@ -113,7 +113,15 @@ select version()
 ```
 ### Backup database 
 ```
-mysqldump --no-tablespaces --routines --password=yourpass --user=root donpos > donpos.sql
+mariadb-dump --no-tablespaces --routines --password=yourpass --user=root donpos > donpos.sql
+```
+### Backup database one table
+```
+mariadb-dump --no-tablespaces --password=yourpass --user=root donpos tablename > donpos.sql
+```
+### Backup database one table data only
+```
+mariadb-dump --no-tablespaces --no-create-info --password=yourpass --user=root donpos tablename > donpos.sql
 ```
 ### Restore database
 ```
