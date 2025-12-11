@@ -644,7 +644,7 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
         ((JPaymentInterface) m_jTabPayment.getSelectedComponent())
                 .activate(customerext,
                         m_dTotal - m_aPaymentInfo.getTotal(),
-                         m_sTransactionID);
+                        m_sTransactionID);
     }
 
     protected static Window getWindow(Component parent) {
@@ -1068,8 +1068,8 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
             } else {
                 ((JPaymentInterface) m_jTabPayment.getSelectedComponent())
                         .activate(customerext,
-                                 m_dTotal - m_aPaymentInfo.getTotal(),
-                                 m_sTransactionID);
+                                m_dTotal - m_aPaymentInfo.getTotal(),
+                                m_sTransactionID);
                 m_jRemaininglEuros.setText(
                         Formats.CURRENCY.formatValue(
                                 m_dTotal - m_aPaymentInfo.getTotal()));
@@ -1338,7 +1338,14 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
     }
 
     private void txtNameFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_txtNameFocusGained
-        txtName.selectAll();
+        var type = modelIdentificationType.getSelectedKey().toString();
+        if (!txtIdentification.getText().isEmpty()
+                && ("C".equals(type) || "R".equals(type))
+                && txtName.getText().isEmpty()) {
+            var status = getData(txtIdentification.getText());
+        } else {
+            txtName.selectAll();
+        }
     }//GEN-LAST:event_txtNameFocusGained
 
     private void txtNameActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtNameActionPerformed
