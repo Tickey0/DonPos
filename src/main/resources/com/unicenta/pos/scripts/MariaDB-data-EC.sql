@@ -69,7 +69,7 @@ from
     `taxpayer` `t` join `establishments` `e`;
 
 CREATE VIEW `v_ele_invoices` AS select
-    (cast(ROWNUM() as unsigned)) AS `id`,
+    (cast(`t`.`serie_number` as unsigned)) as `id`,
     `t`.`code` AS `code`,
     `t`.`serie_number` AS `number`,
     cast('01' as char) AS `code_document`,
@@ -148,7 +148,7 @@ WHERE
     (`t`.`TICKETTYPE` = 0);
 
 CREATE VIEW `v_ele_credit_notes` as SELECT
-    (cast(ROWNUM() as unsigned)) AS `id`,
+    (cast(`t`.`serie_number` as unsigned)) as `id`,
     `t`.`code` AS `code`,
     `t`.`serie_number` AS `number`,
     cast('04' as char) AS `code_document`,
