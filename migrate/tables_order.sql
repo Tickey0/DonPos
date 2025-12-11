@@ -22,4 +22,9 @@ select * from ticketsnum_refund ;
 
 select * from taxpayer ;
 
+select * from establishments ;
+
+-- Ambiente de facturación electrónica: Test -> 1; Production -> 2
+-- resources '92', 'Electronic.Environment'
+
 select * from ele_documents ;
