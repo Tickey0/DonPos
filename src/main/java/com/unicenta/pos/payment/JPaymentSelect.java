@@ -1249,6 +1249,7 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
     }//GEN-LAST:event_txtIdentificationFocusGained
 
     private void txtIdentificationActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtIdentificationActionPerformed
+        requestIdentification();
         if (!validateEmpty(txtIdentification, "Identificación")) {
             return;
         }
@@ -1274,11 +1275,8 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
                 log.error(ex.getMessage());
             }
         } else {
-            var status = getData(txtIdentification.getText());
-            if (!status) {
-                txtName.setText("");
-            }
             modelIdentificationType.setSelectedKey(null);
+            txtName.setText("");
             txtEmail.setText("");
             txtAddress.setText(cityWhenAddressIsEmpty);
             txtPhone.setText("");
@@ -1287,12 +1285,11 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
             cbxIdentificationType.requestFocus();
         }
 
-//        requestIdentification();
         m_jButtonOK.setEnabled(true);
         if (m_jTabPayment.getTabCount() > 0) {
             m_jTabPayment.setSelectedIndex(0);
         }
-        //cbxIdentificationType.requestFocus();
+
         if (modelIdentificationType.getSelectedKey() != null) {
             var type = modelIdentificationType.getSelectedKey().toString();
             if ("CF".equals(type)) {
@@ -1330,6 +1327,8 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
             CursorAnimation.stopWaitCursor(getRootPane());
             return true;
         } else {
+            txtName.setText(null);
+            txtName.requestFocus();
             log.warn(this.getClass().getName() + " " + reidiResponse.getMessage());
         }
 
@@ -1338,12 +1337,15 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
     }
 
     private void txtNameFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_txtNameFocusGained
-        var type = modelIdentificationType.getSelectedKey().toString();
-        if (!txtIdentification.getText().isEmpty()
-                && ("C".equals(type) || "R".equals(type))
-                && txtName.getText().isEmpty()) {
-            var status = getData(txtIdentification.getText());
-        } else {
+        if (modelIdentificationType.getSelectedKey() != null) {
+            var type = modelIdentificationType.getSelectedKey().toString();
+            if (!txtIdentification.getText().isEmpty()
+                    && ("C".equals(type) || "R".equals(type))
+                    && txtName.getText().isEmpty()) {
+                var status = getData(txtIdentification.getText());
+            }
+        }
+        if (!txtName.getText().isEmpty()) {
             txtName.selectAll();
         }
     }//GEN-LAST:event_txtNameFocusGained
