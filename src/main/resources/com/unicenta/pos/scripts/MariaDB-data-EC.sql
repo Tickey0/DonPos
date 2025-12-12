@@ -363,6 +363,11 @@ from
 join `roles` `r` on
     (`u`.`role` = `r`.`id`));
 
+CREATE VIEW `v_assets` AS select `id` AS `id`,
+    `name` AS `name`,
+    convert(`content` using utf8mb3) AS `value`
+from `resources`
+where `name` = 'Electronic.Environment';
 
 Insert into ele_parameters (ID,name,value,observation,type) 
 values (1,'Base Directory','/app/RoQui','Base directory for files','SRI');
