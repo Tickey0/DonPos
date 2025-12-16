@@ -1021,6 +1021,7 @@ INSERT INTO resources(id, name, restype, content) VALUES('73', 'script.Totaldisc
 INSERT INTO resources(id, name, restype, content) VALUES('74', 'script.multibuy', 0, $FILE{/com/unicenta/pos/templates/script.multibuy.txt});
 
 -- Customer default
+INSERT INTO resources(id, name, restype, content) VALUES('90', 'Customer.Default', 0, $FILE{/com/unicenta/pos/templates/Customer.Default.txt});
 INSERT INTO resources(id, name, restype, content) VALUES('91', 'FormatTicket.NumberDigits', 0, $FILE{/com/unicenta/pos/templates/FormatTicket.NumberDigits.txt});
 
 -- ADD Ambiente de facturación electrónica: Test -> 1; Production -> 2
@@ -1029,6 +1030,9 @@ INSERT INTO resources(id, name, restype, content) VALUES('92', 'Electronic.Envir
 -- Tax category for holidays
 INSERT INTO resources(id, name, restype, content) VALUES('93', 'Tax.Holidays', 0, $FILE{/com/unicenta/pos/templates/Tax.Holidays.txt});
 INSERT INTO resources(id, name, restype, content) VALUES('94', 'Tax.Normal.Days', 0, $FILE{/com/unicenta/pos/templates/Tax.Normal.Days.txt});
+
+-- Restrict the default customer for any payment? Yes or No
+INSERT INTO resources(id, name, restype, content) VALUES('95', 'Restrict.Default.Customer', 0, $FILE{/com/unicenta/pos/templates/Restrict.Default.Customer.txt});
 
 -- Subscription Manager URL
 INSERT INTO resources(id, name, restype, content) VALUES('108', 'Subscription.txt', 0, $FILE{/com/unicenta/pos/templates/Subscription.txt});

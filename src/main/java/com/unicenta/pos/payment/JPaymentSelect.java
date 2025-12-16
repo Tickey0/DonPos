@@ -1056,11 +1056,14 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
                                     m_dTotal - m_aPaymentInfo.getTotal()));
                 } else {
                     if ("EC".equals(country) && !"cashrefund".equals(tab.getNameComponent())) {
-                        JOptionPane.showMessageDialog(this,
-                                "Al Consumidor Final solo en dinero en efectivo",
-                                "Error",
-                                JOptionPane.ERROR_MESSAGE);
-                        setOKEnabled(false);
+
+                        final var restrict = dlSystem.getResourceAsText("Restrict.Default.Customer");
+                        if ("Yes".equals(restrict)) {
+                            JOptionPane.showMessageDialog(this,
+                                    "Al Consumidor Final solo en dinero en efectivo",
+                                    "Error", JOptionPane.ERROR_MESSAGE);
+                            setOKEnabled(false);
+                        }
                     } else {
                         setOKEnabled(true);
                     }

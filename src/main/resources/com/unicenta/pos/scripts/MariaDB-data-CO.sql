@@ -17,6 +17,7 @@
 --    along with uniCenta oPOS.  If not, see <http://www.gnu.org/licenses/>.
 
 -- Customer default
+delete from resources where id = '90';
 INSERT INTO resources(id, name, restype, content) VALUES('90', 'Customer.Default', 0, $FILE{/com/unicenta/pos/templates/Customer.Default.CO.txt});
 
 -- ADD IDENTIFICATION TYPES FOR COLOMBIA

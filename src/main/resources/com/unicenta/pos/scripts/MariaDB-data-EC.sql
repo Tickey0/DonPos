@@ -22,6 +22,7 @@ INSERT INTO taxpayer (id, identification, legal_name, forced_accounting, special
 VALUES (1, '9999999999999', 'Mi Empresa', 'SI', '12345', '1', 'CONTRIBUYENTE RÉGIMEN RIMPE');
 
 -- Customer default
+delete from resources where id = '90';
 INSERT INTO resources(id, name, restype, content) VALUES('90', 'Customer.Default', 0, $FILE{/com/unicenta/pos/templates/Customer.Default.EC.txt});
 
 CREATE TABLE `ele_parameters` (

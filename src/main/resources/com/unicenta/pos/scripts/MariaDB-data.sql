@@ -16,9 +16,6 @@
 --    You should have received a copy of the GNU General Public License
 --    along with uniCenta oPOS.  If not, see <http://www.gnu.org/licenses/>.
 
--- Customer default
-INSERT INTO resources(id, name, restype, content) VALUES('90', 'Customer.Default', 0, $FILE{/com/unicenta/pos/templates/Customer.Default.txt});
-
 INSERT INTO identification_type(code, name, legal_code, length, country_code) VALUES ('V', 'VAT', '01', 0, $COUNTRY_CODE{});
 
 -- ADD TAXCATEGORIES
