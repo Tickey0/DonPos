@@ -202,21 +202,26 @@
        
         <line>
             <text align ="left" bold="true" length="16">Subtotal</text>
-            <text align ="right" length="26">${ticket.printSubTotal()}</text>
+            <text align ="right" length="24">${ticket.printSubTotal()}</text>
         </line>
         #foreach ($taxinfo in $taxes)
         #set( $taxline = $ticket.getTaxLine($taxinfo))
             #if ($taxline.printTaxInfo() != "")
             <line>
                 <text align ="left" length="16">${taxline.printTaxInfo()}</text>
-                <text align ="right" length="20">${taxline.printSubTotal()}</text>
+                <text align ="right" length="24">${taxline.printSubTotal()}</text>
             </line>
             #end
-        #end       
+        #end               
+        
+        <line>
+            <text align ="left" length="16">Impuestos</text>
+            <text align ="right" length="24">${ticket.printTax()}</text>
+        </line>
 
         <line size="1">
             <text align ="left" length="16" bold="true">Total</text>
-            <text align ="right" length="20" bold="true">${ticket.printTotal()}</text>
+            <text align ="right" length="24" bold="true">${ticket.printTotal()}</text>
         </line>    
 
         #foreach ($paymentline in $ticket.payments)
