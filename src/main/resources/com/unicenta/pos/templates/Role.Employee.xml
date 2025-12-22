@@ -30,6 +30,7 @@
 
 
 <permissions>
+    <class name="com.unicenta.pos.panels.JPanelCloseMoney"/>
     <class name="com.unicenta.pos.customers.CustomersPayment"/>
     <class name="com.unicenta.pos.panels.JPanelPayments"/>
     <class name="com.unicenta.pos.sales.JPanelTicketEdits"/>

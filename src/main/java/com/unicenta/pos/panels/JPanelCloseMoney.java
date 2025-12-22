@@ -654,6 +654,7 @@ public class JPanelCloseMoney extends JPanel implements JPanelView, BeanFactoryA
 
     private void m_jCloseCashActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_m_jCloseCashActionPerformed
 
+        /*
         var cashCollected = JOptionPane.showInputDialog(
                 this,
                 AppLocal.getIntString("label.cash"),
@@ -669,9 +670,11 @@ public class JPanelCloseMoney extends JPanel implements JPanelView, BeanFactoryA
                     JOptionPane.ERROR_MESSAGE);
             return;
         }
+        */
 
         int res = JOptionPane.showConfirmDialog(this,
-                AppLocal.getIntString("message.wannaclosecash") + " = " + cash,
+                /*AppLocal.getIntString("message.wannaclosecash") + " = " + cash,*/
+                AppLocal.getIntString("message.wannaclosecash"),
                 AppLocal.getIntString("message.title"),
                 JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
 
@@ -710,7 +713,8 @@ public class JPanelCloseMoney extends JPanel implements JPanelView, BeanFactoryA
                     staticSentence.exec(
                             dNow,
                             result,
-                            cash,
+                            /*cash,*/
+                            0.0,
                             m_App.getProperties().getHost(),
                             m_App.getActiveCashIndex());
                 }
@@ -737,8 +741,10 @@ public class JPanelCloseMoney extends JPanel implements JPanelView, BeanFactoryA
 
                 // ponemos la fecha de fin
                 m_PaymentsToClose.setDateEnd(dNow);
+                /*
                 m_PaymentsToClose.setCashCollected(cash);
-
+                */
+                m_PaymentsToClose.setCashCollected(0.0);
                 // print report
                 printPayments("Printer.CloseCash");
 
