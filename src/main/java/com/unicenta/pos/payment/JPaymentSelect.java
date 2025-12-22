@@ -84,6 +84,7 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
     private String ticketType = "";
     private String customerDefault;
     private String country;
+    private String serie;
 
     public CustomerInfoExt getCustomerext() {
         return customerext;
@@ -252,13 +253,7 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
             return false;
         }
 
-        if (txtAddress.getText().isEmpty()) {
-            if (serie.length() >= 3) {
-                setAddressWhenIsEmpty(serie.substring(0, 3));
-            } else {
-                setAddressWhenIsEmpty(serie);
-            }
-        }
+        this.serie = serie;
 
         cmdUnderground.setSelected(false);
 
@@ -951,6 +946,11 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
         lblAddress.setText(bundle.getString("label.locationaddress")); // NOI18N
 
         txtAddress.setFont(new java.awt.Font("Arial", 0, 19)); // NOI18N
+        txtAddress.addFocusListener(new java.awt.event.FocusAdapter() {
+            public void focusGained(java.awt.event.FocusEvent evt) {
+                txtAddressFocusGained(evt);
+            }
+        });
         txtAddress.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 txtAddressActionPerformed(evt);
@@ -1385,6 +1385,18 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
             jlblPrinterStatus.setText("Printer ON");
         }
     }//GEN-LAST:event_cmdUndergroundActionPerformed
+
+    private void txtAddressFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_txtAddressFocusGained
+        if ("EC".equals(country)) {
+            if (txtAddress.getText().isEmpty()) {
+                if (serie.length() >= 3) {
+                    setAddressWhenIsEmpty(serie.substring(0, 3));
+                } else {
+                    setAddressWhenIsEmpty(serie);
+                }
+            }
+        }
+    }//GEN-LAST:event_txtAddressFocusGained
 
     /**
      * Validate that string characters not empty
