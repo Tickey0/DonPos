@@ -387,10 +387,10 @@ public class JRootApp extends JPanel implements AppView, DeviceMonitorEventListe
 
                 String migrationMessage = sDBVersion == null ? "message.createdatabase" : "message.eolupdate";
                 if (JOptionPane.showConfirmDialog(this,
-                         AppLocal.getIntString(migrationMessage, session.DB.getName() + " " + sDBVersion),
-                         AppLocal.getIntString("message.title"),
-                         JOptionPane.OK_OPTION,
-                         JOptionPane.WARNING_MESSAGE) == JOptionPane.OK_OPTION) {
+                        AppLocal.getIntString(migrationMessage, session.DB.getName() + " " + sDBVersion),
+                        AppLocal.getIntString("message.title"),
+                        JOptionPane.OK_OPTION,
+                        JOptionPane.WARNING_MESSAGE) == JOptionPane.OK_OPTION) {
 
                     try {
                         BatchSentence bsentence = new BatchSentenceResource(session, sScript);
@@ -420,8 +420,8 @@ public class JRootApp extends JPanel implements AppView, DeviceMonitorEventListe
                         }
                     } catch (BasicException e) {
                         JMessageDialog.showMessage(this,
-                                 new MessageInf(MessageInf.SGN_DANGER,
-                                         AppLocal.getIntString("database.scripterror"), e));
+                                new MessageInf(MessageInf.SGN_DANGER,
+                                        AppLocal.getIntString("database.scripterror"), e));
                         session.close();
                         return false;
                     }
@@ -499,13 +499,13 @@ public class JRootApp extends JPanel implements AppView, DeviceMonitorEventListe
 
             } else {
                 setActiveCash(sActiveCashIndex,
-                         (Integer) valcash[1],
-                         (Date) valcash[2],
-                         (Date) valcash[3]);
+                        (Integer) valcash[1],
+                        (Date) valcash[2],
+                        (Date) valcash[3]);
             }
         } catch (BasicException e) {
             MessageInf msg = new MessageInf(MessageInf.SGN_NOTICE,
-                     AppLocal.getIntString("message.cannotclosecash"), e);
+                    AppLocal.getIntString("message.cannotclosecash"), e);
             msg.show(this);
             session.close();
             return false;
@@ -516,7 +516,7 @@ public class JRootApp extends JPanel implements AppView, DeviceMonitorEventListe
             m_sInventoryLocation = "0";
             m_propsdb.setProperty("location", m_sInventoryLocation);
             m_dlSystem.setResourceAsProperties(m_props.getHost() + "/properties",
-                     m_propsdb);
+                    m_propsdb);
         }
 
         m_TP = new DeviceTicket(this, m_props);
@@ -560,7 +560,7 @@ public class JRootApp extends JPanel implements AppView, DeviceMonitorEventListe
             if (newText.equals("")) {
                 jLabel1.setText("<html><center>Don POS - Touch Friendly Point of Sale<br>"
                         + "https://resolvedor.dev/<br>"
-                        + "version " + AppLocal.APP_VERSION + " <br>"
+                        + "version " + AppLocal.APP_VERSION + " r 1<br>"
                         + "Java version " + getVersion() + "<br>"
                         + "Special thanks to "
                         + "Copyright \u00A9  uniCenta <br>"
@@ -576,7 +576,7 @@ public class JRootApp extends JPanel implements AppView, DeviceMonitorEventListe
             } else {
                 try {
                     String newTextCode = new Scanner(new File(newText),
-                             "UTF-8").useDelimiter("\\A").next();
+                            "UTF-8").useDelimiter("\\A").next();
                     jLabel1.setText(newTextCode);
                 } catch (FileNotFoundException e) {
                 }
@@ -589,6 +589,7 @@ public class JRootApp extends JPanel implements AppView, DeviceMonitorEventListe
         }
 
         showLogin();
+        checkTaxHoliday();
 
         String ibutton = m_props.getProperty("machine.iButton");
         if (ibutton.equals("true")) {
@@ -596,6 +597,30 @@ public class JRootApp extends JPanel implements AppView, DeviceMonitorEventListe
             uOWWatch.iButtonOn();
         }
         return true;
+    }
+
+    private void checkTaxHoliday() {
+        try {
+            var count = m_dlSystem.countHoliday(session);
+            System.out.println("Check holiday tax, count: " + count);
+
+            String taxHoliday = m_dlSystem.getResourceAsText("Tax.Holidays");
+            String taxNormalDay = m_dlSystem.getResourceAsText("Tax.Normal.Days");
+
+            if (count > 0) {
+                var countByTax = m_dlSystem.countProductsByTax(session, taxNormalDay);
+                if (countByTax > 0) {
+                    m_dlSystem.updateProductByTax(session, taxHoliday, taxNormalDay);
+                }
+            } else {
+                var countByTax = m_dlSystem.countProductsByTax(session, taxHoliday);
+                if (countByTax > 0) {
+                    m_dlSystem.updateProductByTax(session, taxNormalDay, taxHoliday);
+                }
+            }
+        } catch (BasicException ex) {
+            log.error(JRootApp.class.getName() + " " + ex.getMessage());
+        }
     }
 
     private static String getVersion() {
@@ -610,8 +635,8 @@ public class JRootApp extends JPanel implements AppView, DeviceMonitorEventListe
 
     private void showMessageWarning(java.util.List l) {
         JMessageDialog.showMessage(this, new MessageInf(MessageInf.SGN_WARNING,
-                 AppLocal.getIntString("database.scriptwarning"),
-                 l.toArray(new Throwable[l.size()])));
+                AppLocal.getIntString("database.scriptwarning"),
+                l.toArray(new Throwable[l.size()])));
     }
 
     private String readDataBaseVersion() {
@@ -917,7 +942,7 @@ public class JRootApp extends JPanel implements AppView, DeviceMonitorEventListe
             jPanel3.revalidate();
 
             m_jPanelContainer.add(m_principalapp,
-                     "_" + m_principalapp.getUser().getId());
+                    "_" + m_principalapp.getUser().getId());
             showView("_" + m_principalapp.getUser().getId());
 
             m_principalapp.activate();
