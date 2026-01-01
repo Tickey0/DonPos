@@ -236,16 +236,10 @@ public class JPanelCloseMoney extends JPanel implements JPanelView, BeanFactoryA
             s = m_App.getSession();
             con = s.getConnection();
             String sdbmanager = m_dlSystem.getDBVersion();
-
-            if ("PostgreSQL".equals(sdbmanager) || "SQLite".equals(sdbmanager)) {
-                SQL = "SELECT * "
-                        + "FROM draweropened "
-                        + "WHERE TICKETID = 'No Sale' AND OPENDATE > " + "'" + m_PaymentsToClose.printDateStart() + "'";
-            } else {
-                SQL = "SELECT * "
-                        + "FROM draweropened "
-                        + "WHERE TICKETID = 'No Sale' AND OPENDATE > {fn TIMESTAMP('" + m_PaymentsToClose.getDateStartDerby() + "')}";
-            }
+            
+            SQL = "SELECT * "
+                    + "FROM draweropened "
+                    + "WHERE TICKETID = 'No Sale' AND OPENDATE > {fn TIMESTAMP('" + m_PaymentsToClose.getDateStartDerby() + "')}";
 
             stmt = (Statement) con.createStatement();
             rs = stmt.executeQuery(SQL);
@@ -256,15 +250,11 @@ public class JPanelCloseMoney extends JPanel implements JPanelView, BeanFactoryA
 
 // Get Ticket DELETES & Line Voids            
             dresult = 0;
-            if ("PostgreSQL".equals(sdbmanager) || "SQLite".equals(sdbmanager)) {
-                SQL = "SELECT * "
-                        + "FROM lineremoved "
-                        + "WHERE REMOVEDDATE > " + "'" + m_PaymentsToClose.printDateStart() + "'";
-            } else {
-                SQL = "SELECT * "
-                        + "FROM lineremoved "
-                        + "WHERE REMOVEDDATE > {fn TIMESTAMP('" + m_PaymentsToClose.getDateStartDerby() + "')}";
-            }
+            
+            SQL = "SELECT * "
+                    + "FROM lineremoved "
+                    + "WHERE REMOVEDDATE > {fn TIMESTAMP('" + m_PaymentsToClose.getDateStartDerby() + "')}";
+
             log.debug("close-cash sql -> {}", SQL);
 
             stmt = (Statement) con.createStatement();

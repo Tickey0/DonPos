@@ -57,7 +57,6 @@ public class JPanelConfigDatabase extends javax.swing.JPanel implements PanelCon
         dbDriverLibrarySelect.addActionListener(new DirectoryEvent(dbDriverLibraryValue));
         jcboDBDriver.addActionListener(dirty);
         // still in development!
-        //jcboDBDriver.addItem("SQLite");
 //        jcboDBDriver.addItem("Apache Derby");
         jcboDBDriver.addItem("MariaDB");
         jcboDBDriver.addItem("MySQL");
@@ -921,34 +920,7 @@ public class JPanelConfigDatabase extends javax.swing.JPanel implements PanelCon
         String dirname = System.getProperty("dirname.path");
         dirname = dirname == null ? "./" : dirname;
 
-        if ("Apache Derby".equals(jcboDBDriver.getSelectedItem())) {
-            dbDriverLibraryValue.setText(new File(new File(dirname), "derby-10.14.2.0.jar").getAbsolutePath());
-            dbDriverClassValue.setText("org.apache.derby.jdbc.EmbeddedDriver");
-            dbURLValue.setText("jdbc:derby:" + System.getProperty("user.home")+"/.unicenta/");
-            jtxtDbSchema.setText("unicentaopos-database;create=true");
-            dbUserValue.setText("");
-            dbPasswordValue.setText("");
-            //jtxtDbSchema.setText("unicentaopos-derby");
-            jtxtDbOptions.setText("");
-            dbConfigPanel.setVisible(false);
-            db2ConfigPanel.setVisible(false);
-            multiDBPanel.setVisible(false);
-            dbMessageLabel.setText("Single terminal only. If you require a multiple terminal config please use MariaDB");
-            dbMessageLabel.setForeground(new java.awt.Color(51, 204, 255));
-        }
-        else if ("SQLite".equals(jcboDBDriver.getSelectedItem())) {
-            dbDriverLibraryValue.setText(new File(new File(dirname), "sqlite-jdbc-3.7.2.jar").getAbsolutePath());
-            dbDriverClassValue.setText("org.sqlite.JDBC");
-            dbURLValue.setText("jdbc:sqlite:" + System.getProperty("user.home")+"/.unicenta/");
-            dbUserValue.setText("");
-            dbPasswordValue.setText("");
-            jtxtDbSchema.setText("unicentaopos");
-            jtxtDbOptions.setText("");
-            dbConfigPanel.setVisible(false);
-            db2ConfigPanel.setVisible(false);
-            multiDBPanel.setVisible(false);
-        }
-        else if ("MariaDB".equals(jcboDBDriver.getSelectedItem())) {
+        if ("MariaDB".equals(jcboDBDriver.getSelectedItem())) {
             dbDriverLibraryValue.setText(new File(new File(dirname), "mariadb-java-client-3.5.6.jar").getAbsolutePath());
             dbDriverClassValue.setText("org.mariadb.jdbc.Driver");
             dbURLValue.setText("jdbc:mariadb://localhost:3306/");
@@ -987,10 +959,7 @@ public class JPanelConfigDatabase extends javax.swing.JPanel implements PanelCon
             Connection connection = session.getConnection();
 
             boolean isValid;
-            if (connection != null && connection.getClass().getName().equals("org.sqlite.Conn") ) {
-                isValid = true;
-            }
-            else isValid = connection != null && connection.isValid(1000);
+            isValid = connection != null && connection.isValid(1000);
 
             if (isValid) {
                 JOptionPane.showMessageDialog(this,

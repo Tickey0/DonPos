@@ -192,20 +192,10 @@ public final class Session {
 
         String sdbmanager = getConnection().getMetaData().getDatabaseProductName();
         switch (sdbmanager) {
-            case "SQLite":
-                return new SessionDBSQLite();
             case "MariaDB":
                 return new SessionDBMariaDB();
-            case "HSQL Database Engine":
-                return new SessionDBHSQLDB();
             case "MySQL":
                 return new SessionDBMySQL();
-            case "PostgreSQL":
-                return new SessionDBPostgreSQL();
-            case "Oracle":
-                return new SessionDBOracle();
-            case "Apache Derby":
-                return new SessionDBDerby();
             default:
                 return new SessionDBGeneric(sdbmanager);
         }

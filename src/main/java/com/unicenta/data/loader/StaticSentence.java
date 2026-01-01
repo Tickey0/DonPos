@@ -120,29 +120,6 @@ public class StaticSentence extends JDBCSentence {
         this(s, new NormalBuilder(sentence), null, null);
     }
 
-    public String fixSqliteDate(String sql) {
-
-        try {
-            if (session.getURL().contains("sqlite") && sql.contains("{ts '")) {
-                StringBuilder sqliteSQL = new StringBuilder();
-
-                Pattern date = Pattern.compile("(?<=ts ).*(?=})");
-                Matcher matchPattern = date.matcher(sql);
-
-                if (matchPattern.find()) {
-                    sqliteSQL.append(sql.replaceAll("\\{.*}", matchPattern.group(0)));
-                }
-
-                return sqliteSQL.toString();
-            }
-
-        }
-        catch (Exception e) {
-            log.error("Error fixing sql for sqlite {}", e.getMessage());
-            return sql;
-        }
-        return sql;
-    }
     /**
      * @param params
      * @return
@@ -157,8 +134,7 @@ public class StaticSentence extends JDBCSentence {
 
         try {
 
-            String sentence = fixSqliteDate(iSQLBuilder.getSQL(m_SerWrite, params));
-            //String sentence = iSQLBuilder.getSQL(m_SerWrite, params);
+            String sentence = iSQLBuilder.getSQL(m_SerWrite, params);
 
             statement = session.getConnection().createStatement();
 

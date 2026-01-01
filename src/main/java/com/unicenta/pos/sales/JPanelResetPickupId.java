@@ -90,18 +90,6 @@ public class JPanelResetPickupId extends JPanel implements JPanelView {
                     stmt.executeUpdate(SQL);
 //                } catch (SQLException e){System.out.println(e.getMessage());}            
                 } catch (SQLException e){}                    
-        } else if ("PostgreSQL".equals(sdbmanager)) {
-                SQL = "ALTER SEQUENCE pickup_number RESTART WITH 1";
-                try {          
-                    stmt.executeUpdate(SQL);
-//                } catch (SQLException e){System.out.println(e.getMessage());}
-                } catch (SQLException e){}                    
-        } else if ("Oracle".equals(sdbmanager)) {
-                SQL = "ALTER SEQUENCE pickup_number RESTART WITH 1";
-                try {
-                    stmt.executeUpdate(SQL);
-//                } catch (SQLException e){System.out.println(e.getMessage());}
-                } catch (SQLException e){}                    
         } else if ("Apache Derby".equals(sdbmanager)) {
                 SQL = "ALTER TABLE pickup_number ALTER COLUMN ID RESTART WITH 1";
                 try {

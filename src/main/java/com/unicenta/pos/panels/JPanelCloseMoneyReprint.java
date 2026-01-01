@@ -213,15 +213,11 @@ public class JPanelCloseMoneyReprint extends JPanel implements JPanelView, BeanF
                 con=s.getConnection();  
                 String sdbmanager = m_dlSystem.getDBVersion();           
 
-                if ("PostgreSQL".equals(sdbmanager)) {
-                    SQL = "SELECT * " +
-                        "FROM draweropened " +
-                        "WHERE TICKETID = 'No Sale' AND OPENDATE > " + "'" + m_PaymentsClosed.printDateStart() + "'";
-                } else {
-                    SQL = "SELECT * " +
-                        "FROM draweropened " +
-                        "WHERE TICKETID = 'No Sale' AND DATE(OPENDATE) = " + "'" + m_PaymentsClosed.printDateStart() + "'";                        
-                }
+                
+                SQL = "SELECT * " +
+                    "FROM draweropened " +
+                    "WHERE TICKETID = 'No Sale' AND DATE(OPENDATE) = " + "'" + m_PaymentsClosed.printDateStart() + "'";                        
+
 
                 stmt = (Statement) con.createStatement();      
                 rs = stmt.executeQuery(SQL);
@@ -231,15 +227,11 @@ public class JPanelCloseMoneyReprint extends JPanel implements JPanelView, BeanF
             
                 rs=null;
                 dresult=0;
-                if ("PostgreSQL".equals(sdbmanager)) {
-                    SQL = "SELECT * " +
-                        "FROM lineremoved " +
-                        "WHERE TICKETID = 'Void' AND REMOVEDDATE > " + "'" + m_PaymentsClosed.printDateStart() + "'";
-                } else {
-                    SQL = "SELECT * " +
-                        "FROM lineremoved " +
-                        "WHERE TICKETID = 'Void' AND DATE(REMOVEDDATE) = " + "'" + m_PaymentsClosed.printDateStart() + "'";                        
-                }
+                
+                SQL = "SELECT * " +
+                    "FROM lineremoved " +
+                    "WHERE TICKETID = 'Void' AND DATE(REMOVEDDATE) = " + "'" + m_PaymentsClosed.printDateStart() + "'";                        
+
 
                 stmt = (Statement) con.createStatement();      
                 rs = stmt.executeQuery(SQL);

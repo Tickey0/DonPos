@@ -356,24 +356,16 @@ public class JPanelTicketSetup extends javax.swing.JPanel implements PanelConfig
                 String url = db_url + db_schema;            
             
                 conn = DriverManager.getConnection(url,db_user,db_password);
-                sdbmanager = conn.getMetaData().getDatabaseProductName();
+//                sdbmanager = conn.getMetaData().getDatabaseProductName();
                 stmt = (Statement) conn.createStatement();
-            
-                if ("MySQL".equals(sdbmanager)) {
-                    SQL = "UPDATE pickup_number SET id = 0";
-                    try {
-                        stmt.executeUpdate(SQL);
-                    } catch (SQLException e){
-                        System.out.println(e.getMessage()); 
-                    }
-                } else if ("PostgreSQL".equals(sdbmanager)) {
-                    SQL = "ALTER SEQUENCE pickup_number RESTART WITH 1";
-                    try {
-                        stmt.executeUpdate(SQL);
-                    } catch (SQLException e) {
-                        System.out.println(e.getMessage());
-                    }
+                            
+                SQL = "UPDATE pickup_number SET id = 0";
+                try {
+                    stmt.executeUpdate(SQL);
+                } catch (SQLException e){
+                    System.out.println(e.getMessage()); 
                 }
+                 
             } catch (SQLException ex) { log.error(ex.getMessage());
             }
         }        

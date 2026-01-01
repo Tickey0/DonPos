@@ -4,7 +4,6 @@ package com.unicenta.data.loader;
 //import com.unicenta.plugins.metrics.Metrics;
 //import com.unicenta.pos.forms.AppLocal;
 import org.junit.Before;
-import org.junit.Test;
 import org.mockito.Mockito;
 
 
@@ -17,23 +16,6 @@ public class StaticSentenceTest {
     @Before
     public void setup() throws Exception {
         session = Mockito.mock(Session.class);
-    }
-
-    @Test
-    public void shouldConvertUpdateToSQLite() throws Exception {
-        Mockito.when(session.getURL()).thenReturn("jdbc:sqlite://home/temp/.unicenta/unicentaopos");
-        StaticSentence staticSentence = new StaticSentence(session, "");
-        String fixSqliteDate = staticSentence.fixSqliteDate(UPDATE_SQL);
-        assert !fixSqliteDate.contains("{");
-        assert fixSqliteDate.contains("UPDATE");
-    }
-
-    @Test
-    public void shouldConvertJoinToSQLite() throws Exception {
-        Mockito.when(session.getURL()).thenReturn("jdbc:sqlite://home/temp/.unicenta/unicentaopos");
-        StaticSentence staticSentence = new StaticSentence(session, "");
-        String fixSqliteDate = staticSentence.fixSqliteDate(JOIN_SQL);
-        assert !fixSqliteDate.contains("{");
     }
 
 }
