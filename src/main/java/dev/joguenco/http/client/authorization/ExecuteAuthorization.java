@@ -20,7 +20,19 @@ public class ExecuteAuthorization extends Thread {
 
     @Override
     public void run() {
-        send();
+        int attempts = 1;
+
+        do {
+            if (send()) {
+                break;
+            }
+            try {
+                Thread.sleep(60000L);
+            } catch (InterruptedException ie) {
+                Thread.currentThread().interrupt();
+                break;
+            }
+        } while (attempts++ < 3);
     }
 
     public Boolean send() {
@@ -28,6 +40,11 @@ public class ExecuteAuthorization extends Thread {
             AuthorizeClient a = new AuthorizeClient(app);
             final var response = a.post(ticket);
             log.info(ticket.getCode() + " " + ticket.getSerieNumber() + " -> " + response.getStatus());
+
+            if ("ERROR".equalsIgnoreCase(response.getStatus())) {
+                return false;
+            }
+
             return true;
         } catch (Exception ex) {
             log.error(ExecuteAuthorization.class.getName() + " " + ex.getMessage());
