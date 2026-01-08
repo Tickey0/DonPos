@@ -260,14 +260,14 @@ CREATE VIEW `v_ele_taxes_detail` as SELECT
         JOIN `products` `p` ON ((`p`.`ID` = `tl`.`PRODUCT`)));
 
 CREATE VIEW v_ele_information as WITH information AS 
-   (SELECT `TAXID` AS `identification`,
+   (SELECT 1 AS `id`,`TAXID` AS `identification`,
 	'Email' AS `name`,
 	`EMAIL` AS `value`
 FROM `customers`
 WHERE
 	((`EMAIL` IS NOT NULL)
 		AND (`EMAIL` <> ''))
-UNION all SELECT
+UNION all SELECT 2 AS `id`,
 	`TAXID`,
 	'Dirección',
 	`ADDRESS`
@@ -276,7 +276,7 @@ FROM
 WHERE
 	((`ADDRESS` IS NOT NULL)
 		AND (`ADDRESS` <> ''))
-UNION all SELECT
+UNION all SELECT 3 AS `id`,
 	`TAXID`,
 	'Teléfono',
 	`PHONE`
@@ -286,12 +286,12 @@ WHERE
 	((`PHONE` IS NOT NULL)
 		AND (`PHONE` <> ''))
 		)
-SELECT ROWNUM() AS `id`,
+SELECT `information`.`id` AS `id`,
 	`identification`,
 	`name`,
 	`value` FROM information;
 
-CREATE  VIEW `v_ele_payments` AS SELECT ROWNUM() `id`,
+CREATE  VIEW `v_ele_payments` AS SELECT cast(`p`.`id` as uuid) AS `id`,
         `t`.`code` AS `code`,
         `t`.`serie_number` AS `number`,
         CONVERT(IF((`p`.`PAYMENT` = 'cash'), '01', '20') , CHAR) AS `way_pay`,
