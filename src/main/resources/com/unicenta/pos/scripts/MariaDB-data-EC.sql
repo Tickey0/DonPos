@@ -397,7 +397,7 @@ values (12,'Logo PNG','logo.png','URL Logo PNG','Resource');
 Insert into ele_parameters (ID,name,value,observation,type) 
 values (13,'Template Email','template.html','URL template','Resource');
 Insert into ele_parameters (ID,name,value,observation,type) 
-values (99,'Subscription','**************==','Subscription','Subscription');
+values (99,'Subscription','w1b5fZ31Z+8qnlYW0Sa3vA==','Subscription','Subscription');
 
 -- ADD IDENTIFICATION TYPES FOR ECUADOR
 INSERT INTO identification_type(code, name, legal_code, length, country_code) VALUES ('C', 'Cédula', '05', 10, 'EC');
