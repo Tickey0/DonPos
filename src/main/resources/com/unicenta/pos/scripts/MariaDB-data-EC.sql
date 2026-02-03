@@ -70,7 +70,7 @@ from
     `taxpayer` `t` join `establishments` `e`;
 
 CREATE VIEW `v_ele_invoices` AS select
-    (cast(`t`.`serie_number` as unsigned)) as `id`,
+    (cast(`t`.`id` as uuid)) as `id`,
     `t`.`code` AS `code`,
     `t`.`serie_number` AS `number`,
     cast('01' as char) AS `code_document`,
@@ -125,7 +125,7 @@ group by
     cast('' as char(10));
 
 CREATE VIEW `v_ele_invoices_detail` as SELECT
-    (CAST(CONCAT(`t`.`TICKETID`, `tl`.`LINE`) AS UNSIGNED)) AS `id`,
+    (cast(concat(SUBSTRING(`tl`.`ticket`, 1, LENGTH(`tl`.`ticket`) - LENGTH(`tl`.`line`)), `tl`.`line`) as uuid)) AS `id`,
     t.code,
     `t`.`serie_number` AS `number`,
     `p`.`REFERENCE` AS `principal_code`,
@@ -149,7 +149,7 @@ WHERE
     (`t`.`TICKETTYPE` = 0);
 
 CREATE VIEW `v_ele_credit_notes` as SELECT
-    (cast(`t`.`serie_number` as unsigned)) as `id`,
+    (cast(`t`.`id` as uuid)) as `id`,
     `t`.`code` AS `code`,
     `t`.`serie_number` AS `number`,
     cast('04' as char) AS `code_document`,
@@ -217,7 +217,7 @@ group by
 	`c`.`address`;
 
 CREATE VIEW `v_ele_credit_notes_detail` as select
-    (cast(concat(`t`.`ticketid`, `tl`.`line`) as unsigned)) as `id`,
+    (cast(concat(substr(`tl`.`ticket`, 1, octet_length(`tl`.`ticket`) - octet_length(`tl`.`line`)), `tl`.`line`) as uuid)) AS `id`,
     `t`.`code` as `code`,
     `t`.`serie_number` as `number`,
     `p`.`reference` as `principal_code`,
@@ -242,7 +242,7 @@ where
     (`t`.`tickettype` = 1);
 
 CREATE VIEW `v_ele_taxes_detail` as SELECT 
-        (CAST(CONCAT(`t`.`TICKETID`, `tl`.`LINE`, '2') AS UNSIGNED)) AS `id`,
+        (cast(concat(SUBSTRING(`tl`.`ticket`, 1, (LENGTH(`tl`.`ticket`) - LENGTH(`tl`.`line`)) - 1), `tl`.`line`, '2') as uuid)) AS `id`,
         t.code AS `code`,
         `t`.`serie_number` AS `number`,
         `p`.`REFERENCE` AS `principal_code`,
