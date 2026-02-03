@@ -703,7 +703,7 @@ public class CustomersPayment extends javax.swing.JPanel implements JPanelView, 
             Formats.CURRENCY.formatValue(RoundUtils.getValue(prepay));
             paymentdialog.setPrintSelected(true);
         
-            if (paymentdialog.showDialog(prepay, null, "")) {            
+            if (paymentdialog.showDialog(prepay, customerext, "")) {            
            
                 TicketInfo ticket = new TicketInfo();
                 ticket.setTicketType(TicketInfo.RECEIPT_PAYMENT);
