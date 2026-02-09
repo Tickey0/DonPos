@@ -6,6 +6,7 @@ Software de punto de venta basado en uniCenta y OpenBravo.
 * Java 11
 * MariaDB 11.4
 * Maven
+* [Netbeans 21](./doc/NETBEANS.md)
 
 ## Install software and configure (Windows)
 * Install JDK 11
