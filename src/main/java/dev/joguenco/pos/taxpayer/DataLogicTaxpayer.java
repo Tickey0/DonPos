@@ -39,10 +39,10 @@ public class DataLogicTaxpayer extends BeanFactoryDataSingle {
 
         this.tdTaxPayer = new TableDefinition(s,
                 "taxpayer",
-                new String[]{"id", "identification", "legal_name", "forced_accounting",
-                    "special_taxpayer", "retention_agent", "other"},
-                new String[]{"id", "identification", "legal_name", "forced_accounting",
-                    "special_taxpayer", "retention_agent", "other"},
+                new String[]{"id", "identification", "legal_name",
+                    "text_1", "text_2", "text_3", "text_4"},
+                new String[]{"id", "identification", "legal_name",
+                    "text_1", "text_2", "text_3", "text_4"},
                 new Datas[]{Datas.INT, Datas.STRING, Datas.STRING, Datas.STRING,
                     Datas.STRING, Datas.STRING, Datas.STRING},
                 new Formats[]{Formats.INT, Formats.STRING, Formats.STRING, Formats.STRING,
@@ -56,8 +56,9 @@ public class DataLogicTaxpayer extends BeanFactoryDataSingle {
 
     public final PreparedSentence getTaxPayerInfo() {
         return new PreparedSentence(s,
-                "select identification, legal_name, forced_accounting, special_taxpayer, "
-                + "retention_agent, other from taxpayer "
+                "select identification, legal_name, "
+                + "text_1, text_2, text_3, text_4 "
+                + "from taxpayer "
                 + "where id = ?",
                 SerializerWriteString.INSTANCE,
                 (DataRead dr) -> {

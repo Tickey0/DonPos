@@ -928,35 +928,35 @@ public final class TicketInfo implements SerializableRead, Externalizable {
     }    
    
     public String printForcedAccounting() {
-        if ("SI".equals(taxPayerInfo.getForcedAccounting())) {
+        if ("SI".equals(taxPayerInfo.getText1())) {
             return "Obligado a llevar contabilidad: "
-                    + taxPayerInfo.getForcedAccounting();
+                    + taxPayerInfo.getText1();
         }
 
         return "";
     }
 
     public String printSpecialTaxpayer() {
-        if (taxPayerInfo.getSpecialTaxpayer() == null) {
+        if (taxPayerInfo.getText2() == null) {
             return "";
         }
 
-        return "Contribuyente especial No: " + taxPayerInfo.getSpecialTaxpayer();
+        return "Contribuyente especial No: " + taxPayerInfo.getText2();
     }
 
     public String printRetentionAgent() {
-        if (taxPayerInfo.getRetentionAgent() == null) {
+        if (taxPayerInfo.getText3() == null) {
             return "";
         }
         return "Agente de retención resolución No: "
-                + taxPayerInfo.getRetentionAgent();
+                + taxPayerInfo.getText3();
     }
 
     public String printOther() {
-        if (taxPayerInfo.getOther() == null) {
+        if (taxPayerInfo.getText4() == null) {
             return "";
         }
-        return taxPayerInfo.getOther();
+        return taxPayerInfo.getText4();
     }
 
     public String printSequential() {

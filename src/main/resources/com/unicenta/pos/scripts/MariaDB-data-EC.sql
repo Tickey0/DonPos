@@ -18,7 +18,11 @@
 
 delete from taxpayer;
 
-INSERT INTO taxpayer (id, identification, legal_name, forced_accounting, special_taxpayer, retention_agent, other)
+-- text_1 -> forced_accounting
+-- text_2 -> special_taxpayer
+-- text_3 -> retention_agent
+-- text_4 -> regime
+INSERT INTO taxpayer (id, identification, legal_name, text_1, text_2, text_3, text_4)
 VALUES (1, '9999999999999', 'Mi Empresa', 'SI', '12345', '1', 'CONTRIBUYENTE RÉGIMEN RIMPE');
 
 -- Customer default
@@ -52,10 +56,10 @@ CREATE VIEW `v_ele_taxpayer` AS SELECT
         `id`,
         `identification`,
         `legal_name`,
-        `forced_accounting`,
-        `special_taxpayer`,
-        `retention_agent`,
-        `other`
+        `text_1` as `forced_accounting`,
+        `text_2` as `special_taxpayer`,
+        `text_3` as `retention_agent`,
+        `text_4` as `regime`
     FROM
         `taxpayer`;
 

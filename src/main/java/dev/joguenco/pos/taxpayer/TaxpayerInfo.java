@@ -18,6 +18,8 @@ package dev.joguenco.pos.taxpayer;
 import com.unicenta.basic.BasicException;
 import com.unicenta.data.loader.DataRead;
 import com.unicenta.data.loader.SerializableRead;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  *
@@ -25,73 +27,37 @@ import com.unicenta.data.loader.SerializableRead;
  */
 public class TaxpayerInfo implements SerializableRead {
 
+    @Getter
+    @Setter
     private String identification;
+    @Getter
+    @Setter
     private String legalName;
-    private String forcedAccounting;
-    private String specialTaxpayer;
-    private String retentionAgent;
-    private String other;
+    @Getter
+    @Setter
+    private String text1;
+    @Getter
+    @Setter
+    private String text2;
+    @Getter
+    @Setter
+    private String text3;
+    @Getter
+    @Setter
+    private String text4;
 
     public TaxpayerInfo() {
         identification = "";
         legalName = "";
-    }
-
-    public String getIdentification() {
-        return identification;
-    }
-
-    public void setIdentification(String identification) {
-        this.identification = identification;
-    }
-
-    public String getLegalName() {
-        return legalName;
-    }
-
-    public void setLegalName(String legalName) {
-        this.legalName = legalName;
-    }
-
-    public String getForcedAccounting() {
-        return forcedAccounting;
-    }
-
-    public void setForcedAccounting(String forcedAccounting) {
-        this.forcedAccounting = forcedAccounting;
-    }
-
-    public String getSpecialTaxpayer() {
-        return specialTaxpayer;
-    }
-
-    public void setSpecialTaxpayer(String specialTaxpayer) {
-        this.specialTaxpayer = specialTaxpayer;
-    }
-
-    public String getRetentionAgent() {
-        return retentionAgent;
-    }
-
-    public void setRetentionAgent(String retentionAgent) {
-        this.retentionAgent = retentionAgent;
-    }
-
-    public String getOther() {
-        return other;
-    }
-
-    public void setOther(String other) {
-        this.other = other;
-    }
-
+    }    
+    
     @Override
     public void readValues(DataRead dr) throws BasicException {
         this.identification = dr.getString(1);
         this.legalName = dr.getString(2);
-        this.forcedAccounting = dr.getString(3);
-        this.specialTaxpayer = dr.getString(4);
-        this.retentionAgent = dr.getString(5);
-        this.other = dr.getString(6);
+        this.text1 = dr.getString(3);
+        this.text2 = dr.getString(4);
+        this.text3 = dr.getString(5);
+        this.text4 = dr.getString(6);
     }
 }

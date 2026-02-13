@@ -704,12 +704,14 @@ CREATE TABLE `identification_type` (
 
 CREATE TABLE `taxpayer` (
     `id`                int(11) not null,
-    `identification`    varchar(50) not null,
-    `legal_name`        varchar(500) not null,
-    `forced_accounting` varchar(5) null,
-    `special_taxpayer`  varchar(50) null,
-    `retention_agent`   varchar(50) null,
-    `other`             varchar(100) null,
+    `identification`    varchar(90) not null,
+    `legal_name`        varchar(360) not null,
+    `text_1`            varchar(360) null,
+    `text_2`            varchar(360) null,
+    `text_3`            varchar(360) null,
+    `text_4`            varchar(360) null,
+    `text_5`            varchar(360) null,
+    `text_6`            varchar(360) null,
     primary key (`id`)
 ) ENGINE = InnoDB DEFAULT CHARSET=utf8 ;
 
