@@ -16,6 +16,8 @@
 --    You should have received a copy of the GNU General Public License
 --    along with uniCenta oPOS.  If not, see <http://www.gnu.org/licenses/>.
 
+CREATE or REPLACE FUNCTION `fun_tip`(`p_ticket` varchar(90)) RETURNS decimal(19,2) BEGIN DECLARE `v_tip` decimal(19, 2); SELECT nvl(sum(`units` * `price` ), 0) into `v_tip` from `ticketlines` where `ticket` = `p_ticket` and `product` = 'xxx998_998xxx_x8x8x8'; return v_tip; END;
+
 delete from taxpayer;
 
 -- text_1 -> forced_accounting
@@ -83,7 +85,7 @@ CREATE VIEW `v_ele_invoices` AS select
     cast(lpad(`t`.`ticketid`, 9, '0') as char) AS `sequence`,
     cast(`r`.`datenew` as date) AS `date`,
     round(sum(cast(`tl`.`units` * `tl`.`price` as decimal(19, 2))), 2) as `total_without_taxes`,
-    round(sum(cast(`tl`.`units` * `tl`.`price` + if(`tx`.`rate` > 0, `tl`.`units` * `tl`.`price` * `tx`.`rate`, 0) as decimal(19, 2))), 2) AS `total`,
+    round(sum(cast(`tl`.`units` * `tl`.`price` + if(`tx`.`rate` > 0, `tl`.`units` * `tl`.`price` * `tx`.`rate`, 0) as decimal(19, 2))) + `fun_tip`(`t`.`id`), 2) AS `total`,
     `i`.`legal_code` AS `identification_type`,
     `c`.`taxid` AS `identification`,
     `c`.`name` AS `legal_name`,
@@ -96,7 +98,8 @@ CREATE VIEW `v_ele_invoices` AS select
         `establishments` `e`
     where
         `e`.`id` = substr(`t`.`serie_number`, 1, 3)) AS `establishment_address`,
-    `t`.`access_key` as `access_key`
+    `t`.`access_key` as `access_key`,
+    `fun_tip`(`t`.`id`) AS `tip`
 from
     (`tickets` `t`
 join `receipts` `r` on
@@ -112,6 +115,7 @@ join `taxes` `tx` on
 where
     (`t`.`code` = 'FV')
     and (`t`.`tickettype` = 0)
+    and (`tl`.`product` <> 'xxx998_998xxx_x8x8x8')
 group by
     (cast(`t`.`ticketid` as unsigned)),
     `t`.`code`,
@@ -150,7 +154,8 @@ FROM
     JOIN `taxes` `tx` ON ((`tx`.`CATEGORY` = `tl`.`TAXID`)))
     JOIN `products` `p` ON ((`p`.`ID` = `tl`.`PRODUCT`)))
 WHERE
-    (`t`.`TICKETTYPE` = 0);
+    (`t`.`TICKETTYPE` = 0)
+and (`tl`.`product` <> 'xxx998_998xxx_x8x8x8');
 
 CREATE VIEW `v_ele_credit_notes` as SELECT
     (cast(`t`.`id` as uuid)) as `id`,
@@ -261,7 +266,8 @@ CREATE VIEW `v_ele_taxes_detail` as SELECT
         (((`tickets` `t`
         JOIN `ticketlines` `tl` ON ((`t`.`ID` = `tl`.`TICKET`)))
         JOIN `taxes` `tx` ON ((`tx`.`CATEGORY` = `tl`.`TAXID`)))
-        JOIN `products` `p` ON ((`p`.`ID` = `tl`.`PRODUCT`)));
+        JOIN `products` `p` ON ((`p`.`ID` = `tl`.`PRODUCT`)))
+    where (`tl`.`product` <> 'xxx998_998xxx_x8x8x8');
 
 CREATE VIEW v_ele_information as WITH information AS 
    (SELECT 1 AS `id`,`TAXID` AS `identification`,
