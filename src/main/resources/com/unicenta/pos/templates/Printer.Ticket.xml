@@ -342,6 +342,8 @@
         #end
         #end
         <!-- ZACAT please see release notes -->
+        <!-- <image>Printer.Qr</image> -->
+        <!-- <image>Printer.BarCode</image> -->
         
         <line><text align="left" length="15">Terminal: </text><text>${ticket.getHost()}</text></line>
         <line><text align="left" length="15">Atendido por:</text><text>${ticket.printUser()}</text></line>

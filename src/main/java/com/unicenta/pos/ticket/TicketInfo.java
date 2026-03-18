@@ -18,6 +18,11 @@
 //    along with uniCenta oPOS.  If not, see <http://www.gnu.org/licenses/>.
 package com.unicenta.pos.ticket;
 
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.MultiFormatWriter;
+import com.google.zxing.WriterException;
+import com.google.zxing.client.j2se.MatrixToImageWriter;
+import com.google.zxing.common.BitMatrix;
 import com.unicenta.basic.BasicException;
 import com.unicenta.data.loader.DataRead;
 import com.unicenta.data.loader.LocalRes;
@@ -32,7 +37,9 @@ import com.unicenta.pos.payment.PaymentInfoTicket;
 import com.unicenta.pos.util.StringUtils;
 import dev.joguenco.pos.taxpayer.TaxpayerInfo;
 import dev.joguenco.utils.Module11;
+import dev.resolvedor.util.Size;
 import java.io.*;
+import java.nio.file.Paths;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -99,6 +106,11 @@ public final class TicketInfo implements SerializableRead, Externalizable {
     private String addressEstablishment;
     private String phoneEstablishment;
     private String emailEstablishment;
+    
+    public enum Code {
+        QR,
+        BARCODE
+    }
 
     public String getAccessKey() {
         return accessKey;
@@ -1025,5 +1037,44 @@ public final class TicketInfo implements SerializableRead, Externalizable {
             return "Ambiente: Producción";
         }
         return "";
+    }
+    
+    public String buildCode(Size size, String text, Code code) {
+        try {
+            String tmpPath = System.getProperty("java.io.tmpdir");
+            String fileCode = tmpPath + File.separatorChar
+                    + getSerieNumber() + code + ".jpg";            
+            
+            StringBuilder codeText = new StringBuilder();
+            
+            codeText.append(text);
+//            qrStr.append(System.getProperty("line.separator"));
+            
+            BitMatrix matrix;
+            switch (code) {
+                case QR:
+                    matrix = new MultiFormatWriter()
+                    .encode(codeText.toString(), BarcodeFormat.QR_CODE, size.width, size.height);
+                    MatrixToImageWriter.writeToPath(matrix, "jpg", Paths.get(fileCode));
+                    break;
+                case BARCODE:
+                    matrix = new MultiFormatWriter()
+                    .encode(codeText.toString(), BarcodeFormat.CODE_128, size.width, size.height);
+                    MatrixToImageWriter.writeToPath(matrix, "jpg", Paths.get(fileCode));
+                    break;
+                default:
+                    System.out.println("Not implemented");
+                    return "";
+            }
+                        
+            System.out.println("Generate code in: " + fileCode);
+            return fileCode;
+        } catch (WriterException | IOException ex ) {
+            System.out.println("Error code generator: " + ex.getMessage());
+            return "";
+        } catch (Exception ex) {
+            System.out.println("Error code generator: " + ex.getMessage());
+            return "";
+        }
     }
 }

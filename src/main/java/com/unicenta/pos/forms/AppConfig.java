@@ -378,16 +378,16 @@ public class AppConfig implements AppProperties {
     properties.setProperty("override.pin", "");
 
     // Default database
-    properties.setProperty("db.driverlib", new File(new File(dirname), "mariadb-java-client-3.5.6.jar").getAbsolutePath());
+    properties.setProperty("db.driverlib", new File(new File(dirname), "mariadb-java-client-3.5.7.jar").getAbsolutePath());
     properties.setProperty("db.engine", "MariaDB");
     properties.setProperty("db.driver", "org.mariadb.jdbc.Driver");
 
-    properties.setProperty("db.name", "Main DB");
+    properties.setProperty("db.name", "donpos");
     properties.setProperty("db.URL", "jdbc:mariadb://localhost:3306/");
     properties.setProperty("db.schema", "donpos");
     properties.setProperty("db.options", "?zeroDateTimeBehavior=convertToNull");
     properties.setProperty("db.user", "donpos");
-    properties.setProperty("db.password", "");
+    properties.setProperty("db.password", "d");
 
 
 // secondary DB

@@ -1036,6 +1036,8 @@ INSERT INTO resources(id, name, restype, content) VALUES('94', 'Tax.Normal.Days'
 -- Restrict the default customer for any payment? Yes or No
 INSERT INTO resources(id, name, restype, content) VALUES('95', 'Restrict.Default.Customer', 0, $FILE{/com/unicenta/pos/templates/Restrict.Default.Customer.txt});
 
+INSERT INTO resources(id, name, restype, content) VALUES('96', 'Printer.Qr', 1, $FILE{/com/unicenta/images/qr.jpg});
+INSERT INTO resources(id, name, restype, content) VALUES('97', 'Printer.BarCode', 1, $FILE{/com/unicenta/images/barcode.jpg});
 -- Subscription Manager URL
 INSERT INTO resources(id, name, restype, content) VALUES('108', 'Subscription.txt', 0, $FILE{/com/unicenta/pos/templates/Subscription.txt});
 

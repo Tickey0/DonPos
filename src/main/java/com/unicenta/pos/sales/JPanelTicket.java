@@ -62,6 +62,7 @@ import dev.joguenco.pos.taxpayer.TaxpayerInfo;
 import dev.joguenco.pos.ticketsnum.DataLogicTicketsNum;
 import dev.joguenco.pos.ticketsnum.TicketsNumInfo;
 import dev.joguenco.pos.ticketsnumrefund.DataLogicTicketsNumRefund;
+import dev.resolvedor.util.Size;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.jasperreports.engine.*;
 import net.sf.jasperreports.engine.data.JRMapArrayDataSource;
@@ -1978,7 +1979,11 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
                                 String xml = dlSystem.getResourceAsXML("Printer.Ticket");
 //                new Application().sendReceipt(ticket, xml, getActiveWindow());
                             }
-
+                            
+                            /*
+                            buildQr(ticket, ticket.getAccessKey());
+                            buildBarCode(ticket, ticket.getAccessKey());
+                            */
                             executeEvent(ticket, ticketext, "ticket.close",
                                     new ScriptArg("print", paymentdialog.isPrintSelected()));
 
@@ -2028,6 +2033,42 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
         }
 
         return resultok;
+    }
+    
+    private Boolean buildQr(TicketInfo ticket, String text) {
+        Size size = new Size(180, 180);
+        String path = ticket.buildCode(size, text, TicketInfo.Code.QR);
+        
+        if (!path.isEmpty()) {
+            try {
+                byte[] byteArray = com.google.common.io.Files.toByteArray(new File(path));
+                dlSystem.setResource("Printer.Qr",
+                        1,
+                        byteArray);
+            } catch (IOException ex) {
+                log.error(ex.getMessage());
+            }
+            return true;
+        }
+        return false;
+    }
+    
+    private Boolean buildBarCode(TicketInfo ticket, String text) {
+        Size size = new Size(180, 90);
+        String path = ticket.buildCode(size, text, TicketInfo.Code.BARCODE);
+        
+        if (!path.isEmpty()) {
+            try {
+                byte[] byteArray = com.google.common.io.Files.toByteArray(new File(path));
+                dlSystem.setResource("Printer.BarCode",
+                        1,
+                        byteArray);
+            } catch (IOException ex) {
+                log.error(ex.getMessage());
+            }
+            return true;
+        }
+        return false;
     }
 
     private Boolean getCodeAndSerieSales(TicketInfo ticket, String priority) throws BasicException {
