@@ -18,15 +18,6 @@
 //    along with uniCenta oPOS.  If not, see <http://www.gnu.org/licenses/>
 package com.unicenta.pos.forms;
 
-import com.dalsemi.onewire.OneWireAccessProvider;
-import com.dalsemi.onewire.OneWireException;
-import com.dalsemi.onewire.adapter.DSPortAdapter;
-import com.dalsemi.onewire.application.monitor.DeviceMonitor;
-import com.dalsemi.onewire.application.monitor.DeviceMonitorEvent;
-import com.dalsemi.onewire.application.monitor.DeviceMonitorEventListener;
-import com.dalsemi.onewire.application.monitor.DeviceMonitorException;
-import com.dalsemi.onewire.container.OneWireContainer;
-import com.dalsemi.onewire.utils.Address;
 import com.unicenta.basic.BasicException;
 import com.unicenta.beans.JFlowPanel;
 import com.unicenta.beans.JPasswordDialog;
@@ -42,7 +33,6 @@ import com.unicenta.pos.printer.TicketPrinterException;
 import com.unicenta.pos.scale.DeviceScale;
 import com.unicenta.pos.scanpal2.DeviceScanner;
 import com.unicenta.pos.scanpal2.DeviceScannerFactory;
-import com.unicenta.pos.util.uOWWatch;
 
 import lombok.extern.slf4j.Slf4j;
 import org.joda.time.DateTime;
@@ -73,7 +63,7 @@ import java.util.regex.Matcher;
  */
 // public class JRootApp extends JPanel implements AppView {
 @Slf4j
-public class JRootApp extends JPanel implements AppView, DeviceMonitorEventListener {
+public class JRootApp extends JPanel implements AppView {
 
     private AppProperties m_props;
     private Session session;
@@ -217,133 +207,16 @@ public class JRootApp extends JPanel implements AppView, DeviceMonitorEventListe
         webMemoryBar1.setShowMaximumMemory(true);
     }
 
-    private DSPortAdapter m_oneWireAdapter;
-    private DeviceMonitor m_oneWireMonitor;
+ 
 
-    private void initIButtonMonitor() {
 
-        assert m_oneWireMonitor == null;
-        try {
-            m_oneWireAdapter = OneWireAccessProvider.getDefaultAdapter();
-            m_oneWireAdapter.setSearchAllDevices();
-            m_oneWireAdapter.targetFamily(0x01);
-            m_oneWireAdapter.setSpeed(DSPortAdapter.SPEED_REGULAR);
-            m_oneWireMonitor = new DeviceMonitor(m_oneWireAdapter);
-// Normal state
-            m_oneWireMonitor.setMaxStateCount(5);
-// Use for testing
-//            m_oneWireMonitor.setMaxStateCount(100);                        
-            m_oneWireMonitor.addDeviceMonitorEventListener(this);
-            new Thread(m_oneWireMonitor).start();
-        } catch (OneWireException e) {
-            JMessageDialog.showMessage(this,
-                    new MessageInf(MessageInf.SGN_WARNING,
-                            AppLocal.getIntString("message.ibuttonnotfound"), e));
-        }
-    }
 
-    private void shutdownIButtonMonitor() {
-        if (m_oneWireMonitor != null) {
-            m_oneWireMonitor.killMonitor();
-            try {
-                m_oneWireAdapter.freePort();
-            } catch (OneWireException e) {
-//                System.out.println(e);
-            }
-        }
-    }
 
-    public void releaseResources() {
-        shutdownIButtonMonitor();
-    }
+
 
     final static int UNIQUE_KEY_FAMILY = 0x01;
 
-    private boolean isDeviceRelevant(OneWireContainer container) {
-        String iButtonId = container.getAddressAsString();
-        try {
-            if (container.getAdapter().getAdapterAddress().equals(iButtonId)) {
-                return false;
-            }
-        } catch (OneWireException e) {
-        }
 
-        int familyNumber = Address.toByteArray(iButtonId)[0];
-        return (familyNumber == UNIQUE_KEY_FAMILY);
-    }
-
-    /**
-     * Called when an iButton is inserted.
-     *
-     * @param devt
-     */
-    @Override
-    public void deviceArrival(DeviceMonitorEvent devt) {
-        assert m_dlSystem != null;
-
-        for (int i = 0; i < devt.getDeviceCount(); i++) {
-            OneWireContainer container = devt.getContainerAt(i);
-            if (!isDeviceRelevant(container)) {
-                continue;
-            }
-
-            String iButtonId = devt.getAddressAsStringAt(i);
-
-            AppUser user = null;
-            try {
-                user = m_dlSystem.findPeopleByCard(iButtonId);
-            } catch (BasicException e) {
-                if (user == null) {
-                    JOptionPane.showMessageDialog(this,
-                            AppLocal.getIntString("message.ibuttonnotassign"),
-                            AppLocal.getIntString("title.editor"),
-                            JOptionPane.INFORMATION_MESSAGE);
-                }
-            }
-
-            if (user == null) {
-                JOptionPane.showMessageDialog(this,
-                        AppLocal.getIntString("message.ibuttonnotassign"),
-                        AppLocal.getIntString("title.editor"),
-                        JOptionPane.INFORMATION_MESSAGE);
-
-            } else {
-                setVisible(false);
-                openAppView(user);
-                setVisible(true);
-            }
-        }
-    }
-
-    /**
-     * Called when an iButton is removed.
-     *
-     * @param devt
-     */
-    @Override
-    public void deviceDeparture(DeviceMonitorEvent devt) {
-
-        for (int i = 0; i < devt.getDeviceCount(); i++) {
-            OneWireContainer container = devt.getContainerAt(i);
-            if (!isDeviceRelevant(container)) {
-                continue;
-            }
-
-            String iButtonId = devt.getAddressAsStringAt(i);
-
-            if (m_principalapp != null) {
-                AppUser currentUser = m_principalapp.getUser();
-                if (currentUser != null && currentUser.getCard().equals(iButtonId)) {
-                    closeAppView();
-                }
-            }
-        }
-    }
-
-    @Override
-    public void networkException(DeviceMonitorException dexc) {
-//        System.out.println("ERROR: " + dexc.toString());
-    }
 
     /**
      * @param props
@@ -593,8 +466,7 @@ public class JRootApp extends JPanel implements AppView, DeviceMonitorEventListe
 
         String ibutton = m_props.getProperty("machine.iButton");
         if (ibutton.equals("true")) {
-            initIButtonMonitor();
-            uOWWatch.iButtonOn();
+            
         }
         return true;
     }
@@ -651,7 +523,7 @@ public class JRootApp extends JPanel implements AppView, DeviceMonitorEventListe
 
         if (closeAppView()) {
             m_TP.getDeviceDisplay().clearVisor();
-            shutdownIButtonMonitor();
+            
 
 // delete the open.db tracking file
             String sUserPath = System.getProperty("user.home");

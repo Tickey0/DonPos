@@ -159,7 +159,6 @@ public class JRootFrame extends javax.swing.JFrame implements AppMessage {
 
     private void formWindowClosed(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosed
 
-        m_rootapp.releaseResources();
         System.exit(0);
 
     }//GEN-LAST:event_formWindowClosed

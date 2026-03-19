@@ -27,7 +27,6 @@ import com.unicenta.format.Formats;
 import com.unicenta.pos.forms.AppLocal;
 import com.unicenta.pos.util.Hashcypher;
 import com.unicenta.pos.util.StringUtils;
-import com.unicenta.pos.util.uOWWatch;
 import java.awt.Component;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
@@ -426,7 +425,6 @@ public class PeopleView extends JPanel implements EditorRecord {
                 JOptionPane.INFORMATION_MESSAGE) == JOptionPane.OK_OPTION) 
 
             {  
-                m_jcard.setText( uOWWatch.getibuttonid() );
                 jLblCardID.setText(AppLocal.getIntString("label.ibutton"));
                 m_Dirty.setDirty(true);
             }

@@ -56,10 +56,7 @@ public class JPanelConfigDatabase extends javax.swing.JPanel implements PanelCon
         dbDriverClassValue.getDocument().addDocumentListener(dirty);
         dbDriverLibrarySelect.addActionListener(new DirectoryEvent(dbDriverLibraryValue));
         jcboDBDriver.addActionListener(dirty);
-        // still in development!
-//        jcboDBDriver.addItem("Apache Derby");
         jcboDBDriver.addItem("MariaDB");
-        jcboDBDriver.addItem("MySQL");
         jcboDBDriver.setSelectedIndex(0);
         multiDBButton.addActionListener(dirty);
 
@@ -279,7 +276,6 @@ public class JPanelConfigDatabase extends javax.swing.JPanel implements PanelCon
         headerPanel = new javax.swing.JPanel();
         dbTypeLabel = new javax.swing.JLabel();
         jcboDBDriver = new javax.swing.JComboBox();
-        dbMessageLabel = new javax.swing.JLabel();
         dbConfigPanel = new javax.swing.JPanel();
         jLabel7 = new javax.swing.JLabel();
         jCBSchema = new javax.swing.JComboBox<>();
@@ -347,9 +343,6 @@ public class JPanelConfigDatabase extends javax.swing.JPanel implements PanelCon
             }
         });
 
-        dbMessageLabel.setForeground(new java.awt.Color(51, 204, 255));
-        dbMessageLabel.setText("If you require a multiple terminal config please use MariaDB");
-
         javax.swing.GroupLayout headerPanelLayout = new javax.swing.GroupLayout(headerPanel);
         headerPanel.setLayout(headerPanelLayout);
         headerPanelLayout.setHorizontalGroup(
@@ -359,17 +352,14 @@ public class JPanelConfigDatabase extends javax.swing.JPanel implements PanelCon
                 .addComponent(dbTypeLabel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jcboDBDriver, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(dbMessageLabel)
-                .addContainerGap(2327, Short.MAX_VALUE))
+                .addContainerGap(2872, Short.MAX_VALUE))
         );
         headerPanelLayout.setVerticalGroup(
             headerPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(headerPanelLayout.createSequentialGroup()
                 .addGroup(headerPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jcboDBDriver, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(dbTypeLabel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(dbMessageLabel))
+                    .addComponent(dbTypeLabel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(0, 6, Short.MAX_VALUE))
         );
 
@@ -636,7 +626,7 @@ public class JPanelConfigDatabase extends javax.swing.JPanel implements PanelCon
                     .addComponent(jtxtDbSchema, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(validUserAlert, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(9, Short.MAX_VALUE))
             .addGroup(dbConfigPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(dbConfigPanelLayout.createSequentialGroup()
                     .addContainerGap()
@@ -648,19 +638,23 @@ public class JPanelConfigDatabase extends javax.swing.JPanel implements PanelCon
 
         db2NameLabel.setFont(new java.awt.Font("Arial", 1, 14)); // NOI18N
         db2NameLabel.setText(AppLocal.getIntString("label.DbName1")); // NOI18N
+        db2NameLabel.setEnabled(false);
         db2NameLabel.setPreferredSize(new java.awt.Dimension(125, 30));
 
         db2NameValue.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         db2NameValue.setToolTipText(bundle.getString("tooltip.config.db.name1")); // NOI18N
+        db2NameValue.setEnabled(false);
         db2NameValue.setPreferredSize(new java.awt.Dimension(160, 30));
 
         db2URLLabel.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         db2URLLabel.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
         db2URLLabel.setText(AppLocal.getIntString("label.DbURL")); // NOI18N
+        db2URLLabel.setEnabled(false);
         db2URLLabel.setPreferredSize(new java.awt.Dimension(125, 30));
 
         db2URLValue.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         db2URLValue.setToolTipText(bundle.getString("tooltip.config.db.url1")); // NOI18N
+        db2URLValue.setEnabled(false);
         db2URLValue.setPreferredSize(new java.awt.Dimension(320, 30));
         db2URLValue.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -670,20 +664,24 @@ public class JPanelConfigDatabase extends javax.swing.JPanel implements PanelCon
 
         db2UserValue.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         db2UserValue.setToolTipText(bundle.getString("tooltip.config.db.user1")); // NOI18N
+        db2UserValue.setEnabled(false);
         db2UserValue.setPreferredSize(new java.awt.Dimension(160, 30));
 
         db2UserLabel.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         db2UserLabel.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
         db2UserLabel.setText(AppLocal.getIntString("label.DbUser")); // NOI18N
+        db2UserLabel.setEnabled(false);
         db2UserLabel.setPreferredSize(new java.awt.Dimension(125, 30));
 
         db2PasswordLabel.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         db2PasswordLabel.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
         db2PasswordLabel.setText(AppLocal.getIntString("label.DbPassword")); // NOI18N
+        db2PasswordLabel.setEnabled(false);
         db2PasswordLabel.setPreferredSize(new java.awt.Dimension(125, 30));
 
         db2PasswordValue.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         db2PasswordValue.setToolTipText(bundle.getString("tooltip.config.db.password1")); // NOI18N
+        db2PasswordValue.setEnabled(false);
         db2PasswordValue.setPreferredSize(new java.awt.Dimension(160, 30));
 
         jbtnConnect1.setFont(new java.awt.Font("Arial", 0, 12)); // NOI18N
@@ -691,6 +689,7 @@ public class JPanelConfigDatabase extends javax.swing.JPanel implements PanelCon
         jbtnConnect1.setText(bundle.getString("button.connect")); // NOI18N
         jbtnConnect1.setToolTipText(bundle.getString("tooltip.config.db.connect")); // NOI18N
         jbtnConnect1.setActionCommand(bundle.getString("Button.Test")); // NOI18N
+        jbtnConnect1.setEnabled(false);
         jbtnConnect1.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
         jbtnConnect1.setPreferredSize(new java.awt.Dimension(160, 45));
         jbtnConnect1.addActionListener(new java.awt.event.ActionListener() {
@@ -702,6 +701,7 @@ public class JPanelConfigDatabase extends javax.swing.JPanel implements PanelCon
         jbtnReset1.setFont(new java.awt.Font("Arial", 0, 12)); // NOI18N
         jbtnReset1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/unicenta/images/reload.png"))); // NOI18N
         jbtnReset1.setToolTipText(AppLocal.getIntString("tooltip.config.db.reset1")); // NOI18N
+        jbtnReset1.setEnabled(false);
         jbtnReset1.setPreferredSize(new java.awt.Dimension(80, 45));
         jbtnReset1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -719,6 +719,7 @@ public class JPanelConfigDatabase extends javax.swing.JPanel implements PanelCon
         db2DBLabel.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         db2DBLabel.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
         db2DBLabel.setText(AppLocal.getIntString("label.DBName")); // NOI18N
+        db2DBLabel.setEnabled(false);
         db2DBLabel.setHorizontalTextPosition(javax.swing.SwingConstants.LEFT);
         db2DBLabel.setPreferredSize(new java.awt.Dimension(125, 30));
 
@@ -734,10 +735,12 @@ public class JPanelConfigDatabase extends javax.swing.JPanel implements PanelCon
         db2OptionsLabel.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         db2OptionsLabel.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
         db2OptionsLabel.setText(AppLocal.getIntString("label.DbOptions")); // NOI18N
+        db2OptionsLabel.setEnabled(false);
         db2OptionsLabel.setPreferredSize(new java.awt.Dimension(125, 30));
 
         db2OptionsValue.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
         db2OptionsValue.setToolTipText(bundle.getString("tooltip.config.db.options")); // NOI18N
+        db2OptionsValue.setEnabled(false);
         db2OptionsValue.setPreferredSize(new java.awt.Dimension(330, 30));
 
         jbtnSetDB1.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
@@ -753,6 +756,7 @@ public class JPanelConfigDatabase extends javax.swing.JPanel implements PanelCon
         });
 
         jtxtDbSchema1.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
+        jtxtDbSchema1.setEnabled(false);
         jtxtDbSchema1.setPreferredSize(new java.awt.Dimension(250, 30));
 
         javax.swing.GroupLayout db2ConfigPanelLayout = new javax.swing.GroupLayout(db2ConfigPanel);
@@ -927,20 +931,7 @@ public class JPanelConfigDatabase extends javax.swing.JPanel implements PanelCon
             jtxtDbSchema.setText("unicentaopos");
             jtxtDbOptions.setText("?zeroDateTimeBehavior=convertToNull");
             dbConfigPanel.setVisible(true);
-            multiDBPanel.setVisible(true);
-            dbMessageLabel.setText("This is the best option for multiple terminal configuration");
-            dbMessageLabel.setForeground(new java.awt.Color(51, 204, 255));
-
-        } else {
-            dbDriverLibraryValue.setText(new File(new File(dirname), "mysql-connector-j-9.5.0.jar").getAbsolutePath());
-            dbDriverClassValue.setText("com.mysql.jdbc.Driver");
-            dbURLValue.setText("jdbc:mysql://localhost:3306/");
-            jtxtDbSchema.setText("unicentaopos");
-            jtxtDbOptions.setText("?zeroDateTimeBehavior=convertToNull");
-            dbConfigPanel.setVisible(true);
-            multiDBPanel.setVisible(true);
-            dbMessageLabel.setText("MySQL is deprecated and will be remove in a subsequent release. Please migrate to MariaDB");
-            dbMessageLabel.setForeground(new Color(255,0,51));
+            multiDBPanel.setVisible(true);            
         }
     }//GEN-LAST:event_jcboDBDriverActionPerformed
 
@@ -1230,7 +1221,6 @@ public class JPanelConfigDatabase extends javax.swing.JPanel implements PanelCon
     private javax.swing.JButton dbDriverLibrarySelect;
     private javax.swing.JTextField dbDriverLibraryValue;
     private javax.swing.JLabel dbInfoLabel;
-    private javax.swing.JLabel dbMessageLabel;
     private javax.swing.JLabel dbNameLabel;
     private javax.swing.JTextField dbNameValue;
     private javax.swing.JLabel dbPasswordLabel;

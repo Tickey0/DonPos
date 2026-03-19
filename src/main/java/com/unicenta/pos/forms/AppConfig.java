@@ -387,7 +387,7 @@ public class AppConfig implements AppProperties {
     properties.setProperty("db.schema", "donpos");
     properties.setProperty("db.options", "?zeroDateTimeBehavior=convertToNull");
     properties.setProperty("db.user", "donpos");
-    properties.setProperty("db.password", "d");
+    properties.setProperty("db.password", "");
 
 
 // secondary DB
