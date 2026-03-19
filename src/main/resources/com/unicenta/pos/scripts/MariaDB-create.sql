@@ -480,6 +480,7 @@ CREATE TABLE `stockdiary` (
 	`datenew` datetime NOT NULL,
 	`reason` int(11) NOT NULL,
 	`location` varchar(255) NOT NULL,
+        `batch` varchar(255) NOT NULL,
 	`product` varchar(255) NOT NULL,
 	`attributesetinstance_id` varchar(255) default NULL,
 	`units` double NOT NULL,
@@ -755,6 +756,43 @@ CREATE TABLE `refresh_token` (
   `date_created` TIMESTAMP(6) DEFAULT NOW(6)
 ) ENGINE = InnoDB DEFAULT CHARSET=utf8 ;
 
+CREATE TABLE `purchases` (
+	`id` varchar(255) NOT NULL,
+	`datenew` datetime NOT NULL,
+        `reason` int(11) NOT NULL,
+	`location` varchar(255) NOT NULL,
+	`person` varchar(255) NOT NULL,
+        `supplier` varchar(255) NOT NULL,
+        `purchase_tax_support` varchar(255) default NULL,
+        `purchase_document` varchar(255) default NULL,        
+        `purchase_reference` varchar(255) default NULL,
+        `purchase_date` datetime default NULL,
+        `purchase_authorization` varchar(255) default NULL,
+        PRIMARY KEY  ( `id` ),
+	KEY `purchases_inx_1` ( `datenew` ),
+        KEY `purchases_location_fk` ( `location` ),
+        KEY `purchases_supplier_fk` ( `supplier` )
+) ENGINE = InnoDB DEFAULT CHARSET=utf8 ;
+
+CREATE TABLE `batches` (
+	`id` varchar(255) NOT NULL,
+        `name` varchar(255) NOT NULL,
+        `expiration_date` datetime NOT NULL,	
+        `status` BOOLEAN DEFAULT true,
+	`created_at` datetime NOT NULL,	
+        PRIMARY KEY  ( `id` )   
+) ENGINE = InnoDB DEFAULT CHARSET=utf8 ;
+
+ALTER TABLE `purchases` ADD CONSTRAINT `purchases_location_fk`
+	FOREIGN KEY ( `location` ) REFERENCES `locations` ( `id` );
+
+ALTER TABLE `purchases` ADD CONSTRAINT `purchases_supplier_fk`
+	FOREIGN KEY ( `supplier` ) REFERENCES `suppliers` ( `id` );
+
+ALTER TABLE `purchases` ADD CONSTRAINT `purchases_receipts_fk` 
+        FOREIGN KEY (`id`) REFERENCES receipts(`id`) ON DELETE CASCADE;
+
+
 -- Update foreign keys of attributeinstance
 ALTER TABLE `attributeinstance` ADD CONSTRAINT `attinst_att`
 	FOREIGN KEY ( `attribute_id` ) REFERENCES `attribute` ( `id` );
@@ -862,6 +900,9 @@ ALTER TABLE `stockdiary` ADD CONSTRAINT `stockdiary_fk_1`
 
 ALTER TABLE `stockdiary` ADD CONSTRAINT `stockdiary_fk_2`
 	FOREIGN KEY ( `location` ) REFERENCES `locations` ( `id` );
+
+ALTER TABLE `stockdiary` ADD CONSTRAINT `stockdiary_purchase_fk`
+	FOREIGN KEY ( `id` ) REFERENCES `purchases` ( `id` ) ON DELETE CASCADE;
 
 -- Update foreign keys of stocklevel
 ALTER TABLE `stocklevel` ADD CONSTRAINT `stocklevel_location`
