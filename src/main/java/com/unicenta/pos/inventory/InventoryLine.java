@@ -16,11 +16,11 @@
 //
 //    You should have received a copy of the GNU General Public License
 //    along with uniCenta oPOS.  If not, see <http://www.gnu.org/licenses/>.
-
 package com.unicenta.pos.inventory;
 
 import com.unicenta.format.Formats;
 import com.unicenta.pos.ticket.ProductInfoExt;
+import com.unicenta.pos.ticket.TaxInfo;
 import com.unicenta.pos.util.StringUtils;
 
 /**
@@ -28,19 +28,27 @@ import com.unicenta.pos.util.StringUtils;
  * @author adrianromero
  */
 public class InventoryLine {
-    
-    private double m_dMultiply;    
+
+    private double m_dMultiply;
     private double m_dPrice;
-    
+    private double totalCost;
+
     private String m_sProdID;
     private String m_sProdName;
 
     private String attsetid;
     private String attsetinstid;
     private String attsetinstdesc;
- 
-    /** Creates a new instance of InventoryLine
-     * @param oProduct */
+
+    private String lot;
+    private boolean isService;
+    private TaxInfo tax;
+
+    /**
+     * Creates a new instance of InventoryLine
+     *
+     * @param oProduct
+     */
     public InventoryLine(ProductInfoExt oProduct) {
         m_sProdID = oProduct.getID();
         m_sProdName = oProduct.getName();
@@ -50,8 +58,10 @@ public class InventoryLine {
         attsetid = oProduct.getAttributeSetID();
         attsetinstid = null;
         attsetinstdesc = null;
+        lot = oProduct.getLot();
+        isService = oProduct.isService();
     }
-    
+
     /**
      *
      * @param oProduct
@@ -66,8 +76,24 @@ public class InventoryLine {
         attsetid = oProduct.getAttributeSetID();
         attsetinstid = null;
         attsetinstdesc = null;
+        lot = oProduct.getLot();
+        isService = oProduct.isService();
     }
-    
+
+    public InventoryLine(ProductInfoExt oProduct, double dpor, double totalCost, String lot, TaxInfo tax) {
+        m_sProdID = oProduct.getID();
+        m_sProdName = oProduct.getName();
+        m_dMultiply = dpor;
+        m_dPrice = totalCost / dpor;
+        this.totalCost = totalCost;
+        this.lot = lot;
+        attsetid = oProduct.getAttributeSetID();
+        attsetinstid = null;
+        attsetinstdesc = null;
+        this.tax = tax;
+        isService = oProduct.isService();
+    }
+
     /**
      *
      * @return
@@ -82,7 +108,7 @@ public class InventoryLine {
      */
     public String getProductName() {
         return m_sProdName;
-    } 
+    }
 
     /**
      *
@@ -101,7 +127,7 @@ public class InventoryLine {
     public double getMultiply() {
         return m_dMultiply;
     }
-    
+
     /**
      *
      * @param dValue
@@ -109,7 +135,7 @@ public class InventoryLine {
     public void setMultiply(double dValue) {
         m_dMultiply = dValue;
     }
-    
+
     /**
      *
      * @return
@@ -117,7 +143,7 @@ public class InventoryLine {
     public double getPrice() {
         return m_dPrice;
     }
-    
+
     /**
      *
      * @param dValue
@@ -133,7 +159,7 @@ public class InventoryLine {
     public double getSubValue() {
         return m_dMultiply * m_dPrice;
     }
-    
+
     /**
      *
      * @return
@@ -173,7 +199,7 @@ public class InventoryLine {
     public void setProductAttSetInstDesc(String value) {
         attsetinstdesc = value;
     }
-    
+
     /**
      *
      * @return
@@ -181,7 +207,7 @@ public class InventoryLine {
     public String printName() {
         return StringUtils.encodeXML(m_sProdName);
     }
-    
+
     /**
      *
      * @return
@@ -193,7 +219,7 @@ public class InventoryLine {
             return Formats.CURRENCY.formatValue(new Double(getPrice()));
         }
     }
-    
+
     /**
      *
      * @return
@@ -201,12 +227,42 @@ public class InventoryLine {
     public String printMultiply() {
         return Formats.DOUBLE.formatValue(new Double(m_dMultiply));
     }
-    
+
     /**
      *
      * @return
      */
     public String printSubValue() {
         return Formats.CURRENCY.formatValue(new Double(getSubValue()));
-    }    
+    }
+
+    public String getLot() {
+        return lot;
+    }
+
+    public void setLot(String lot) {
+        this.lot = lot;
+    }
+
+    public double getTaxPurchase() {
+        return m_dPrice * tax.getRate() * m_dMultiply;
+    }
+    
+    public double getTaxRate() {
+        return tax == null ? 0.0 : tax.getRate();
+    }
+    
+    public double getTaxValue() {
+        return m_dPrice * m_dMultiply * getTaxRate();
+    }
+
+    public TaxInfo getTax() {
+        return tax;
+    }
+
+    public boolean isService() {
+        return isService;
+    }
+
+    
 }

@@ -469,6 +469,7 @@ CREATE TABLE `stockcurrent` (
 	`product` varchar(255) NOT NULL,
 	`attributesetinstance_id` varchar(255) default NULL,
 	`units` double NOT NULL,
+        `lot` varchar(255) NOT NULL,
 	KEY `stockcurrent_attsetinst` ( `attributesetinstance_id` ),
 	KEY `stockcurrent_fk_1` ( `product` ),
 	UNIQUE INDEX `stockcurrent_inx` ( `location`, `product`, `attributesetinstance_id` )
@@ -480,7 +481,6 @@ CREATE TABLE `stockdiary` (
 	`datenew` datetime NOT NULL,
 	`reason` int(11) NOT NULL,
 	`location` varchar(255) NOT NULL,
-        `batch` varchar(255) NOT NULL,
 	`product` varchar(255) NOT NULL,
 	`attributesetinstance_id` varchar(255) default NULL,
 	`units` double NOT NULL,
@@ -488,6 +488,7 @@ CREATE TABLE `stockdiary` (
 	`appuser` varchar(255) default NULL,
 	`supplier` varchar(255) default NULL,
 	`supplierdoc` varchar(255) default NULL,
+        `lot` varchar(255) NOT NULL,
 	PRIMARY KEY  ( `id` ),
 	KEY `stockdiary_attsetinst` ( `attributesetinstance_id` ),
 	KEY `stockdiary_fk_1` ( `product` ),
@@ -622,6 +623,7 @@ CREATE TABLE `ticketlines` (
 	`price` double NOT NULL,
 	`taxid` varchar(255) NOT NULL,
 	`attributes` mediumblob default NULL,
+        `lot` varchar(255) NOT NULL,
 	PRIMARY KEY  ( `ticket`, `line` ),
 	KEY `ticketlines_attsetinst` ( `attributesetinstance_id` ),
 	KEY `ticketlines_fk_2` ( `product` ),
@@ -758,40 +760,83 @@ CREATE TABLE `refresh_token` (
 
 CREATE TABLE `purchases` (
 	`id` varchar(255) NOT NULL,
-	`datenew` datetime NOT NULL,
+        `number` bigint NOT NULL,
+	`created_at` datetime DEFAULT NOW(),
         `reason` int(11) NOT NULL,
-	`location` varchar(255) NOT NULL,
-	`person` varchar(255) NOT NULL,
-        `supplier` varchar(255) NOT NULL,
+        `supplier` varchar(255) default NULL,
         `purchase_tax_support` varchar(255) default NULL,
         `purchase_document` varchar(255) default NULL,        
         `purchase_reference` varchar(255) default NULL,
         `purchase_date` datetime default NULL,
         `purchase_authorization` varchar(255) default NULL,
+        `observation` varchar(900) default NULL,
+        `status` BOOLEAN DEFAULT true,
         PRIMARY KEY  ( `id` ),
-	KEY `purchases_inx_1` ( `datenew` ),
-        KEY `purchases_location_fk` ( `location` ),
+        UNIQUE INDEX `purchases_uk` ( `number` ),
+	KEY `purchases_inx_1` ( `created_at` ),
         KEY `purchases_supplier_fk` ( `supplier` )
 ) ENGINE = InnoDB DEFAULT CHARSET=utf8 ;
 
-CREATE TABLE `batches` (
+CREATE TABLE `purchaselines` (
+	`purchase` varchar(255) NOT NULL,
+	`line` int(11) NOT NULL,
+	`product` varchar(255) default NULL,
+	`units` double NOT NULL,
+	`price` double NOT NULL,
+	`taxid` varchar(255) NOT NULL,
+        `lot` varchar(255) NOT NULL,
+	PRIMARY KEY  ( `purchase`, `line` ),
+        KEY `purchaselines_purchase_fk` ( `purchase` ),
+	KEY `purchaselines_product_fk` ( `product` ),
+	KEY `purchaselines_tax_fk` ( `taxid` )
+) ENGINE = InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE `lots` (
 	`id` varchar(255) NOT NULL,
         `name` varchar(255) NOT NULL,
-        `expiration_date` datetime NOT NULL,	
+        `expiration_date` datetime DEFAULT NULL,	
         `status` BOOLEAN DEFAULT true,
-	`created_at` datetime NOT NULL,	
+	`created_at` datetime DEFAULT NOW(),	
         PRIMARY KEY  ( `id` )   
 ) ENGINE = InnoDB DEFAULT CHARSET=utf8 ;
 
-ALTER TABLE `purchases` ADD CONSTRAINT `purchases_location_fk`
-	FOREIGN KEY ( `location` ) REFERENCES `locations` ( `id` );
+CREATE TABLE `products_lots` (
+	`product` varchar(255) NOT NULL,
+        `lot` varchar(255) NOT NULL,
+        `status` BOOLEAN DEFAULT true,
+	`created_at` datetime DEFAULT NOW(),	
+        PRIMARY KEY  ( `product`, `lot`)   
+) ENGINE = InnoDB DEFAULT CHARSET=utf8 ;
+
+CREATE TABLE `tax_supports` (
+	`id` varchar(90) NOT NULL,
+        `name` varchar(900) NOT NULL,
+        `status` BOOLEAN DEFAULT true,
+	`created_at` datetime DEFAULT NOW(),	
+        PRIMARY KEY  ( `id` )   
+) ENGINE = InnoDB DEFAULT CHARSET=utf8 ;
+
+CREATE TABLE `document_types` (
+	`id` varchar(90) NOT NULL,
+        `name` varchar(900) NOT NULL,
+        `type` varchar(90) NOT NULL,
+        `inventory` varchar(90) NOT NULL,
+        `status` BOOLEAN DEFAULT true,
+	`created_at` datetime DEFAULT NOW(),	
+        PRIMARY KEY  ( `id` )   
+) ENGINE = InnoDB DEFAULT CHARSET=utf8 ;
+
+ALTER TABLE `products_lots` ADD CONSTRAINT `product_lot_fk`
+	FOREIGN KEY ( `product` ) REFERENCES `products` ( `id` );
+
+ALTER TABLE `products_lots` ADD CONSTRAINT `lot_product_fk`
+	FOREIGN KEY ( `lot` ) REFERENCES `lots` ( `id` );
 
 ALTER TABLE `purchases` ADD CONSTRAINT `purchases_supplier_fk`
 	FOREIGN KEY ( `supplier` ) REFERENCES `suppliers` ( `id` );
 
-ALTER TABLE `purchases` ADD CONSTRAINT `purchases_receipts_fk` 
+ALTER TABLE `purchases` ADD CONSTRAINT `purchases_receipts_fk`         
         FOREIGN KEY (`id`) REFERENCES receipts(`id`) ON DELETE CASCADE;
-
 
 -- Update foreign keys of attributeinstance
 ALTER TABLE `attributeinstance` ADD CONSTRAINT `attinst_att`
@@ -891,6 +936,9 @@ ALTER TABLE `stockcurrent` ADD CONSTRAINT `stockcurrent_fk_1`
 ALTER TABLE `stockcurrent` ADD CONSTRAINT `stockcurrent_fk_2`
 	FOREIGN KEY ( `location` ) REFERENCES `locations` ( `id` );
 
+ALTER TABLE `stockcurrent` ADD CONSTRAINT `stockcurrent_products_lots_fk` 
+        FOREIGN KEY (product,lot) REFERENCES `products_lots` ( `product`, `lot`) ON DELETE RESTRICT ON UPDATE RESTRICT;
+
 -- Update foreign keys of stockdiary
 ALTER TABLE `stockdiary` ADD CONSTRAINT `stockdiary_attsetinst`
 	FOREIGN KEY ( `attributesetinstance_id` ) REFERENCES `attributesetinstance` ( `id` );
@@ -901,8 +949,8 @@ ALTER TABLE `stockdiary` ADD CONSTRAINT `stockdiary_fk_1`
 ALTER TABLE `stockdiary` ADD CONSTRAINT `stockdiary_fk_2`
 	FOREIGN KEY ( `location` ) REFERENCES `locations` ( `id` );
 
-ALTER TABLE `stockdiary` ADD CONSTRAINT `stockdiary_purchase_fk`
-	FOREIGN KEY ( `id` ) REFERENCES `purchases` ( `id` ) ON DELETE CASCADE;
+ALTER TABLE `stockdiary` ADD CONSTRAINT `stockdiary_products_lots_fk`
+        FOREIGN KEY (`product`, `lot`) REFERENCES `products_lots`(`product`, `lot`) ON DELETE RESTRICT ON UPDATE RESTRICT;
 
 -- Update foreign keys of stocklevel
 ALTER TABLE `stocklevel` ADD CONSTRAINT `stocklevel_location`
@@ -965,8 +1013,38 @@ alter table `ticketsnum` add constraint `ticketsnum_people_fk`
 
 alter table `tickets` add constraint `tickets_tickets_fk`
     foreign key ( `tickets_id` ) references `tickets` ( `id` );
+
+ALTER TABLE `purchaselines` ADD CONSTRAINT `purchaselines_product_fk`
+	FOREIGN KEY ( `product` ) REFERENCES `products` ( `id` );
+
+ALTER TABLE `purchaselines` ADD CONSTRAINT `purchaselines_tax_fk`
+	FOREIGN KEY ( `taxid` ) REFERENCES `taxes` ( `id` );
+
+ALTER TABLE `purchaselines` ADD CONSTRAINT `purchaselines_purchase_fk`
+        FOREIGN KEY ( `purchase` ) REFERENCES `purchases` ( `id` ) ON DELETE CASCADE;
+
  
 -- *****************************************************************************
+-- ADD views
+CREATE VIEW `v_supplier_purchases` AS SELECT
+        `s`.`taxid` AS `taxid`,
+        `s`.`name` AS `name`,
+        `s`.`curdebt` AS `curdebt`,
+        `p`.`number` AS `number`,
+        `p`.`created_at` AS `datedocument`,
+        `d`.`name` AS `document`,
+        `p`.`purchase_reference` AS `purchase_reference`,
+        `p`.`observation` AS `observation`,
+        round(SUM((`l`.`units` * `l`.`price`)), 2) AS `subtotal`,
+        round(SUM(((`l`.`units` * `l`.`price`) * `t`.`rate`)), 2) AS `impuesto`,
+        round(SUM(((`l`.`units` * `l`.`price`) * (1 + `t`.`rate`))), 2) AS `total`
+    FROM
+        ((((`suppliers` `s`
+        JOIN `purchases` `p` ON ((`s`.`id` = `p`.`supplier`)))
+        JOIN `document_types` `d` ON ((`d`.`id` = `p`.`purchase_document`)))
+        JOIN `purchaselines` `l` ON ((`l`.`purchase` = `p`.`id`)))
+        JOIN `taxes` `t` ON ((`t`.`id` = `l`.`taxid`)))
+    GROUP BY `s`.`id` , `s`.`name` , `s`.`curdebt` , `p`.`number` , `p`.`created_at` , `document` , `p`.`purchase_reference`, `p`.`observation`;
 
 -- ADD roles
 INSERT INTO roles(id, name, permissions) VALUES('0', 'Administrator role', $FILE{/com/unicenta/pos/templates/Role.Administrator.xml} );
@@ -1079,8 +1157,10 @@ INSERT INTO resources(id, name, restype, content) VALUES('95', 'Restrict.Default
 
 INSERT INTO resources(id, name, restype, content) VALUES('96', 'Printer.Qr', 1, $FILE{/com/unicenta/images/qr.jpg});
 INSERT INTO resources(id, name, restype, content) VALUES('97', 'Printer.BarCode', 1, $FILE{/com/unicenta/images/barcode.jpg});
+
+INSERT INTO resources(id, name, restype, content) VALUES('98', 'Default.Lot', 0, $FILE{/com/unicenta/pos/templates/Default.Lot.txt});
 -- Subscription Manager URL
-INSERT INTO resources(id, name, restype, content) VALUES('108', 'Subscription.txt', 0, $FILE{/com/unicenta/pos/templates/Subscription.txt});
+INSERT INTO resources(id, name, restype, content) VALUES('108', 'Subscription', 0, $FILE{/com/unicenta/pos/templates/Subscription.txt});
 
 -- ADD CATEGORIES
 INSERT INTO categories(id, name) VALUES ('000', 'Category Standard');
@@ -1162,6 +1242,15 @@ VALUES ('001', 'Principal', 'Mi ciudad', 'Mi dirección principal', '0999 999 99
 
 INSERT INTO establishments (id, comercial_name, city, address, phone, email, principal, status) 
 VALUES ('002', 'Sucursal', 'Mi otra ciudad', 'Mi otra dirección', '0988 888 888', 'info@sucu.com', 'BranchOffice', true);
+
+INSERT INTO lots (id, name) values ('0', 'Default'); 
+
+INSERT INTO tax_supports (id, name) VALUES('0', 'General');
+
+INSERT INTO document_types (id, name, type, inventory) VALUES('0', 'Invoice', 'All', 'In');
+INSERT INTO document_types (id, name, type, inventory) VALUES('1', 'Refund', 'All', 'Out');
+
+CREATE TRIGGER trg_products AFTER INSERT ON products FOR EACH ROW BEGIN INSERT INTO products_lots(product, lot) VALUES(new.id, '0'); END;
 
 -- ADD APPLICATION VERSION
 INSERT INTO applications(id, name, version) VALUES($APP_ID{}, $APP_NAME{}, $APP_VERSION{});

@@ -171,6 +171,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 
         initComponents();
 
+        /*
         KeyboardFocusManager.getCurrentKeyboardFocusManager()
                 .addKeyEventDispatcher(new KeyEventDispatcher() {
                     public boolean dispatchKeyEvent(KeyEvent e) {
@@ -182,6 +183,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
                         return false;
                     }
                 });
+         */
     }
 
     /**
@@ -740,7 +742,8 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
             }
 
             addTicketLine(new TicketLineInfo(oProduct, dMul, dPrice, tax,
-                    (java.util.Properties) (oProduct.getProperties().clone())));
+                    (java.util.Properties) (oProduct.getProperties().clone()), oProduct.getLot())
+            );
 
         } else if (oProduct.getID().equals("xxx998_998xxx_x8x8x8")) {
 
@@ -754,7 +757,8 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
                 scharge = m_oTicket.getTotal() * (scharge / 100);
 
                 addTicketLine(new TicketLineInfo(oProduct, 1, scharge, tax,
-                        (java.util.Properties) (oProduct.getProperties().clone())));
+                        (java.util.Properties) (oProduct.getProperties().clone()), oProduct.getLot())
+                );
 
             } else {
                 JOptionPane.showMessageDialog(this, "Service Charge Not Enabled");
@@ -765,7 +769,8 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
             TaxInfo tax = taxeslogic.getTaxInfo(oProduct.getTaxCategoryID(), m_oTicket.getCustomer());
 
             addTicketLine(new TicketLineInfo(oProduct, dMul, dPrice, tax,
-                    (java.util.Properties) (oProduct.getProperties().clone())));
+                    (java.util.Properties) (oProduct.getProperties().clone()), oProduct.getLot())
+            );
 
 //            if (oProduct.getID().equals("xxx999_999xxx_x9x9x9")){
 //                m_jEditLine.doClick();
@@ -842,9 +847,9 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 //        if (m_App.getProperties().getProperty("override.check").equals("true")) {
         if (!m_oTicket.getLine(i).getUpdated()) {
             JOptionPane.showMessageDialog(this,
-                     AppLocal.getIntString("message.deletelinesent"),
-                     AppLocal.getIntString("label.deleteline"),
-                     JOptionPane.WARNING_MESSAGE);
+                    AppLocal.getIntString("message.deletelinesent"),
+                    AppLocal.getIntString("label.deleteline"),
+                    JOptionPane.WARNING_MESSAGE);
         } else {
             if (executeEventAndRefresh("ticket.removeline", new ScriptArg("index", i)) == null) {
                 String ticketID = Integer.toString(m_oTicket.getTicketId());
@@ -882,7 +887,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
                         } else {
                             JOptionPane.showMessageDialog(this,
                                     AppLocal.getIntString("message.deletelineno"),
-                                     AppLocal.getIntString("label.deleteline"), JOptionPane.WARNING_MESSAGE);
+                                    AppLocal.getIntString("label.deleteline"), JOptionPane.WARNING_MESSAGE);
                         }
                     } else {
                         m_oTicket.removeLine(i);
@@ -1045,6 +1050,49 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
      * @param prod
      */
     protected void buttonTransition(ProductInfoExt prod) {
+
+        try {
+            int countProductLots = (int) dlSales.countProdutLots().find(prod.getID());
+
+            if (countProductLots == 0) {
+                JOptionPane.showMessageDialog(this, AppLocal.getIntString("message.lot.noAssigned"), "", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            if (countProductLots == 1) {
+                prod.setLot(dlSales.getLotOfProduct().find(prod.getID()).toString());
+            }
+
+            if (countProductLots > 1) {
+                LotDialog dialog = new LotDialog(
+                        m_App,
+                        new javax.swing.JFrame(),
+                        true,
+                        prod.getID()
+                );
+
+                dialog.addWindowListener(new java.awt.event.WindowAdapter() {
+                    @Override
+                    public void windowClosing(java.awt.event.WindowEvent e) {
+                        dialog.setVisible(false);
+                    }
+                });
+
+                dialog.setLocationRelativeTo(null);
+                dialog.setVisible(true);
+
+                if (dialog.getReturnStatus() == LotDialog.RET_CANCEL) {
+                    return;
+                }
+
+                if (dialog.getReturnStatus() == LotDialog.RET_OK) {
+                    prod.setLot(dialog.getLot());
+                }
+            }
+        } catch (BasicException ex) {
+            JOptionPane.showMessageDialog(this, AppLocal.getIntString("message.lot.error"), "", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
 
         if (m_iNumberStatusInput == NUMBERZERO && m_iNumberStatusPor == NUMBERZERO) {
             incProduct(prod);
@@ -1237,7 +1285,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 
                             TaxInfo tax = taxeslogic // get the TaxRate for the product
                                     .getTaxInfo(oProduct.getTaxCategoryID(),
-                                             m_oTicket.getCustomer());                         // calculate if ticket has a Customer
+                                            m_oTicket.getCustomer());                         // calculate if ticket has a Customer
 
                             switch (sVariableTypePrefix) {
 //  PRICE - Assign var's
@@ -1247,7 +1295,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
                                     dUnits = (Double.parseDouble(sVariableNum)
                                             / 100) / oProduct.getPriceSellTax(tax);     // Units as proportion of selling price
                                     oProduct.setProperty("product.price",
-                                             Double.toString(oProduct.getPriceSell())); // push to screen
+                                            Double.toString(oProduct.getPriceSell())); // push to screen
                                     break;
                                 case "20":                                          // as above
                                     dPriceSell = oProduct.getPriceSellTax(tax)
@@ -1255,7 +1303,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
                                     dUnits = (Double.parseDouble(sVariableNum)
                                             / 100) / oProduct.getPriceSellTax(tax);
                                     oProduct.setProperty("product.price",
-                                             Double.toString(oProduct.getPriceSellTax(tax)));
+                                            Double.toString(oProduct.getPriceSellTax(tax)));
                                     break;
                                 case "21":
                                     dPriceSell = oProduct.getPriceSellTax(tax)
@@ -1263,7 +1311,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
                                     dUnits = (Double.parseDouble(sVariableNum)
                                             / 10) / oProduct.getPriceSellTax(tax);
                                     oProduct.setProperty("product.price",
-                                             Double.toString(oProduct.getPriceSell()));
+                                            Double.toString(oProduct.getPriceSell()));
                                     break;
                                 case "22":
                                     dPriceSell = oProduct.getPriceSellTax(tax)
@@ -1271,7 +1319,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
                                     dUnits = (Double.parseDouble(sVariableNum)
                                             / 1) / oProduct.getPriceSellTax(tax);
                                     oProduct.setProperty("product.price",
-                                             Double.toString(oProduct.getPriceSell()));
+                                            Double.toString(oProduct.getPriceSell()));
                                     break;
 
 // WEIGHT - Assign variable to Unit
@@ -1280,27 +1328,27 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
                                             / 1000;                                     // 3 decimals = 01.049 kg
                                     dUnits = weight;                                // which represents 1gramme Units
                                     oProduct.setProperty("product.weight",
-                                             Double.toString(weight));
+                                            Double.toString(weight));
                                     oProduct.setProperty("product.price",
-                                             Double.toString(dPriceSell));
+                                            Double.toString(dPriceSell));
                                     break;
                                 case "24":
                                     weight = Double.parseDouble(sVariableNum)
                                             / 100;                                      // 2 decimals = 010.49 kg
                                     dUnits = weight;                                // which represents 10gramme Units
                                     oProduct.setProperty("product.weight",
-                                             Double.toString(weight));
+                                            Double.toString(weight));
                                     oProduct.setProperty("product.price",
-                                             Double.toString(dPriceSell));
+                                            Double.toString(dPriceSell));
                                     break;
                                 case "25":
                                     weight = Double.parseDouble(sVariableNum)
                                             / 10;                                       // 1 decimal = 0104.9 kg
                                     dUnits = weight;                                // which represents 100gramme Units
                                     oProduct.setProperty("product.weight",
-                                             Double.toString(weight));
+                                            Double.toString(weight));
                                     oProduct.setProperty("product.price",
-                                             Double.toString(dPriceSell));
+                                            Double.toString(dPriceSell));
                                     break;
 
                                 /*
@@ -1323,13 +1371,13 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 
                             if (m_jaddtax.isSelected()) {
                                 addTicketLine(oProduct,
-                                         dUnits //weight
+                                        dUnits //weight
                                         ,
                                          dPriceSell = oProduct.getPriceSellTax(tax));
                             } else {
                                 addTicketLine(oProduct,
-                                         dUnits,
-                                         dPriceSell);
+                                        dUnits,
+                                        dPriceSell);
                             }
                         }
                     } catch (BasicException eData) {
@@ -1381,7 +1429,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 
                             TaxInfo tax = taxeslogic // get the TaxRate for the product
                                     .getTaxInfo(oProduct.getTaxCategoryID(),
-                                             m_oTicket.getCustomer());
+                                            m_oTicket.getCustomer());
 
                             if (oProduct.getPriceSell() != 0.0) {                       // we have a weight barcode
                                 weight = Double.parseDouble(sVariableNum) / 100;        // 2 decimals (e.g. 10.49 kg)
@@ -1406,12 +1454,12 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 
                             if (m_jaddtax.isSelected()) {
                                 addTicketLine(oProduct,
-                                         dUnits,
-                                         dPriceSell);
+                                        dUnits,
+                                        dPriceSell);
                             } else {
                                 addTicketLine(oProduct,
-                                         dUnits,
-                                         dPriceSell / (1.0 + tax.getRate()));
+                                        dUnits,
+                                        dPriceSell / (1.0 + tax.getRate()));
                             }
                         }
                     } catch (BasicException eData) {
@@ -1979,11 +2027,11 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
                                 String xml = dlSystem.getResourceAsXML("Printer.Ticket");
 //                new Application().sendReceipt(ticket, xml, getActiveWindow());
                             }
-                            
+
                             /*
                             buildQr(ticket, ticket.getAccessKey());
                             buildBarCode(ticket, ticket.getAccessKey());
-                            */
+                             */
                             executeEvent(ticket, ticketext, "ticket.close",
                                     new ScriptArg("print", paymentdialog.isPrintSelected()));
 
@@ -2034,11 +2082,11 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 
         return resultok;
     }
-    
+
     private Boolean buildQr(TicketInfo ticket, String text) {
         Size size = new Size(180, 180);
         String path = ticket.buildCode(size, text, TicketInfo.Code.QR);
-        
+
         if (!path.isEmpty()) {
             try {
                 byte[] byteArray = com.google.common.io.Files.toByteArray(new File(path));
@@ -2052,11 +2100,11 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
         }
         return false;
     }
-    
+
     private Boolean buildBarCode(TicketInfo ticket, String text) {
         Size size = new Size(180, 90);
         String path = ticket.buildCode(size, text, TicketInfo.Code.BARCODE);
-        
+
         if (!path.isEmpty()) {
             try {
                 byte[] byteArray = com.google.common.io.Files.toByteArray(new File(path));
@@ -3848,15 +3896,15 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
                 }
 
                 dlSystem.addOrder(getPickupString(m_oTicket),
-                         (int) m_oTicket.getLine(i).getMultiply(),
-                         m_oTicket.getLine(i).getProductName(),
-                         m_oTicket.getLine(i).getProductAttSetInstDesc(),
-                         m_oTicket.getLine(i).getProperty("notes"),
-                         id,
-                         null,
-                         display,
-                         null,
-                         null);
+                        (int) m_oTicket.getLine(i).getMultiply(),
+                        m_oTicket.getLine(i).getProductName(),
+                        m_oTicket.getLine(i).getProductAttSetInstDesc(),
+                        m_oTicket.getLine(i).getProperty("notes"),
+                        id,
+                        null,
+                        display,
+                        null,
+                        null);
 
                 /* this block for future - right now we're deleting all ticketlines
     and resending for consistency with actual ticketlines

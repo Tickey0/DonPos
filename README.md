@@ -108,6 +108,10 @@ SELECT User, Db, Host from mysql.db;
 ```
 select distinct concat('SHOW GRANTS FOR ', QUOTE(user), '@', QUOTE(host), ';') as query from mysql.user;
 ```
+### Show users with detail grants 
+```
+SELECT User, Db, Host, Select_priv, Insert_priv, Update_priv, Delete_priv from mysql.db;
+```
 ### Show database version 
 ```
 select version()

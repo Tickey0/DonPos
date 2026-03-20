@@ -489,3 +489,31 @@ VALUES ('2', 'Authorize', 'http://localhost:8080',
 'Administrator',
 '',
 30, 0);
+
+-- Tax Supports
+delete from tax_supports;
+INSERT INTO tax_supports (id, name) VALUES
+('01', 'Crédito tributario declaración IVA servicios y bienes distintos de inventarios y activos fijos'),
+('02', 'Costo o gasto para declaración IR servicios y bienes distintos de inventarios y activos fijos'),
+('03', 'Activo fijo - crédito tributario para declaración de IVA'),
+('04', 'Activo fijo - costo o gasto para declaración de IR'),
+('05', 'Liquidación gastos de viaje, hospedaje y alimentación Gastos IR a nombre de empleados'),
+('06', 'Inventario - crédito tributario para declaración de IVA'),
+('07', 'Inventario - costo o gasto para declaración de IR'),
+('08', 'Valor pagado para solicitar reembolso de gasto (intermediario)'),
+('09', 'Reembolso por Siniestros'),
+('10', 'Distribución de dividendos, beneficios o utilidades'),
+('11', 'Convenios de débito o recaudación para IFIs'),
+('12', 'Impuestos y retenciones presuntivos'),
+('13', 'Valores reconocidos por entidades del sector público a favor de sujetos pasivos'),
+('14', 'Valores facturados por socios a operadoras de transporte que no constituyen gasto de dicha operadora'),
+('15', 'Pagos efectuados por consumos propios y de terceros de servicios digitales'),
+('00', 'Casos especiales cuyo sustento no aplica en las opciones anteriores');
+
+-- Document Type
+delete from document_types;
+INSERT INTO document_types (id, name, type, inventory) VALUES
+('01', 'Factura', 'RUC', 'In'),
+('02', 'Nota o boleta de venta', 'RUC', 'In'),
+('03', 'Liquidación de compra de bienes o prestación de servicios', 'CI', 'In'),
+('04', 'Nota de crédito', 'RUC', 'Out');

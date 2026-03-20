@@ -98,6 +98,7 @@
             <class name="/com/unicenta/reports/suppliers_list.bs"/>
             <class name="/com/unicenta/reports/suppliers_products.bs"/>
             <class name="/com/unicenta/reports/suppliers_sales.bs"/>
+            <class name="/com/unicenta/reports/suppliers_purchase.bs"/>
 
 <class name="com.unicenta.pos.forms.MenuStockManagement"/>
     <class name="com.unicenta.pos.inventory.AttributeSetsPanel"/>
@@ -112,10 +113,12 @@
     <class name="com.unicenta.pos.inventory.ProductsWarehousePanel"/>
     <class name="com.unicenta.pos.inventory.StockDiaryPanel"/>
     <class name="com.unicenta.pos.inventory.StockManagement"/>
+    <class name="dev.resolvedor.pos.inventory.management.PurchaseEditor"/>
     <class name="com.unicenta.pos.inventory.TaxCategoriesPanel"/>
     <class name="com.unicenta.pos.inventory.TaxCustCategoriesPanel"/>
     <class name="com.unicenta.pos.inventory.TaxPanel"/>
     <class name="com.unicenta.pos.inventory.UomPanel"/>
+    <class name="dev.resolvedor.pos.inventory.lot.LotPanel"/>
 
             <class name="/com/unicenta/reports/inventory.bs"/>
             <class name="/com/unicenta/reports/inventory_b.bs"/>

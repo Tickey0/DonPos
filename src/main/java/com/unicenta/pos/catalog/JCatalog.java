@@ -58,6 +58,7 @@ public class JCatalog extends JPanel implements ListSelectionListener, CatalogSe
     
     private boolean pricevisible;
     private boolean taxesincluded;
+    private boolean showServices;
     
     // Set of Products panels
     private final Map<String, ProductInfoExt> m_productsset = new HashMap<>();
@@ -74,7 +75,11 @@ public class JCatalog extends JPanel implements ListSelectionListener, CatalogSe
     /** Creates new form JCatalog
      * @param dlSales */
     public JCatalog(DataLogicSales dlSales) {
-        this(dlSales, false, false, 90, 60);
+        this(dlSales, false, false, 90, 60, true);
+    }
+    
+    public JCatalog(DataLogicSales dlSales, boolean showServices) {
+        this(dlSales, false, false, 90, 60, showServices);
     }
 
     /**
@@ -86,7 +91,7 @@ public class JCatalog extends JPanel implements ListSelectionListener, CatalogSe
      * @param height
      */
     public JCatalog(DataLogicSales dlSales, boolean pricevisible, 
-            boolean taxesincluded, int width, int height) {
+            boolean taxesincluded, int width, int height, boolean showServices) {
         
         m_dlSales = dlSales;
         this.pricevisible = pricevisible;
@@ -101,7 +106,7 @@ public class JCatalog extends JPanel implements ListSelectionListener, CatalogSe
         tnbcat = new ThumbNailBuilder(48, 48, "com/unicenta/images/category.png");  
         tnbsubcat = new ThumbNailBuilder(width, height, "com/unicenta/images/subcategory.png"); 
         tnbbutton = new ThumbNailBuilder(width, height, "com/unicenta/images/null.png");        
-
+        this.showServices = showServices;
     }
     
     /**
@@ -288,10 +293,19 @@ public class JCatalog extends JPanel implements ListSelectionListener, CatalogSe
                 java.util.List<ProductInfoExt> products = m_dlSales.getProductCatalog(catid);
 
                 for (ProductInfoExt prod : products) {
-                    jcurrTab.addButton(
-                    new ImageIcon(tnbbutton.getThumbNailText(prod.getImage(), 
-                    getProductLabel(prod))), 
-                    new SelectedAction(prod),prod.getTextTip());
+                    if(this.showServices) {
+                        jcurrTab.addButton(
+                                new ImageIcon(tnbbutton.getThumbNailText(prod.getImage(), getProductLabel(prod))),
+                                new SelectedAction(prod),prod.getTextTip()
+                        );
+                    } else {
+                        if (!prod.isService()) {
+                            jcurrTab.addButton(
+                                new ImageIcon(tnbbutton.getThumbNailText(prod.getImage(), getProductLabel(prod))),
+                                new SelectedAction(prod),prod.getTextTip()
+                            );
+                        }
+                    }
                 }
             }
             

@@ -19,6 +19,16 @@ package dev.resolvedor.util;
 
 import com.unicenta.basic.BasicException;
 import com.unicenta.format.Formats;
+import com.unicenta.pos.forms.AppConfig;
+import com.unicenta.pos.forms.AppLocal;
+import java.io.File;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 /**
  *
@@ -33,6 +43,40 @@ public class Read {
             return (Double) Formats.CURRENCY.parseValue(sValue);
         } catch (BasicException e) {
             return null;
+        }
+    }
+
+    public static Date dateValidate(String dateString) {
+        
+        String format = getDateFormat();
+
+        try {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(format);
+            LocalDate localDate = LocalDate.parse(dateString, formatter);
+            return Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+        } catch (Exception e) {
+            return null;
+        }
+    }
+    
+    public static String getDateFormat() {
+        AppConfig config = new AppConfig(new File((System.getProperty("user.home")), AppLocal.APP_ID + ".properties"));
+        String format = config.getProperty("format.date");
+        
+        if (format == null || format.trim().isEmpty()) {
+            format = getSystemDateFormat();
+        }
+        
+        return format;
+    }
+
+    private static String getSystemDateFormat() {
+        Locale locale = Locale.getDefault();
+        DateFormat df = DateFormat.getDateInstance(DateFormat.SHORT, locale);
+        if (df instanceof SimpleDateFormat) {
+            return ((SimpleDateFormat) df).toPattern();
+        } else {
+            return "yyyy-MM-dd";
         }
     }
 }

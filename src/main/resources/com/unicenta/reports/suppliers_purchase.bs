@@ -1,0 +1,39 @@
+report = new com.unicenta.pos.reports.PanelReportBean();
+
+report.setTitleKey("Menu.Suppliers.Reports.List");
+report.setReport("/com/unicenta/reports/suppliers_purchase");
+report.setResourceBundle("com/unicenta/reports/suppliers_messages");
+
+report.setSentence("select " +
+"taxid, " +
+"name, " +
+"curdebt, " +
+"number, " +
+"datedocument, " +
+"document, " +
+"purchase_reference, " +
+"observation, " +
+"subtotal, " +
+"impuesto, " +
+"total " +
+"from v_supplier_purchases " +
+"WHERE ?(QBF_FILTER) " +
+"order by datedocument desc;");
+
+report.addParameter("TAXID");
+report.addParameter("NAME");
+report.addQBFFilter(new com.unicenta.pos.reports.JParamsSuppliers());
+
+report.addField("TAXID", com.unicenta.data.loader.Datas.STRING);
+report.addField("NAME", com.unicenta.data.loader.Datas.STRING);
+report.addField("CURDEBT", com.unicenta.data.loader.Datas.DOUBLE);
+report.addField("NUMBER", com.unicenta.data.loader.Datas.INT);
+report.addField("DATEDOCUMENT", com.unicenta.data.loader.Datas.TIMESTAMP);
+report.addField("DOCUMENT", com.unicenta.data.loader.Datas.STRING);
+report.addField("PURCHASE_REFERENCE", com.unicenta.data.loader.Datas.STRING);
+report.addField("OBSERVATION", com.unicenta.data.loader.Datas.STRING);
+report.addField("SUBTOTAL", com.unicenta.data.loader.Datas.DOUBLE);
+report.addField("IMPUESTO", com.unicenta.data.loader.Datas.DOUBLE);
+report.addField("TOTAL", com.unicenta.data.loader.Datas.DOUBLE);
+
+report;

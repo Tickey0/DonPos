@@ -36,7 +36,7 @@ import com.unicenta.pos.payment.PaymentInfoMagcard;
 import com.unicenta.pos.payment.PaymentInfoTicket;
 import com.unicenta.pos.util.StringUtils;
 import dev.joguenco.pos.taxpayer.TaxpayerInfo;
-import dev.joguenco.utils.Module11;
+import dev.resolvedor.util.Module11;
 import dev.resolvedor.util.Size;
 import java.io.*;
 import java.nio.file.Paths;

@@ -91,7 +91,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
         stockdiaryDatas = new Datas[]{
             Datas.STRING, Datas.TIMESTAMP, Datas.INT, Datas.STRING,
             Datas.STRING, Datas.STRING, Datas.DOUBLE, Datas.DOUBLE,
-            Datas.STRING, Datas.STRING, Datas.STRING};
+            Datas.STRING, Datas.STRING, Datas.STRING, Datas.STRING};
 
         paymenttabledatas = new Datas[]{
             Datas.STRING, Datas.STRING, Datas.TIMESTAMP,
@@ -106,7 +106,8 @@ public class DataLogicSales extends BeanFactoryDataSingle {
             Datas.STRING,
             Datas.STRING,
             Datas.STRING,
-            Datas.DOUBLE};
+            Datas.DOUBLE,
+            Datas.STRING};
 
         auxiliarDatas = new Datas[]{
             Datas.STRING, Datas.STRING, Datas.STRING,
@@ -192,7 +193,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
         m_createCat = new StaticSentence(s,
                 "INSERT INTO categories ( ID, NAME, CATSHOWNAME ) "
                 + "VALUES (?, ?, ?)",
-                 new SerializerWriteBasic(new Datas[]{
+                new SerializerWriteBasic(new Datas[]{
             Datas.STRING,
             Datas.STRING,
             Datas.BOOLEAN})
@@ -201,7 +202,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
         m_createSupp = new StaticSentence(s,
                 "INSERT INTO suppliers ( ID, NAME, SEARCHKEY, VISIBLE ) "
                 + "VALUES (?, ?, ?, ?)",
-                 new SerializerWriteBasic(new Datas[]{
+                new SerializerWriteBasic(new Datas[]{
             Datas.STRING,
             Datas.STRING,
             Datas.STRING,
@@ -235,7 +236,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
      */
     public final ProductInfoExt getProductInfo(String id) throws BasicException {
         return (ProductInfoExt) new PreparedSentence(s,
-                 "SELECT "
+                "SELECT "
                 + "ID, "
                 + "REFERENCE, "
                 + "CODE, "
@@ -267,8 +268,8 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                 + "UOM, "
                 + "MEMODATE "
                 + "FROM products WHERE ID = ?",
-                 SerializerWriteString.INSTANCE,
-                 ProductInfoExt.getSerializerRead()).find(id);
+                SerializerWriteString.INSTANCE,
+                ProductInfoExt.getSerializerRead()).find(id);
     }
 
     public final ProductInfoExt getProductInfoByCode(String sCode) throws BasicException {
@@ -276,7 +277,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 //            return  getProductInfoByShortCode(sCode);
 //        else {
         return (ProductInfoExt) new PreparedSentence(s,
-                 "SELECT "
+                "SELECT "
                 + "ID, "
                 + "REFERENCE, "
                 + "CODE, "
@@ -308,15 +309,15 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                 + "UOM, "
                 + "MEMODATE "
                 + "FROM products WHERE CODE = ?",
-                 SerializerWriteString.INSTANCE,
-                 ProductInfoExt.getSerializerRead()).find(sCode);
+                SerializerWriteString.INSTANCE,
+                ProductInfoExt.getSerializerRead()).find(sCode);
 //        }
     }
 
     public final ProductInfoExt getProductInfoByShortCode(String sCode) throws BasicException {
 
         return (ProductInfoExt) new PreparedSentence(s,
-                 "SELECT "
+                "SELECT "
                 + "ID, "
                 + "REFERENCE, "
                 + "CODE, "
@@ -349,8 +350,8 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                 + "MEMODATE "
                 + "FROM products "
                 + "WHERE SUBSTRING( CODE, 3, 6 ) = ?",
-                 SerializerWriteString.INSTANCE,
-                 ProductInfoExt.getSerializerRead()).find(sCode.substring(2, 8));
+                SerializerWriteString.INSTANCE,
+                ProductInfoExt.getSerializerRead()).find(sCode.substring(2, 8));
     }
 
     /*
@@ -364,7 +365,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
     public final ProductInfoExt getProductInfoByUShortCode(String sCode) throws BasicException {
 
         return (ProductInfoExt) new PreparedSentence(s,
-                 "SELECT "
+                "SELECT "
                 + "ID, "
                 + "REFERENCE, "
                 + "CODE, "
@@ -401,7 +402,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                 //  last digit (position 7) can be used to identify COUPON (5 or 9) - FUTURE
                 ,
                  SerializerWriteString.INSTANCE,
-                 ProductInfoExt.getSerializerRead())
+                ProductInfoExt.getSerializerRead())
                 .find(sCode.substring(0, 7));
     }
 
@@ -413,7 +414,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
      */
     public final ProductInfoExt getProductInfoByReference(String sReference) throws BasicException {
         return (ProductInfoExt) new PreparedSentence(s,
-                 "SELECT "
+                "SELECT "
                 + "ID, "
                 + "REFERENCE, "
                 + "CODE, "
@@ -445,8 +446,8 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                 + "UOM, "
                 + "MEMODATE "
                 + "FROM products WHERE REFERENCE = ?",
-                 SerializerWriteString.INSTANCE,
-                 ProductInfoExt.getSerializerRead()).find(sReference);
+                SerializerWriteString.INSTANCE,
+                ProductInfoExt.getSerializerRead()).find(sReference);
     }
 
     /**
@@ -455,7 +456,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
      */
     public final List<CategoryInfo> getRootCategories() throws BasicException {
         return new PreparedSentence(s,
-                 "SELECT "
+                "SELECT "
                 + "ID, "
                 + "NAME, "
                 + "IMAGE, "
@@ -465,8 +466,8 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                 + "FROM categories "
                 + "WHERE PARENTID IS NULL AND CATSHOWNAME = " + s.DB.TRUE() + " "
                 + "ORDER BY CATORDER, NAME",
-                 null,
-                 CategoryInfo.getSerializerRead()).list();
+                null,
+                CategoryInfo.getSerializerRead()).list();
     }
 
     /**
@@ -477,7 +478,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
      */
     public final List<CategoryInfo> getSubcategories(String category) throws BasicException {
         return new PreparedSentence(s,
-                 "SELECT "
+                "SELECT "
                 + "ID, "
                 + "NAME, "
                 + "IMAGE, "
@@ -486,8 +487,8 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                 + "CATORDER "
                 + "FROM categories WHERE PARENTID = ? "
                 + "ORDER BY CATORDER, NAME",
-                 SerializerWriteString.INSTANCE,
-                 CategoryInfo.getSerializerRead()).list(category);
+                SerializerWriteString.INSTANCE,
+                CategoryInfo.getSerializerRead()).list(category);
     }
 
     /**
@@ -498,7 +499,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
      */
     public List<ProductInfoExt> getProductCatalog(String category) throws BasicException {
         return new PreparedSentence(s,
-                 "SELECT "
+                "SELECT "
                 + "P.ID, "
                 + "P.REFERENCE, "
                 + "P.CODE, "
@@ -532,8 +533,8 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                 + "FROM products P, products_cat O "
                 + "WHERE P.ID = O.PRODUCT AND P.CATEGORY = ? "
                 + "ORDER BY O.CATORDER, P.NAME ",
-                 SerializerWriteString.INSTANCE,
-                 ProductInfoExt.getSerializerRead()).list(category);
+                SerializerWriteString.INSTANCE,
+                ProductInfoExt.getSerializerRead()).list(category);
     }
 
     /**
@@ -544,7 +545,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
      */
     public List<ProductInfoExt> getProductComments(String id) throws BasicException {
         return new PreparedSentence(s,
-                 "SELECT "
+                "SELECT "
                 + "P.ID, "
                 + "P.REFERENCE, "
                 + "P.CODE, "
@@ -580,8 +581,8 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                 + "WHERE P.ID = O.PRODUCT AND P.ID = M.PRODUCT2 AND M.PRODUCT = ? "
                 + "AND P.ISCOM = " + s.DB.TRUE() + " "
                 + "ORDER BY O.CATORDER, P.NAME",
-                 SerializerWriteString.INSTANCE,
-                 ProductInfoExt.getSerializerRead()).list(id);
+                SerializerWriteString.INSTANCE,
+                ProductInfoExt.getSerializerRead()).list(id);
     }
 
     // JG uniCenta June 2014 includes StockUnits
@@ -591,7 +592,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
      */
     public List<ProductInfoExt> getProductConstant() throws BasicException {
         return new PreparedSentence(s,
-                 "SELECT "
+                "SELECT "
                 + "products.ID, "
                 + "products.REFERENCE, "
                 + "products.CODE, "
@@ -638,7 +639,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
      */
     public final CategoryInfo getCategoryInfo(String id) throws BasicException {
         return (CategoryInfo) new PreparedSentence(s,
-                 "SELECT "
+                "SELECT "
                 + "ID, "
                 + "NAME, "
                 + "IMAGE, "
@@ -648,8 +649,8 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                 + "FROM categories "
                 + "WHERE ID = ? "
                 + "ORDER BY CATORDER, NAME",
-                 SerializerWriteString.INSTANCE,
-                 CategoryInfo.getSerializerRead()).find(id);
+                SerializerWriteString.INSTANCE,
+                CategoryInfo.getSerializerRead()).find(id);
     }
 
     /**
@@ -680,7 +681,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
      */
     public final SentenceList getProductList() {
         return new StaticSentence(s,
-                 new QBFBuilder(
+                new QBFBuilder(
                         "SELECT "
                         + "ID, "
                         + "REFERENCE, "
@@ -716,13 +717,60 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                         + "WHERE ?(QBF_FILTER) "
                         + "ORDER BY REFERENCE",
                         new String[]{"NAME", "PRICEBUY", "PRICESELL", "CATEGORY", "CODE"}),
-                 new SerializerWriteBasic(new Datas[]{
+                new SerializerWriteBasic(new Datas[]{
             Datas.OBJECT, Datas.STRING,
             Datas.OBJECT, Datas.DOUBLE,
             Datas.OBJECT, Datas.DOUBLE,
             Datas.OBJECT, Datas.STRING,
             Datas.OBJECT, Datas.STRING}),
-                 ProductInfoExt.getSerializerRead());
+                ProductInfoExt.getSerializerRead());
+    }
+
+    public final SentenceList getProductListByName(String name) {
+        return new StaticSentence(s,
+                new QBFBuilder(
+                        "SELECT "
+                        + "ID, "
+                        + "REFERENCE, "
+                        + "CODE, "
+                        + "CODETYPE, "
+                        + "NAME, "
+                        + "PRICEBUY, "
+                        + "PRICESELL, "
+                        + "CATEGORY, "
+                        + "TAXCAT, "
+                        + "ATTRIBUTESET_ID, "
+                        + "STOCKCOST, "
+                        + "STOCKVOLUME, "
+                        + "IMAGE, "
+                        + "ISCOM, "
+                        + "ISSCALE, "
+                        + "ISCONSTANT, "
+                        + "PRINTKB, "
+                        + "SENDSTATUS, "
+                        + "ISSERVICE, "
+                        + "ATTRIBUTES, "
+                        + "DISPLAY, "
+                        + "ISVPRICE, "
+                        + "ISVERPATRIB, "
+                        + "TEXTTIP, "
+                        + "WARRANTY, "
+                        + "STOCKUNITS, "
+                        + "PRINTTO, "
+                        + "SUPPLIER, "
+                        + "UOM, "
+                        + "MEMODATE "
+                        + "FROM products "
+                        + "WHERE NAME like '%" + name + "%' "
+                        + "ORDER BY REFERENCE",
+                        new String[]{"NAME", "PRICEBUY", "PRICESELL", "CATEGORY", "CODE"}),
+                new SerializerWriteBasic(new Datas[]{
+            Datas.OBJECT, Datas.STRING,
+            Datas.OBJECT, Datas.DOUBLE,
+            Datas.OBJECT, Datas.DOUBLE,
+            Datas.OBJECT, Datas.STRING,
+            Datas.OBJECT, Datas.STRING}),
+                ProductInfoExt.getSerializerRead());
     }
 
     /**
@@ -731,7 +779,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
      */
     public SentenceList getProductListNormal() {
         return new StaticSentence(s,
-                 new QBFBuilder(
+                new QBFBuilder(
                         "SELECT "
                         + "ID, "
                         + "REFERENCE, "
@@ -766,13 +814,13 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                         + "FROM products "
                         + "WHERE ISCOM = " + s.DB.FALSE() + " AND ?(QBF_FILTER) ORDER BY REFERENCE",
                         new String[]{"NAME", "PRICEBUY", "PRICESELL", "CATEGORY", "CODE"}),
-                 new SerializerWriteBasic(new Datas[]{
+                new SerializerWriteBasic(new Datas[]{
             Datas.OBJECT, Datas.STRING,
             Datas.OBJECT, Datas.DOUBLE,
             Datas.OBJECT, Datas.DOUBLE,
             Datas.OBJECT, Datas.STRING,
             Datas.OBJECT, Datas.STRING}),
-                 ProductInfoExt.getSerializerRead());
+                ProductInfoExt.getSerializerRead());
     }
 
     /**
@@ -781,7 +829,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
      */
     public SentenceList getProductsList() {
         return new StaticSentence(s,
-                 "SELECT "
+                "SELECT "
                 + "ID, "
                 + "REFERENCE, "
                 + "CODE, "
@@ -814,13 +862,13 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                 + "MEMODATE "
                 + "FROM products "
                 + "ORDER BY NAME",
-                 null,
-                 ProductInfo.getSerializerRead());
+                null,
+                ProductInfo.getSerializerRead());
     }
 
     public SentenceList getProductList2() {
         return new StaticSentence(s,
-                 new QBFBuilder(
+                new QBFBuilder(
                         "SELECT "
                         + "products.id, "
                         + "products.name, "
@@ -841,12 +889,12 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                         + "WHERE ?(QBF_FILTER) "
                         + "GROUP BY products.name ",
                         new String[]{"NAME", "UNITS", "SellIncTax", "LOCATION",}),
-                 new SerializerWriteBasic(new Datas[]{
+                new SerializerWriteBasic(new Datas[]{
             Datas.OBJECT, Datas.STRING,
             Datas.OBJECT, Datas.DOUBLE,
             Datas.OBJECT, Datas.DOUBLE,
             Datas.OBJECT, Datas.STRING}),
-                 ProductInfoExt.getSerializerRead());
+                ProductInfoExt.getSerializerRead());
     }
 
     /**
@@ -855,7 +903,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
      */
     public SentenceList getProductListAuxiliar() {
         return new StaticSentence(s,
-                 new QBFBuilder(
+                new QBFBuilder(
                         "SELECT "
                         + "ID, "
                         + "REFERENCE, "
@@ -890,13 +938,13 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                         + "FROM products "
                         + "WHERE ISCOM = " + s.DB.TRUE() + " AND ?(QBF_FILTER) "
                         + "ORDER BY REFERENCE", new String[]{"NAME", "PRICEBUY", "PRICESELL", "CATEGORY", "CODE"}),
-                 new SerializerWriteBasic(new Datas[]{
+                new SerializerWriteBasic(new Datas[]{
             Datas.OBJECT, Datas.STRING,
             Datas.OBJECT, Datas.DOUBLE,
             Datas.OBJECT, Datas.DOUBLE,
             Datas.OBJECT, Datas.STRING,
             Datas.OBJECT, Datas.STRING}),
-                 ProductInfoExt.getSerializerRead());
+                ProductInfoExt.getSerializerRead());
     }
 
     /**
@@ -907,14 +955,14 @@ public class DataLogicSales extends BeanFactoryDataSingle {
      */
     public final List<ProductsBundleInfo> getProductsBundle(String productId) throws BasicException {
         return new PreparedSentence(s,
-                 "SELECT "
+                "SELECT "
                 + "ID, "
                 + "PRODUCT, "
                 + "PRODUCT_BUNDLE, "
                 + "QUANTITY "
                 + "FROM products_bundle WHERE PRODUCT = ?",
-                 SerializerWriteString.INSTANCE,
-                 ProductsBundleInfo.getSerializerRead()).list(productId);
+                SerializerWriteString.INSTANCE,
+                ProductsBundleInfo.getSerializerRead()).list(productId);
     }
 
     /**
@@ -945,8 +993,8 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                 + "ON locations.id = stockcurrent.location "
                 + "WHERE products.id = ? "
                 + "AND locations.id = ?",
-                 SerializerWriteString.INSTANCE,
-                 ProductStock.getSerializerRead());
+                SerializerWriteString.INSTANCE,
+                ProductStock.getSerializerRead());
 
         ProductStock productStock = (ProductStock) preparedSentence.find(pId, location);
 
@@ -1003,7 +1051,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 
         //payment queries
         List<ReprintTicketInfo> ticketInfoList = (List<ReprintTicketInfo>) new StaticSentence(s,
-                 "SELECT "
+                "SELECT "
                 + "T.TICKETID, "
                 + "T.TICKETTYPE, "
                 + "R.DATENEW, "
@@ -1024,8 +1072,8 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                 + "C.NAME "
                 + "ORDER BY R.DATENEW DESC, T.TICKETID "
                 + "LIMIT 10 ",
-                 null,
-                 new SerializerReadClass(ReprintTicketInfo.class)).list();
+                null,
+                new SerializerReadClass(ReprintTicketInfo.class)).list();
 
         return ticketInfoList;
     }
@@ -1043,7 +1091,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
             return null;
         } else {
             Object[] record = (Object[]) new StaticSentence(s,
-                     "SELECT "
+                    "SELECT "
                     + "T.TICKETID, "
                     + "SUM(PM.TOTAL), "
                     + "R.DATENEW, "
@@ -1056,8 +1104,8 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                     + "ON R.ID = PM.RECEIPT LEFT OUTER JOIN customers C "
                     + "ON C.ID = T.CUSTOMER LEFT OUTER JOIN people P ON T.PERSON = P.ID "
                     + "WHERE T.TICKETID = ?",
-                     SerializerWriteString.INSTANCE,
-                     new SerializerReadBasic(new Datas[]{Datas.SERIALIZABLE})).find(Id);
+                    SerializerWriteString.INSTANCE,
+                    new SerializerReadBasic(new Datas[]{Datas.SERIALIZABLE})).find(Id);
             return record == null ? null : (TicketInfo) record[0];
         }
     }
@@ -1067,7 +1115,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
     public SentenceList getTicketsList() {
 
         StaticSentence staticSentence = new StaticSentence(s,
-                 new QBFBuilder(
+                new QBFBuilder(
                         "SELECT "
                         + "T.TICKETID, "
                         + "T.TICKETTYPE, "
@@ -1088,7 +1136,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                         + "ORDER BY R.DATENEW DESC, T.TICKETID",
                         new String[]{
                             "T.TICKETID", "T.TICKETTYPE", "PM.TOTAL", "R.DATENEW", "R.DATENEW", "P.NAME", "C.NAME", "PM.NOTES"}),
-                 new SerializerWriteBasic(new Datas[]{
+                new SerializerWriteBasic(new Datas[]{
             Datas.OBJECT, Datas.INT,
             Datas.OBJECT, Datas.INT,
             Datas.OBJECT, Datas.DOUBLE,
@@ -1097,7 +1145,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
             Datas.OBJECT, Datas.STRING,
             Datas.OBJECT, Datas.STRING,
             Datas.OBJECT, Datas.STRING}),
-                 new SerializerReadClass(FindTicketsInfo.class));
+                new SerializerReadClass(FindTicketsInfo.class));
 
         return staticSentence;
     }
@@ -1109,13 +1157,13 @@ public class DataLogicSales extends BeanFactoryDataSingle {
      */
     public final SentenceList getUserList() {
         return new StaticSentence(s,
-                 "SELECT "
+                "SELECT "
                 + "ID, "
                 + "NAME "
                 + "FROM people "
                 + "ORDER BY NAME",
-                 null,
-                 (DataRead dr) -> new TaxCategoryInfo(
+                null,
+                (DataRead dr) -> new TaxCategoryInfo(
                         dr.getString(1),
                         dr.getString(2)));
     }
@@ -1126,7 +1174,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
      */
     public final SentenceList getTaxList() {
         return new StaticSentence(s,
-                 "SELECT "
+                "SELECT "
                 + "ID, "
                 + "NAME, "
                 + "CATEGORY, "
@@ -1139,8 +1187,8 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                 + "DATESTART "
                 + "FROM taxes "
                 + "ORDER BY NAME",
-                 null,
-                 (DataRead dr) -> new TaxInfo(
+                null,
+                (DataRead dr) -> new TaxInfo(
                         dr.getString(1),
                         dr.getString(2),
                         dr.getString(3),
@@ -1159,7 +1207,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
      */
     public final SentenceList getCategoriesList() {
         return new StaticSentence(s,
-                 "SELECT "
+                "SELECT "
                 + "ID, "
                 + "NAME, "
                 + "IMAGE, "
@@ -1168,8 +1216,8 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                 + "CATORDER "
                 + "FROM categories "
                 + "ORDER BY NAME",
-                 null,
-                 CategoryInfo.getSerializerRead());
+                null,
+                CategoryInfo.getSerializerRead());
     }
 
     /**
@@ -1179,7 +1227,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
      */
     public final SentenceList getCategoriesList_1() {
         return new StaticSentence(s,
-                 "SELECT "
+                "SELECT "
                 + "ID, "
                 + "NAME, "
                 + "IMAGE, "
@@ -1189,8 +1237,8 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                 + "FROM categories "
                 + "WHERE PARENTID IS NULL "
                 + "ORDER BY NAME",
-                 null,
-                 CategoryInfo.getSerializerRead());
+                null,
+                CategoryInfo.getSerializerRead());
     }
 
     /**
@@ -1199,14 +1247,14 @@ public class DataLogicSales extends BeanFactoryDataSingle {
      */
     public final SentenceList getSuppList() {
         return new StaticSentence(s,
-                 "SELECT "
+                "SELECT "
                 + "ID, "
                 + "SEARCHKEY, "
                 + "NAME "
                 + "FROM suppliers "
                 + "ORDER BY NAME",
-                 null,
-                 (DataRead dr) -> new SupplierInfo(
+                null,
+                (DataRead dr) -> new SupplierInfo(
                         dr.getString(1),
                         dr.getString(2),
                         dr.getString(3)));
@@ -1218,13 +1266,13 @@ public class DataLogicSales extends BeanFactoryDataSingle {
      */
     public final SentenceList getTaxCustCategoriesList() {
         return new StaticSentence(s,
-                 "SELECT "
+                "SELECT "
                 + "ID, "
                 + "NAME "
                 + "FROM taxcustcategories "
                 + "ORDER BY NAME",
-                 null,
-                 (DataRead dr) -> new TaxCustCategoryInfo(
+                null,
+                (DataRead dr) -> new TaxCustCategoryInfo(
                         dr.getString(1),
                         dr.getString(2)));
     }
@@ -1237,7 +1285,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
      */
     public final CustomerInfoExt getCustomerInfo(String id) throws BasicException {
         return (CustomerInfoExt) new PreparedSentence(s,
-                 "SELECT "
+                "SELECT "
                 + "ID, "
                 + "SEARCHKEY, "
                 + "TAXID, "
@@ -1266,8 +1314,8 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                 + "DISCOUNT, "
                 + "MEMODATE "
                 + "FROM customers WHERE ID = ?",
-                 SerializerWriteString.INSTANCE,
-                 new CustomerExtRead()).find(id);
+                SerializerWriteString.INSTANCE,
+                new CustomerExtRead()).find(id);
     }
 
     /**
@@ -1308,13 +1356,13 @@ public class DataLogicSales extends BeanFactoryDataSingle {
      */
     public final SentenceList getTaxCategoriesList() {
         return new StaticSentence(s,
-                 "SELECT "
+                "SELECT "
                 + "ID, "
                 + "NAME "
                 + "FROM taxcategories "
                 + "ORDER BY NAME",
-                 null,
-                 (DataRead dr) -> new TaxCategoryInfo(dr.getString(1), dr.getString(2)));
+                null,
+                (DataRead dr) -> new TaxCategoryInfo(dr.getString(1), dr.getString(2)));
     }
 
     /**
@@ -1323,14 +1371,14 @@ public class DataLogicSales extends BeanFactoryDataSingle {
      */
     public final SentenceList getTaxCategoriesListForProducts() {
         return new StaticSentence(s,
-                 "select c.id, concat(c.name, ' - ', t.rate * 100, '%') as name "
+                "select c.id, concat(c.name, ' - ', t.rate * 100, '%') as name "
                 + "from taxcategories c "
                 + "join taxes t "
                 + "on c.id = t.category "
                 + "where t.status = true "
                 + "order by t.rate",
-                 null,
-                 (DataRead dr) -> new TaxCategoryInfo(dr.getString(1), dr.getString(2)));
+                null,
+                (DataRead dr) -> new TaxCategoryInfo(dr.getString(1), dr.getString(2)));
     }
 
     /**
@@ -1339,13 +1387,13 @@ public class DataLogicSales extends BeanFactoryDataSingle {
      */
     public final SentenceList getAttributeSetList() {
         return new StaticSentence(s,
-                 "SELECT "
+                "SELECT "
                 + "ID, "
                 + "NAME "
                 + "FROM attributeset "
                 + "ORDER BY NAME",
-                 null,
-                 (DataRead dr) -> new AttributeSetInfo(dr.getString(1), dr.getString(2)));
+                null,
+                (DataRead dr) -> new AttributeSetInfo(dr.getString(1), dr.getString(2)));
     }
 
     /**
@@ -1354,13 +1402,13 @@ public class DataLogicSales extends BeanFactoryDataSingle {
      */
     public final SentenceList getLocationsList() {
         return new StaticSentence(s,
-                 "SELECT "
+                "SELECT "
                 + "ID, "
                 + "NAME, "
                 + "ADDRESS FROM locations "
                 + "ORDER BY NAME",
-                 null,
-                 new SerializerReadClass(LocationInfo.class));
+                null,
+                new SerializerReadClass(LocationInfo.class));
     }
 
     /**
@@ -1369,9 +1417,9 @@ public class DataLogicSales extends BeanFactoryDataSingle {
      */
     public final SentenceList getFloorsList() {
         return new StaticSentence(s,
-                 "SELECT ID, NAME FROM floors ORDER BY NAME",
-                 null,
-                 new SerializerReadClass(FloorsInfo.class));
+                "SELECT ID, NAME FROM floors ORDER BY NAME",
+                null,
+                new SerializerReadClass(FloorsInfo.class));
     }
 
     /**
@@ -1380,9 +1428,9 @@ public class DataLogicSales extends BeanFactoryDataSingle {
      */
     public final SentenceList getFloorTablesList() {
         return new StaticSentence(s,
-                 "SELECT ID, NAME, SEATS, width, height FROM places ORDER BY NAME",
-                 null,
-                 new SerializerReadClass(FloorsInfo.class));
+                "SELECT ID, NAME, SEATS, width, height FROM places ORDER BY NAME",
+                null,
+                new SerializerReadClass(FloorsInfo.class));
     }
 
     /**
@@ -1393,7 +1441,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
      */
     public CustomerInfoExt findCustomerExt(String card) throws BasicException {
         return (CustomerInfoExt) new PreparedSentence(s,
-                 "SELECT "
+                "SELECT "
                 + "ID, "
                 + "TAXID, "
                 + "SEARCHKEY, "
@@ -1424,8 +1472,8 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                 + "FROM customers "
                 + "WHERE CARD = ? AND VISIBLE = " + s.DB.TRUE() + " "
                 + "ORDER BY NAME",
-                 SerializerWriteString.INSTANCE,
-                 new CustomerExtRead()).find(card);
+                SerializerWriteString.INSTANCE,
+                new CustomerExtRead()).find(card);
     }
 
     /**
@@ -1436,7 +1484,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
      */
     public CustomerInfoExt findCustomerName(String name) throws BasicException {
         return (CustomerInfoExt) new PreparedSentence(s,
-                 "SELECT "
+                "SELECT "
                 + "ID, "
                 + "SEARCHKEY, "
                 + "TAXID, "
@@ -1467,8 +1515,8 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                 + "FROM customers "
                 + "WHERE NAME = ? AND VISIBLE = " + s.DB.TRUE() + " "
                 + "ORDER BY NAME",
-                 SerializerWriteString.INSTANCE,
-                 new CustomerExtRead()).find(name);
+                SerializerWriteString.INSTANCE,
+                new CustomerExtRead()).find(name);
     }
 
     /**
@@ -1479,7 +1527,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
      */
     public CustomerInfoExt loadCustomerExt(String id) throws BasicException {
         return (CustomerInfoExt) new PreparedSentence(s,
-                 "SELECT "
+                "SELECT "
                 + "ID, "
                 + "SEARCHKEY, "
                 + "TAXID, "
@@ -1508,8 +1556,8 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                 + "DISCOUNT, "
                 + "MEMODATE "
                 + "FROM customers WHERE ID = ?",
-                 SerializerWriteString.INSTANCE,
-                 new CustomerExtRead()).find(id);
+                SerializerWriteString.INSTANCE,
+                new CustomerExtRead()).find(id);
     }
 
     /**
@@ -1521,7 +1569,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
      */
     public CustomerInfoExt qCustomerExt(String id) throws BasicException {
         return (CustomerInfoExt) new PreparedSentence(s,
-                 "SELECT "
+                "SELECT "
                 + "ID, "
                 + "SEARCHKEY, "
                 + "TAXID, "
@@ -1536,8 +1584,8 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                 + "ISVIP, "
                 + "DISCOUNT "
                 + "FROM customers WHERE ID = ?",
-                 SerializerWriteString.INSTANCE,
-                 new CustomerExtRead()).find(id);
+                SerializerWriteString.INSTANCE,
+                new CustomerExtRead()).find(id);
     }
 
     /**
@@ -1567,7 +1615,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
             final int ticketid,
             final String serieNumber) throws BasicException {
         TicketInfo ticket = (TicketInfo) new PreparedSentence(s,
-                 "SELECT "
+                "SELECT "
                 + "T.ID, "
                 + "T.TICKETTYPE, "
                 + "T.TICKETID, "
@@ -1605,18 +1653,18 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                     : loadCustomerExt(customerid));
 
             ticket.setLines(new PreparedSentence(s,
-                     "SELECT L.TICKET, L.LINE, L.PRODUCT, L.ATTRIBUTESETINSTANCE_ID, "
+                    "SELECT L.TICKET, L.LINE, L.PRODUCT, L.ATTRIBUTESETINSTANCE_ID, "
                     + "L.UNITS, L.PRICE, T.ID, T.NAME, T.CATEGORY, T.CUSTCATEGORY, "
-                    + "T.PARENTID, T.RATE, T.RATECASCADE, T.RATEORDER, L.ATTRIBUTES "
+                    + "T.PARENTID, T.RATE, T.RATECASCADE, T.RATEORDER, L.ATTRIBUTES, L.LOT "
                     + "FROM ticketlines L, taxes T "
                     + "WHERE L.TAXID = T.ID AND L.TICKET = ? ORDER BY L.LINE",
-                     SerializerWriteString.INSTANCE,
-                     new SerializerReadClass(TicketLineInfo.class)).list(ticket.getId()));
+                    SerializerWriteString.INSTANCE,
+                    new SerializerReadClass(TicketLineInfo.class)).list(ticket.getId()));
 
             ticket.setPayments(new PreparedSentence(s,
-                     "SELECT PAYMENT, TOTAL, TRANSID, TENDERED, CARDNAME FROM payments WHERE RECEIPT = ?",
-                     SerializerWriteString.INSTANCE,
-                     new SerializerReadClass(PaymentInfoTicket.class)).list(ticket.getId()));
+                    "SELECT PAYMENT, TOTAL, TRANSID, TENDERED, CARDNAME FROM payments WHERE RECEIPT = ?",
+                    SerializerWriteString.INSTANCE,
+                    new SerializerReadClass(PaymentInfoTicket.class)).list(ticket.getId()));
         }
         return ticket;
     }
@@ -1672,8 +1720,8 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                 }
 
                 new PreparedSentence(s,
-                         "INSERT INTO receipts (ID, MONEY, DATENEW, ATTRIBUTES, PERSON) VALUES (?, ?, ?, ?, ?)",
-                         SerializerWriteParams.INSTANCE)
+                        "INSERT INTO receipts (ID, MONEY, DATENEW, ATTRIBUTES, PERSON) VALUES (?, ?, ?, ?, ?)",
+                        SerializerWriteParams.INSTANCE)
                         .exec(new DataParams() {
 
                             @Override
@@ -1719,9 +1767,9 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 
                 // update status of existing ticket
                 new PreparedSentence(s,
-                         "UPDATE tickets SET STATUS = ? "
+                        "UPDATE tickets SET STATUS = ? "
                         + "WHERE TICKETTYPE = 0 AND TICKETID = ?",
-                         SerializerWriteParams.INSTANCE)
+                        SerializerWriteParams.INSTANCE)
                         .exec(new DataParams() {
 
                             @Override
@@ -1732,13 +1780,14 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                         });
 
                 SentenceExec ticketlineinsert = new PreparedSentence(s,
-                         "INSERT INTO ticketlines (TICKET, LINE, "
+                        "INSERT INTO ticketlines (TICKET, LINE, "
                         + "PRODUCT, ATTRIBUTESETINSTANCE_ID, "
-                        + "UNITS, PRICE, TAXID, ATTRIBUTES) "
-                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                         SerializerWriteBuilder.INSTANCE);
+                        + "UNITS, PRICE, TAXID, ATTRIBUTES, LOT) "
+                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                        SerializerWriteBuilder.INSTANCE);
 
                 for (TicketLineInfo l : ticket.getLines()) {
+
                     ticketlineinsert.exec(l);
 
                     if (l.getProductID() != null && l.isProductService() != true) {
@@ -1751,16 +1800,17 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                             location,
                             l.getProductID(),
                             l.getProductAttSetInstId(), -l.getMultiply(), l.getPrice(),
-                            ticket.getUser().getName()
+                            ticket.getUser().getName(),
+                            l.getLot()
                         });
                     }
                 }
 
                 final Payments payments = new Payments();
                 SentenceExec paymentinsert = new PreparedSentence(s,
-                         "INSERT INTO payments (ID, RECEIPT, PAYMENT, TOTAL, TRANSID, RETURNMSG, "
+                        "INSERT INTO payments (ID, RECEIPT, PAYMENT, TOTAL, TRANSID, RETURNMSG, "
                         + "TENDERED, CARDNAME, VOUCHER, NOTES) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                         SerializerWriteParams.INSTANCE);
+                        SerializerWriteParams.INSTANCE);
 
                 ticket.getPayments().forEach((p) -> {
                     if (p instanceof PaymentInfoMagcard) {
@@ -1817,9 +1867,9 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                 }
 
                 SentenceExec taxlinesinsert = new PreparedSentence(s,
-                         "INSERT INTO taxlines (ID, RECEIPT, TAXID, BASE, AMOUNT)  "
+                        "INSERT INTO taxlines (ID, RECEIPT, TAXID, BASE, AMOUNT)  "
                         + "VALUES (?, ?, ?, ?, ?)",
-                         SerializerWriteParams.INSTANCE);
+                        SerializerWriteParams.INSTANCE);
 
                 if (ticket.getTaxes() != null) {
                     for (final TicketTaxInfo tickettax : ticket.getTaxes()) {
@@ -1869,7 +1919,8 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                             location,
                             ticket.getLine(i).getProductID(),
                             ticket.getLine(i).getProductAttSetInstId(), ticket.getLine(i).getMultiply(), ticket.getLine(i).getPrice(),
-                            ticket.getUser().getName()
+                            ticket.getUser().getName(),
+                            ticket.getLine(i).getLot()
                         });
                     }
 // For productBundle
@@ -1888,8 +1939,10 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                                 location,
                                 bundleComponent.getProductBundleId(),
                                 null, ticket.getLine(i).getMultiply() * bundleComponent.getQuantity(),
-                                 bundleProduct.getPriceSell(),
-                                ticket.getUser().getName()});
+                                bundleProduct.getPriceSell(),
+                                ticket.getUser().getName(),
+                                ticket.getLine(i).getLot()
+                            });
                         }
                     }
                 }
@@ -1915,20 +1968,20 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 
                 // and delete the receipt
                 new StaticSentence(s,
-                         "DELETE FROM taxlines WHERE RECEIPT = ?",
-                         SerializerWriteString.INSTANCE).exec(ticket.getId());
+                        "DELETE FROM taxlines WHERE RECEIPT = ?",
+                        SerializerWriteString.INSTANCE).exec(ticket.getId());
                 new StaticSentence(s,
-                         "DELETE FROM payments WHERE RECEIPT = ?",
-                         SerializerWriteString.INSTANCE).exec(ticket.getId());
+                        "DELETE FROM payments WHERE RECEIPT = ?",
+                        SerializerWriteString.INSTANCE).exec(ticket.getId());
                 new StaticSentence(s,
-                         "DELETE FROM ticketlines WHERE TICKET = ?",
-                         SerializerWriteString.INSTANCE).exec(ticket.getId());
+                        "DELETE FROM ticketlines WHERE TICKET = ?",
+                        SerializerWriteString.INSTANCE).exec(ticket.getId());
                 new StaticSentence(s,
-                         "DELETE FROM tickets WHERE ID = ?",
-                         SerializerWriteString.INSTANCE).exec(ticket.getId());
+                        "DELETE FROM tickets WHERE ID = ?",
+                        SerializerWriteString.INSTANCE).exec(ticket.getId());
                 new StaticSentence(s,
-                         "DELETE FROM receipts WHERE ID = ?",
-                         SerializerWriteString.INSTANCE).exec(ticket.getId());
+                        "DELETE FROM receipts WHERE ID = ?",
+                        SerializerWriteString.INSTANCE).exec(ticket.getId());
                 return null;
             }
         };
@@ -1988,7 +2041,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
         return new PreparedSentence(s,
                 "SELECT IMAGE FROM products WHERE ID = ?",
                 SerializerWriteString.INSTANCE,
-                 (DataRead dr) -> ImageUtils.readImage(dr.getBytes(1)));
+                (DataRead dr) -> ImageUtils.readImage(dr.getBytes(1)));
     }
 
     /**
@@ -1998,7 +2051,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
      */
     public final SentenceList getProductCatQBF() {
         return new StaticSentence(s,
-                 new QBFBuilder(
+                new QBFBuilder(
                         "SELECT "
                         + "P.ID, "
                         + "P.REFERENCE, "
@@ -2043,13 +2096,13 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                         + "ORDER BY P.REFERENCE",
                         new String[]{
                             "P.NAME", "P.PRICEBUY", "P.PRICESELL", "P.CATEGORY", "P.CODE"}),
-                 new SerializerWriteBasic(new Datas[]{
+                new SerializerWriteBasic(new Datas[]{
             Datas.OBJECT, Datas.STRING,
             Datas.OBJECT, Datas.DOUBLE,
             Datas.OBJECT, Datas.DOUBLE,
             Datas.OBJECT, Datas.STRING,
             Datas.OBJECT, Datas.STRING}),
-                 productsRow.getSerializerRead());
+                productsRow.getSerializerRead());
     }
 
     /**
@@ -2062,7 +2115,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
             public int execInTransaction(Object params) throws BasicException {
                 Object[] values = (Object[]) params;
                 int i = new PreparedSentence(s,
-                         "INSERT INTO products ("
+                        "INSERT INTO products ("
                         + "ID, "
                         + "REFERENCE, "
                         + "CODE, "
@@ -2099,7 +2152,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                         + "?, ?, ?, ?, ?, ?, "
                         + "?, ?, ?, ?, ?, ?, "
                         + "?, ?, ?, ?, ?, ?)",
-                         new SerializerWriteBasicExt(productsRow.getDatas(),
+                        new SerializerWriteBasicExt(productsRow.getDatas(),
                                 new int[]{0,
                                     1, 2, 3, 4, 5, 6,
                                     7, 8, 9, 10, 11, 12,
@@ -2110,8 +2163,8 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 
                 if (i > 0 && ((Boolean) values[30])) {
                     return new PreparedSentence(s,
-                             "INSERT INTO products_cat (PRODUCT, CATORDER) VALUES (?, ?)",
-                             new SerializerWriteBasicExt(productsRow.getDatas(), new int[]{0, 31}))
+                            "INSERT INTO products_cat (PRODUCT, CATORDER) VALUES (?, ?)",
+                            new SerializerWriteBasicExt(productsRow.getDatas(), new int[]{0, 31}))
                             .exec(params);
                 } else {
                     return i;
@@ -2130,7 +2183,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
             public int execInTransaction(Object params) throws BasicException {
                 Object[] values = (Object[]) params;
                 int i = new PreparedSentence(s,
-                         "UPDATE products SET "
+                        "UPDATE products SET "
                         + "ID = ?, "
                         + "REFERENCE = ?, "
                         + "CODE = ?, "
@@ -2162,7 +2215,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                         + "UOM = ?, "
                         + "MEMODATE = ? "
                         + "WHERE ID = ?",
-                         new SerializerWriteBasicExt(productsRow.getDatas(),
+                        new SerializerWriteBasicExt(productsRow.getDatas(),
                                 new int[]{0,
                                     1, 2, 3, 4, 5,
                                     6, 7, 8, 9, 10,
@@ -2174,17 +2227,17 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                 if (i > 0) {
                     if (((Boolean) values[30])) {
                         if (new PreparedSentence(s,
-                                 "UPDATE products_cat SET CATORDER = ? WHERE PRODUCT = ?",
-                                 new SerializerWriteBasicExt(productsRow.getDatas(),
-                                         new int[]{31, 0})).exec(params) == 0) {
+                                "UPDATE products_cat SET CATORDER = ? WHERE PRODUCT = ?",
+                                new SerializerWriteBasicExt(productsRow.getDatas(),
+                                        new int[]{31, 0})).exec(params) == 0) {
                             new PreparedSentence(s,
-                                     "INSERT INTO products_cat (PRODUCT, CATORDER) VALUES (?, ?)",
-                                     new SerializerWriteBasicExt(productsRow.getDatas(), new int[]{0, 31})).exec(params);
+                                    "INSERT INTO products_cat (PRODUCT, CATORDER) VALUES (?, ?)",
+                                    new SerializerWriteBasicExt(productsRow.getDatas(), new int[]{0, 31})).exec(params);
                         }
                     } else {
                         new PreparedSentence(s,
-                                 "DELETE FROM products_cat WHERE PRODUCT = ?",
-                                 new SerializerWriteBasicExt(productsRow.getDatas(), new int[]{0})).exec(params);
+                                "DELETE FROM products_cat WHERE PRODUCT = ?",
+                                new SerializerWriteBasicExt(productsRow.getDatas(), new int[]{0})).exec(params);
                     }
                 }
                 return i;
@@ -2201,11 +2254,11 @@ public class DataLogicSales extends BeanFactoryDataSingle {
             @Override
             public int execInTransaction(Object params) throws BasicException {
                 new PreparedSentence(s,
-                         "DELETE FROM products_cat WHERE PRODUCT = ?",
-                         new SerializerWriteBasicExt(productsRow.getDatas(), new int[]{0})).exec(params);
+                        "DELETE FROM products_cat WHERE PRODUCT = ?",
+                        new SerializerWriteBasicExt(productsRow.getDatas(), new int[]{0})).exec(params);
                 return new PreparedSentence(s,
-                         "DELETE FROM products WHERE ID = ?",
-                         new SerializerWriteBasicExt(productsRow.getDatas(), new int[]{0})).exec(params);
+                        "DELETE FROM products WHERE ID = ?",
+                        new SerializerWriteBasicExt(productsRow.getDatas(), new int[]{0})).exec(params);
             }
         };
     }
@@ -2217,8 +2270,8 @@ public class DataLogicSales extends BeanFactoryDataSingle {
     public final SentenceExec getDebtUpdate() {
 
         return new PreparedSentence(s,
-                 "UPDATE customers SET CURDEBT = ?, CURDATE = ? WHERE ID = ?",
-                 SerializerWriteParams.INSTANCE);
+                "UPDATE customers SET CURDEBT = ?, CURDATE = ? WHERE ID = ?",
+                SerializerWriteParams.INSTANCE);
     }
 
     /**
@@ -2242,21 +2295,22 @@ public class DataLogicSales extends BeanFactoryDataSingle {
              */
             public int execInTransaction(Object params) throws BasicException {
 
-                Object[] adjustParams = new Object[4];
+                Object[] adjustParams = new Object[5];
                 Object[] paramsArray = (Object[]) params;
                 adjustParams[0] = paramsArray[4];                               //product ->Location
                 adjustParams[1] = paramsArray[3];                               //location -> Product
                 adjustParams[2] = paramsArray[5];                               //attributesetinstance
                 adjustParams[3] = paramsArray[6];                               //units
+                adjustParams[4] = paramsArray[9];                               //lot
                 adjustStock(adjustParams);
 
                 return new PreparedSentence(s,
-                         "INSERT INTO stockdiary (ID, DATENEW, REASON, LOCATION, "
+                        "INSERT INTO stockdiary (ID, DATENEW, REASON, LOCATION, "
                         + "PRODUCT, ATTRIBUTESETINSTANCE_ID, "
-                        + "UNITS, PRICE, AppUser) "
-                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                         new SerializerWriteBasicExt(stockdiaryDatas,
-                                 new int[]{0, 1, 2, 3, 4, 5, 6, 7, 8}))
+                        + "UNITS, PRICE, AppUser, lot) "
+                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                        new SerializerWriteBasicExt(stockdiaryDatas,
+                                new int[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}))
                         .exec(params);
             }
         };
@@ -2273,30 +2327,30 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 
                 int updateresult = ((Object[]) params)[5] == null
                         ? new PreparedSentence(s,
-                                 "UPDATE stockcurrent SET UNITS = (UNITS + ?) "
-                                + "WHERE LOCATION = ? AND PRODUCT = ? "
+                                "UPDATE stockcurrent SET UNITS = (UNITS + ?) "
+                                + "WHERE LOCATION = ? AND PRODUCT = ? AND LOT = ? "
                                 + "AND ATTRIBUTESETINSTANCE_ID IS NULL",
-                                 new SerializerWriteBasicExt(stockdiaryDatas, new int[]{6, 3, 4})).exec(params)
+                                new SerializerWriteBasicExt(stockdiaryDatas, new int[]{6, 3, 4, 11})).exec(params)
                         : new PreparedSentence(s,
-                                 "UPDATE stockcurrent SET UNITS = (UNITS + ?) "
+                                "UPDATE stockcurrent SET UNITS = (UNITS + ?) "
                                 + "WHERE LOCATION = ? AND PRODUCT = ? "
-                                + "AND ATTRIBUTESETINSTANCE_ID = ?",
-                                 new SerializerWriteBasicExt(stockdiaryDatas, new int[]{6, 3, 4, 5})).exec(params);
+                                + "AND ATTRIBUTESETINSTANCE_ID = ? AND LOT = ?",
+                                new SerializerWriteBasicExt(stockdiaryDatas, new int[]{6, 3, 4, 5, 11})).exec(params);
 
                 if (updateresult == 0) {
                     new PreparedSentence(s,
-                             "INSERT INTO stockcurrent (LOCATION, PRODUCT, "
-                            + "ATTRIBUTESETINSTANCE_ID, UNITS) "
-                            + "VALUES (?, ?, ?, ?)",
-                             new SerializerWriteBasicExt(stockdiaryDatas, new int[]{3, 4, 5, 6})).exec(params);
+                            "INSERT INTO stockcurrent (LOCATION, PRODUCT, "
+                            + "ATTRIBUTESETINSTANCE_ID, UNITS, LOT) "
+                            + "VALUES (?, ?, ?, ?, ?)",
+                            new SerializerWriteBasicExt(stockdiaryDatas, new int[]{3, 4, 5, 6, 11})).exec(params);
                 }
                 return new PreparedSentence(s,
-                         "INSERT INTO stockdiary (ID, DATENEW, REASON, LOCATION, PRODUCT, "
+                        "INSERT INTO stockdiary (ID, DATENEW, REASON, LOCATION, PRODUCT, "
                         + "ATTRIBUTESETINSTANCE_ID, UNITS, PRICE, AppUser, "
-                        + "SUPPLIER, SUPPLIERDOC) "
-                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                         new SerializerWriteBasicExt(stockdiaryDatas,
-                                new int[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10})).exec(params);
+                        + "SUPPLIER, SUPPLIERDOC, LOT) "
+                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                        new SerializerWriteBasicExt(stockdiaryDatas,
+                                new int[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11})).exec(params);
 
             }
         };
@@ -2312,26 +2366,26 @@ public class DataLogicSales extends BeanFactoryDataSingle {
             public int execInTransaction(Object params) throws BasicException {
                 int updateresult = ((Object[]) params)[5] == null // if ATTRIBUTESETINSTANCE_ID is null
                         ? new PreparedSentence(s,
-                                 "UPDATE stockcurrent SET UNITS = (UNITS - ?) "
+                                "UPDATE stockcurrent SET UNITS = (UNITS - ?) "
                                 + "WHERE LOCATION = ? AND PRODUCT = ? "
                                 + "AND ATTRIBUTESETINSTANCE_ID IS NULL",
-                                 new SerializerWriteBasicExt(stockdiaryDatas, new int[]{6, 3, 4})).exec(params)
+                                new SerializerWriteBasicExt(stockdiaryDatas, new int[]{6, 3, 4})).exec(params)
                         : new PreparedSentence(s,
-                                 "UPDATE stockcurrent SET UNITS = (UNITS - ?) "
+                                "UPDATE stockcurrent SET UNITS = (UNITS - ?) "
                                 + "WHERE LOCATION = ? AND PRODUCT = ? "
                                 + "AND ATTRIBUTESETINSTANCE_ID = ?",
-                                 new SerializerWriteBasicExt(stockdiaryDatas, new int[]{6, 3, 4, 5})).exec(params);
+                                new SerializerWriteBasicExt(stockdiaryDatas, new int[]{6, 3, 4, 5})).exec(params);
 
                 if (updateresult == 0) {
                     new PreparedSentence(s,
-                             "INSERT INTO stockcurrent (LOCATION, PRODUCT, "
+                            "INSERT INTO stockcurrent (LOCATION, PRODUCT, "
                             + "ATTRIBUTESETINSTANCE_ID, UNITS) "
                             + "VALUES (?, ?, ?, -(?))",
-                             new SerializerWriteBasicExt(stockdiaryDatas, new int[]{3, 4, 5, 6})).exec(params);
+                            new SerializerWriteBasicExt(stockdiaryDatas, new int[]{3, 4, 5, 6})).exec(params);
                 }
                 return new PreparedSentence(s,
-                         "DELETE FROM stockdiary WHERE ID = ?",
-                         new SerializerWriteBasicExt(stockdiaryDatas, new int[]{0})).exec(params);
+                        "DELETE FROM stockdiary WHERE ID = ?",
+                        new SerializerWriteBasicExt(stockdiaryDatas, new int[]{0})).exec(params);
             }
         };
     }
@@ -2354,28 +2408,30 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 
             int updateresult = ((Object[]) params)[2] == null
                     ? new PreparedSentence(s,
-                             "UPDATE stockcurrent SET UNITS = (UNITS + ?) "
+                            "UPDATE stockcurrent SET UNITS = (UNITS + ?) "
                             + "WHERE LOCATION = ? AND PRODUCT = ? "
-                            + "AND ATTRIBUTESETINSTANCE_ID IS NULL",
-                             new SerializerWriteBasicExt(stockAdjustDatas,
-                                     new int[]{3, 1, 0}))
+                            + "AND ATTRIBUTESETINSTANCE_ID IS NULL "
+                            + "AND LOT = ? ",
+                            new SerializerWriteBasicExt(stockAdjustDatas,
+                                    new int[]{3, 1, 0, 4}))
                             .exec(params)
                     : new PreparedSentence(s,
-                             "UPDATE stockcurrent SET UNITS = (UNITS + ?) "
+                            "UPDATE stockcurrent SET UNITS = (UNITS + ?) "
                             + "WHERE LOCATION = ? AND PRODUCT = ? "
-                            + "AND ATTRIBUTESETINSTANCE_ID = ?",
-                             new SerializerWriteBasicExt(stockAdjustDatas,
-                                     new int[]{3, 1, 0, 2}))
+                            + "AND ATTRIBUTESETINSTANCE_ID = ? "
+                            + "AND LOT = ?",
+                            new SerializerWriteBasicExt(stockAdjustDatas,
+                                    new int[]{3, 1, 0, 2, 4}))
                             .exec(params);
 
             if (updateresult == 0) {
 
                 new PreparedSentence(s,
-                         "INSERT INTO stockcurrent (LOCATION, PRODUCT, "
-                        + "ATTRIBUTESETINSTANCE_ID, UNITS) "
-                        + "VALUES (?, ?, ?, ?)",
-                         new SerializerWriteBasicExt(stockAdjustDatas,
-                                 new int[]{1, 0, 2, 3}))
+                        "INSERT INTO stockcurrent (LOCATION, PRODUCT, "
+                        + "ATTRIBUTESETINSTANCE_ID, UNITS, LOT) "
+                        + "VALUES (?, ?, ?, ?, ?)",
+                        new SerializerWriteBasicExt(stockAdjustDatas,
+                                new int[]{1, 0, 2, 3, 4}))
                         .exec(params);
             }
         }
@@ -2390,14 +2446,14 @@ public class DataLogicSales extends BeanFactoryDataSingle {
             @Override
             public int execInTransaction(Object params) throws BasicException {
                 new PreparedSentence(s,
-                         "INSERT INTO receipts (ID, MONEY, DATENEW) "
+                        "INSERT INTO receipts (ID, MONEY, DATENEW) "
                         + "VALUES (?, ?, ?)",
-                         new SerializerWriteBasicExt(paymenttabledatas,
+                        new SerializerWriteBasicExt(paymenttabledatas,
                                 new int[]{0, 1, 2})).exec(params);
                 return new PreparedSentence(s,
-                         "INSERT INTO payments (ID, RECEIPT, PAYMENT, TOTAL, NOTES) "
+                        "INSERT INTO payments (ID, RECEIPT, PAYMENT, TOTAL, NOTES) "
                         + "VALUES (?, ?, ?, ?, ?)",
-                         new SerializerWriteBasicExt(paymenttabledatas,
+                        new SerializerWriteBasicExt(paymenttabledatas,
                                 new int[]{3, 0, 4, 5, 6})).exec(params);
             }
         };
@@ -2412,11 +2468,11 @@ public class DataLogicSales extends BeanFactoryDataSingle {
             @Override
             public int execInTransaction(Object params) throws BasicException {
                 new PreparedSentence(s,
-                         "DELETE FROM payments WHERE ID = ?",
-                         new SerializerWriteBasicExt(paymenttabledatas, new int[]{3})).exec(params);
+                        "DELETE FROM payments WHERE ID = ?",
+                        new SerializerWriteBasicExt(paymenttabledatas, new int[]{3})).exec(params);
                 return new PreparedSentence(s,
-                         "DELETE FROM receipts WHERE ID = ?",
-                         new SerializerWriteBasicExt(paymenttabledatas, new int[]{0})).exec(params);
+                        "DELETE FROM receipts WHERE ID = ?",
+                        new SerializerWriteBasicExt(paymenttabledatas, new int[]{0})).exec(params);
             }
         };
     }
@@ -2434,12 +2490,12 @@ public class DataLogicSales extends BeanFactoryDataSingle {
         PreparedSentence p = attsetinstid == null
                 ? new PreparedSentence(s, "SELECT UNITS FROM stockcurrent "
                         + "WHERE LOCATION = ? AND PRODUCT = ? AND ATTRIBUTESETINSTANCE_ID IS NULL",
-                         new SerializerWriteBasic(Datas.STRING, Datas.STRING),
-                         SerializerReadDouble.INSTANCE)
+                        new SerializerWriteBasic(Datas.STRING, Datas.STRING),
+                        SerializerReadDouble.INSTANCE)
                 : new PreparedSentence(s, "SELECT UNITS FROM stockcurrent "
                         + "WHERE LOCATION = ? AND PRODUCT = ? AND ATTRIBUTESETINSTANCE_ID = ?",
-                         new SerializerWriteBasic(Datas.STRING, Datas.STRING, Datas.STRING),
-                         SerializerReadDouble.INSTANCE);
+                        new SerializerWriteBasic(Datas.STRING, Datas.STRING, Datas.STRING),
+                        SerializerReadDouble.INSTANCE);
 
         Double d = (Double) p.find(warehouse, id, attsetinstid);
         return d == null ? 0.0 : d;
@@ -2451,8 +2507,8 @@ public class DataLogicSales extends BeanFactoryDataSingle {
      */
     public final SentenceExec getCatalogCategoryAdd() {
         return new StaticSentence(s,
-                 "INSERT INTO products_cat(PRODUCT, CATORDER) SELECT ID, " + s.DB.INTEGER_NULL() + " FROM products WHERE CATEGORY = ?",
-                 SerializerWriteString.INSTANCE);
+                "INSERT INTO products_cat(PRODUCT, CATORDER) SELECT ID, " + s.DB.INTEGER_NULL() + " FROM products WHERE CATEGORY = ?",
+                SerializerWriteString.INSTANCE);
     }
 
     /**
@@ -2461,9 +2517,9 @@ public class DataLogicSales extends BeanFactoryDataSingle {
      */
     public final SentenceExec getCatalogCategoryDel() {
         return new StaticSentence(s,
-                 "DELETE FROM products_cat WHERE PRODUCT = ANY (SELECT ID "
+                "DELETE FROM products_cat WHERE PRODUCT = ANY (SELECT ID "
                 + "FROM products WHERE CATEGORY = ?)",
-                 SerializerWriteString.INSTANCE);
+                SerializerWriteString.INSTANCE);
     }
 
     /**
@@ -2473,13 +2529,13 @@ public class DataLogicSales extends BeanFactoryDataSingle {
     public final TableDefinition getTableCategories() {
         return new TableDefinition(s,
                 "categories",
-                 new String[]{"ID", "NAME", "PARENTID", "IMAGE", "TEXTTIP", "CATSHOWNAME", "CATORDER"},
-                 new String[]{"ID", AppLocal.getIntString("label.name"), "", AppLocal.getIntString("label.image")},
-                 new Datas[]{Datas.STRING, Datas.STRING, Datas.STRING,
+                new String[]{"ID", "NAME", "PARENTID", "IMAGE", "TEXTTIP", "CATSHOWNAME", "CATORDER"},
+                new String[]{"ID", AppLocal.getIntString("label.name"), "", AppLocal.getIntString("label.image")},
+                new Datas[]{Datas.STRING, Datas.STRING, Datas.STRING,
                     Datas.IMAGE, Datas.STRING, Datas.BOOLEAN, Datas.STRING},
-                 new Formats[]{Formats.STRING, Formats.STRING, Formats.STRING,
+                new Formats[]{Formats.STRING, Formats.STRING, Formats.STRING,
                     Formats.NULL, Formats.STRING, Formats.BOOLEAN, Formats.STRING},
-                 new int[]{0}
+                new int[]{0}
         );
     }
 
@@ -2490,11 +2546,11 @@ public class DataLogicSales extends BeanFactoryDataSingle {
     public final TableDefinition getTableTaxes() {
         return new TableDefinition(s,
                 "taxes",
-                 new String[]{"ID", "NAME", "CATEGORY", "CUSTCATEGORY", "PARENTID", "RATE", "RATECASCADE", "RATEORDER", "LEGALCODE", "DATESTART", "STATUS"},
-                 new String[]{"ID", AppLocal.getIntString("label.name"), AppLocal.getIntString("label.taxcategory"), AppLocal.getIntString("label.custtaxcategory"), AppLocal.getIntString("label.taxparent"), AppLocal.getIntString("label.dutyrate"), AppLocal.getIntString("label.cascade"), AppLocal.getIntString("label.order"), AppLocal.getIntString("label.LegalCode"), AppLocal.getIntString("label.date"), AppLocal.getIntString("label.Status")},
-                 new Datas[]{Datas.STRING, Datas.STRING, Datas.STRING, Datas.STRING, Datas.STRING, Datas.DOUBLE, Datas.BOOLEAN, Datas.INT, Datas.STRING, Datas.TIMESTAMP, Datas.BOOLEAN},
-                 new Formats[]{Formats.STRING, Formats.STRING, Formats.STRING, Formats.STRING, Formats.STRING, Formats.PERCENT, Formats.BOOLEAN, Formats.INT, Formats.STRING, Formats.DATE, Formats.BOOLEAN},
-                 new int[]{0}
+                new String[]{"ID", "NAME", "CATEGORY", "CUSTCATEGORY", "PARENTID", "RATE", "RATECASCADE", "RATEORDER", "LEGALCODE", "DATESTART", "STATUS"},
+                new String[]{"ID", AppLocal.getIntString("label.name"), AppLocal.getIntString("label.taxcategory"), AppLocal.getIntString("label.custtaxcategory"), AppLocal.getIntString("label.taxparent"), AppLocal.getIntString("label.dutyrate"), AppLocal.getIntString("label.cascade"), AppLocal.getIntString("label.order"), AppLocal.getIntString("label.LegalCode"), AppLocal.getIntString("label.date"), AppLocal.getIntString("label.Status")},
+                new Datas[]{Datas.STRING, Datas.STRING, Datas.STRING, Datas.STRING, Datas.STRING, Datas.DOUBLE, Datas.BOOLEAN, Datas.INT, Datas.STRING, Datas.TIMESTAMP, Datas.BOOLEAN},
+                new Formats[]{Formats.STRING, Formats.STRING, Formats.STRING, Formats.STRING, Formats.STRING, Formats.PERCENT, Formats.BOOLEAN, Formats.INT, Formats.STRING, Formats.DATE, Formats.BOOLEAN},
+                new int[]{0}
         );
     }
 
@@ -2505,11 +2561,11 @@ public class DataLogicSales extends BeanFactoryDataSingle {
     public final TableDefinition getTableTaxCustCategories() {
         return new TableDefinition(s,
                 "taxcustcategories",
-                 new String[]{"ID", "NAME"},
-                 new String[]{"ID", AppLocal.getIntString("label.name")},
-                 new Datas[]{Datas.STRING, Datas.STRING},
-                 new Formats[]{Formats.STRING, Formats.STRING},
-                 new int[]{0}
+                new String[]{"ID", "NAME"},
+                new String[]{"ID", AppLocal.getIntString("label.name")},
+                new Datas[]{Datas.STRING, Datas.STRING},
+                new Formats[]{Formats.STRING, Formats.STRING},
+                new int[]{0}
         );
     }
 
@@ -2520,11 +2576,11 @@ public class DataLogicSales extends BeanFactoryDataSingle {
     public final TableDefinition getTableTaxCategories() {
         return new TableDefinition(s,
                 "taxcategories",
-                 new String[]{"ID", "NAME"},
-                 new String[]{"ID", AppLocal.getIntString("label.name")},
-                 new Datas[]{Datas.STRING, Datas.STRING},
-                 new Formats[]{Formats.STRING, Formats.STRING},
-                 new int[]{0}
+                new String[]{"ID", "NAME"},
+                new String[]{"ID", AppLocal.getIntString("label.name")},
+                new Datas[]{Datas.STRING, Datas.STRING},
+                new Formats[]{Formats.STRING, Formats.STRING},
+                new int[]{0}
         );
     }
 
@@ -2535,12 +2591,12 @@ public class DataLogicSales extends BeanFactoryDataSingle {
     public final TableDefinition getTableLocations() {
         return new TableDefinition(s,
                 "locations",
-                 new String[]{"ID", "NAME", "ADDRESS"},
-                 new String[]{"ID", AppLocal.getIntString("label.locationname"),
+                new String[]{"ID", "NAME", "ADDRESS"},
+                new String[]{"ID", AppLocal.getIntString("label.locationname"),
                     AppLocal.getIntString("label.locationaddress")},
-                 new Datas[]{Datas.STRING, Datas.STRING, Datas.STRING},
-                 new Formats[]{Formats.STRING, Formats.STRING, Formats.STRING},
-                 new int[]{0}
+                new Datas[]{Datas.STRING, Datas.STRING, Datas.STRING},
+                new Formats[]{Formats.STRING, Formats.STRING, Formats.STRING},
+                new int[]{0}
         );
     }
 
@@ -2596,7 +2652,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                 + "id, name "
                 + "FROM uom "
                 + "WHERE id = ?",
-                 SerializerWriteString.INSTANCE, UomInfo.getSerializerRead()).find(id);
+                SerializerWriteString.INSTANCE, UomInfo.getSerializerRead()).find(id);
     }
 
     public final TableDefinition getTableUom() {
@@ -2637,28 +2693,28 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                 + "FROM vouchers   "
                 + "WHERE STATUS='A' "
                 + "ORDER BY vouchers.VOUCHER_NUMBER ASC",
-                 null, VoucherInfo.getSerializerRead());
+                null, VoucherInfo.getSerializerRead());
     }
 
     public final SentenceExec getVoucherNonActive() {
         return new PreparedSentence(s,
                 "UPDATE vouchers SET STATUS = 'D' "
                 + "WHERE VOUCHER_NUMBER = ?",
-                 SerializerWriteString.INSTANCE);
+                SerializerWriteString.INSTANCE);
     }
 
     public final SentenceExec setVoucherPending() {
         return new PreparedSentence(s,
                 "UPDATE vouchers SET STATUS = 'P' "
                 + "WHERE VOUCHER_NUMBER = ?",
-                 SerializerWriteString.INSTANCE);
+                SerializerWriteString.INSTANCE);
     }
 
     public final SentenceExec resetPickupId() {
 
         return new PreparedSentence(s,
                 "UPDATE pickup_number SET ID=1 ",
-                 SerializerWriteString.INSTANCE);
+                SerializerWriteString.INSTANCE);
 
     }
 
@@ -2670,7 +2726,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
      */
     public SupplierInfoExt loadSupplierExt(String id) throws BasicException {
         return (SupplierInfoExt) new PreparedSentence(s,
-                 "SELECT "
+                "SELECT "
                 + "ID, "
                 + "SEARCHKEY, "
                 + "TAXID, "
@@ -2694,8 +2750,8 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                 + "CURDEBT, "
                 + "VATID "
                 + "FROM suppliers WHERE ID = ?",
-                 SerializerWriteString.INSTANCE,
-                 new SupplierExtRead()).find(id);
+                SerializerWriteString.INSTANCE,
+                new SupplierExtRead()).find(id);
     }
 
     /**
@@ -2748,7 +2804,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
             public int execInTransaction(Object params) throws BasicException {
                 Object[] values = (Object[]) params;
                 int i = new PreparedSentence(s,
-                         "INSERT INTO customers ("
+                        "INSERT INTO customers ("
                         + "ID, "
                         + "SEARCHKEY, "
                         + "TAXID, "
@@ -2782,7 +2838,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                         + "?, ?, ?, ?, ?, ?, "
                         + "?, ?, ?, ?, ?, ?, "
                         + "?, ?, ?)",
-                         new SerializerWriteBasicExt(customersRow.getDatas(),
+                        new SerializerWriteBasicExt(customersRow.getDatas(),
                                 new int[]{0,
                                     1, 2, 3, 4, 5, 6,
                                     7, 8, 9, 10, 11, 12,
@@ -2805,7 +2861,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
             public int execInTransaction(Object params) throws BasicException {
                 Object[] values = (Object[]) params;
                 int i = new PreparedSentence(s,
-                         "UPDATE customers SET "
+                        "UPDATE customers SET "
                         + "ID = ?, "
                         + "SEARCHKEY = ?, "
                         + "TAXID = ?, "
@@ -2834,7 +2890,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                         + "DISCOUNT = ?, "
                         + "MEMODATE = ? "
                         + "WHERE ID = ?",
-                         new SerializerWriteBasicExt(customersRow.getDatas(),
+                        new SerializerWriteBasicExt(customersRow.getDatas(),
                                 new int[]{0,
                                     1, 2, 3, 4, 5,
                                     6, 7, 8, 9, 10,
@@ -2878,8 +2934,8 @@ public class DataLogicSales extends BeanFactoryDataSingle {
             @Override
             public int execInTransaction(Object params) throws BasicException {
                 return new PreparedSentence(s,
-                         "DELETE FROM customers WHERE ID = ?",
-                         new SerializerWriteBasicExt(customersRow.getDatas(),
+                        "DELETE FROM customers WHERE ID = ?",
+                        new SerializerWriteBasicExt(customersRow.getDatas(),
                                 new int[]{0}
                         )).exec(params);
             }
@@ -2915,5 +2971,23 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                 + "and serie_number = ?",
                 new SerializerWriteBasic(new Datas[]{Datas.STRING, Datas.STRING}),
                 SerializerReadInteger.INSTANCE);
+    }
+
+    public StaticSentence countProdutLots() {
+        return new StaticSentence(s,
+                "select count(*) from products_lots "
+                + "where product = ? "
+                + "and status = true",
+                SerializerWriteString.INSTANCE,
+                SerializerReadInteger.INSTANCE);
+    }
+
+    public StaticSentence getLotOfProduct() {
+        return new StaticSentence(s,
+                "select lot from products_lots "
+                + "where product = ? "
+                + "and status = true",
+                SerializerWriteString.INSTANCE,
+                SerializerReadString.INSTANCE);
     }
 }

@@ -66,6 +66,10 @@ public class ProductInfoExt {
     public String supplierid;
     private String uomid;   
     protected String memodate;
+    
+    private double totalCost;
+    private String lot;
+    private double quantity;
 
     public ProductInfoExt() {
         m_ID = null;
@@ -98,6 +102,8 @@ public class ProductInfoExt {
         supplierid = "0";
         uomid = "0";        
         memodate = null;
+        quantity = 0;
+        totalCost = 0.0;
     }
 
     /**
@@ -376,6 +382,30 @@ public class ProductInfoExt {
             }
         };
     }
+
+    public double getTotalCost() {
+        return totalCost;
+    }
+
+    public void setTotalCost(double totalCost) {
+        this.totalCost = totalCost;
+    }
+
+    public String getLot() {
+        return lot;
+    }
+
+    public void setLot(String lot) {
+        this.lot = lot;
+    }        
+
+    public double getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(double quantity) {
+        this.quantity = quantity;
+    }        
 
     @Override
     public final String toString() {

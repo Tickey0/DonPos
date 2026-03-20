@@ -25,7 +25,7 @@ import com.unicenta.format.Formats;
 import com.unicenta.pos.forms.AppLocal;
 import com.unicenta.pos.forms.BeanFactoryDataSingle;
 import com.unicenta.pos.voucher.VoucherInfo;
-import dev.joguenco.utils.ExtractNames;
+import dev.resolvedor.util.ExtractNames;
 import java.util.UUID;
 
 /**

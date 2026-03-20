@@ -33,7 +33,7 @@ report.setSentence("SELECT " +
                 "products.CATEGORY, " +
                 "MIN(categories.NAME) AS CATEGORYNAME, " +
                 "MIN(products.SUPPLIER), " +
-                "MIN(stockcurrent.UNITS), " +
+                "SUM(stockcurrent.UNITS), " +
                 "COALESCE(MIN(stocklevel.STOCKSECURITY), 0) AS STOCKSECURITY, " +
                 "COALESCE(MIN(stocklevel.STOCKMAXIMUM), 0) AS STOCKMAXIMUM, " +
                 "MIN(suppliers.NAME) " +
