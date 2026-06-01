@@ -18,11 +18,19 @@ report.setSentence("select " +
 "total " +
 "from v_supplier_purchases " +
 "WHERE ?(QBF_FILTER) " +
-"order by datedocument desc;");
+"order by name, datedocument desc;");
 
 report.addParameter("TAXID");
 report.addParameter("NAME");
 report.addQBFFilter(new com.unicenta.pos.reports.JParamsSuppliers());
+
+report.addParameter("DATEDOCUMENT");
+report.addParameter("DATEDOCUMENT");
+
+paramdates = new com.unicenta.pos.reports.JParamsDatesInterval();
+paramdates.setStartDate(com.unicenta.beans.DateUtils.getFirstDayOfMonth());
+paramdates.setEndDate(com.unicenta.beans.DateUtils.getTodayMinutes());
+report.addQBFFilter(paramdates);
 
 report.addField("TAXID", com.unicenta.data.loader.Datas.STRING);
 report.addField("NAME", com.unicenta.data.loader.Datas.STRING);
