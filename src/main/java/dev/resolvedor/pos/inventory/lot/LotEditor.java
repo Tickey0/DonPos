@@ -5,7 +5,9 @@ import com.unicenta.beans.JCalendarDialog;
 import com.unicenta.data.user.DirtyManager;
 import com.unicenta.data.user.EditorRecord;
 import com.unicenta.format.Formats;
+import com.unicenta.pos.forms.AppLocal;
 import com.unicenta.pos.forms.AppView;
+import dev.joguenco.error.ErrorMessage;
 import java.awt.Component;
 import java.util.Date;
 import java.util.UUID;
@@ -228,6 +230,12 @@ public class LotEditor extends JPanel implements EditorRecord {
 
     @Override
     public Object createValue() throws BasicException {
+        ErrorMessage validate = validateData();
+
+        if (validate.getIsError()) {
+            throw new BasicException(validate.getMessage());
+        }
+
         Object[] lot = new Object[4];
 
         lot[0] = id == null ? UUID.randomUUID().toString() : id;
@@ -240,6 +248,13 @@ public class LotEditor extends JPanel implements EditorRecord {
         }
 
         return lot;
+    }
+
+    private ErrorMessage validateData() {
+        if (txtName.getText().trim().isEmpty()) {
+            return new ErrorMessage(AppLocal.getIntString("message.lot.empty"));
+        }
+        return new ErrorMessage();
     }
 
 

@@ -45,7 +45,7 @@ public class PurchaseProductDialog extends javax.swing.JDialog {
     private ListProvider lpr;
 
     private TaxesLogic taxeslogic;
-    
+
     private SentenceList sentTax;
 
     public static final int RET_CANCEL = 0;
@@ -68,7 +68,7 @@ public class PurchaseProductDialog extends javax.swing.JDialog {
             taxeslogic = new TaxesLogic(taxlist);
         } catch (BasicException ex) {
             log.error(PurchaseProductDialog.class.getName() + " " + ex.getMessage());
-        }        
+        }
 
         // Close the dialog when Esc is pressed
         String cancelName = "cancel";
@@ -95,7 +95,7 @@ public class PurchaseProductDialog extends javax.swing.JDialog {
 
     public TaxInfo getTax() {
         return tax;
-    }        
+    }
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -111,6 +111,7 @@ public class PurchaseProductDialog extends javax.swing.JDialog {
         panelFinder = new javax.swing.JPanel();
         lblName = new javax.swing.JLabel();
         txtProductName = new javax.swing.JTextField();
+        cmdFindProduct = new javax.swing.JButton();
         jScrollPane1 = new javax.swing.JScrollPane();
         jListProducts = new javax.swing.JList();
         lblProduct = new javax.swing.JLabel();
@@ -158,6 +159,13 @@ public class PurchaseProductDialog extends javax.swing.JDialog {
             }
         });
 
+        cmdFindProduct.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/unicenta/images/search24.png"))); // NOI18N
+        cmdFindProduct.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cmdFindProductActionPerformed(evt);
+            }
+        });
+
         jScrollPane1.setMaximumSize(new java.awt.Dimension(260, 132));
 
         jListProducts.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
@@ -185,6 +193,8 @@ public class PurchaseProductDialog extends javax.swing.JDialog {
                 .addGroup(panelFinderLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(txtProductName, javax.swing.GroupLayout.PREFERRED_SIZE, 360, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(cmdFindProduct, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         panelFinderLayout.setVerticalGroup(
@@ -193,7 +203,8 @@ public class PurchaseProductDialog extends javax.swing.JDialog {
                 .addContainerGap()
                 .addGroup(panelFinderLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(txtProductName, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(lblName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(lblName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(cmdFindProduct, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(panelFinderLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 132, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -269,7 +280,7 @@ public class PurchaseProductDialog extends javax.swing.JDialog {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(panelFinder, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addGap(0, 394, Short.MAX_VALUE)
+                        .addGap(0, 0, Short.MAX_VALUE)
                         .addComponent(okButton, javax.swing.GroupLayout.PREFERRED_SIZE, 67, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(cancelButton))
@@ -286,7 +297,7 @@ public class PurchaseProductDialog extends javax.swing.JDialog {
                 .addComponent(panelFinder, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(panelFeatures, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 42, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 43, Short.MAX_VALUE)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(cancelButton)
                     .addComponent(okButton))
@@ -308,7 +319,7 @@ public class PurchaseProductDialog extends javax.swing.JDialog {
 
         selectedProduct.setQuantity(Double.parseDouble(txtQuantiy.getText()));
         selectedProduct.setTotalCost(Double.parseDouble(txtTotalCost.getText()));
-        
+
         double costWithTax = selectedProduct.getTotalCost() / selectedProduct.getQuantity();
         double taxValue = tax.getRate() + 1;
         selectedProduct.setPriceBuy(costWithTax / taxValue);
@@ -368,6 +379,10 @@ public class PurchaseProductDialog extends javax.swing.JDialog {
     }//GEN-LAST:event_formWindowOpened
 
     private void txtProductNameActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtProductNameActionPerformed
+        findProduct();
+    }//GEN-LAST:event_txtProductNameActionPerformed
+
+    private void findProduct() {
         lpr = new ListProviderCreator(dlSales.getProductListByName(txtProductName.getText()));
 
         try {
@@ -378,11 +393,15 @@ public class PurchaseProductDialog extends javax.swing.JDialog {
             }
         } catch (BasicException e) {
         }
-    }//GEN-LAST:event_txtProductNameActionPerformed
+    }
 
     private void jListProductsValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_jListProductsValueChanged
         loadLotsOfProduct();
     }//GEN-LAST:event_jListProductsValueChanged
+
+    private void cmdFindProductActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmdFindProductActionPerformed
+        findProduct();
+    }//GEN-LAST:event_cmdFindProductActionPerformed
 
     private void loadLotsOfProduct() {
         selectedProduct = (ProductInfoExt) jListProducts.getSelectedValue();
@@ -433,6 +452,7 @@ public class PurchaseProductDialog extends javax.swing.JDialog {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton cancelButton;
     private javax.swing.JComboBox<String> cboLot;
+    private javax.swing.JButton cmdFindProduct;
     private javax.swing.JList jListProducts;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JLabel lblLot;

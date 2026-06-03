@@ -3,6 +3,7 @@ package dev.resolvedor.pos.inventory.management;
 import com.unicenta.basic.BasicException;
 import com.unicenta.data.loader.DataRead;
 import com.unicenta.data.loader.SerializableRead;
+import com.unicenta.data.loader.SerializerRead;
 import com.unicenta.format.Formats;
 import com.unicenta.pos.inventory.InventoryLine;
 import com.unicenta.pos.ticket.UserInfo;
@@ -96,5 +97,25 @@ public class PurchaseInfo implements SerializableRead {
         purchaseAuthorization = dr.getString(9);
         observation = dr.getString(10);
         status = dr.getBoolean(11);
+    }
+
+    public static SerializerRead getSerializerRead() {
+        return new SerializerRead() {
+            @Override
+            public Object readValues(DataRead dr) throws BasicException {
+                PurchaseInfo purchase = new PurchaseInfo();
+
+                purchase.id = dr.getString(1);
+                purchase.number = dr.getInt(2);
+                purchase.createdAt = dr.getTimestamp(3);
+                purchase.supplier = dr.getString(4);
+                purchase.purchaseDate = dr.getTimestamp(5);
+                purchase.purchaseDocument = dr.getString(6);
+                purchase.purchaseReference = dr.getString(7);
+                purchase.observation = dr.getString(8);
+
+                return purchase;
+            }
+        };
     }
 }

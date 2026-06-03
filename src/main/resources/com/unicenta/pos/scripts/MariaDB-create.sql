@@ -838,6 +838,9 @@ ALTER TABLE `purchases` ADD CONSTRAINT `purchases_supplier_fk`
 ALTER TABLE `purchases` ADD CONSTRAINT `purchases_receipts_fk`         
         FOREIGN KEY (`id`) REFERENCES receipts(`id`) ON DELETE CASCADE;
 
+ALTER TABLE `purchases` ADD CONSTRAINT `purchases_document_types_FK`
+        FOREIGN KEY (`purchase_document`) REFERENCES document_types(`id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
+
 -- Update foreign keys of attributeinstance
 ALTER TABLE `attributeinstance` ADD CONSTRAINT `attinst_att`
 	FOREIGN KEY ( `attribute_id` ) REFERENCES `attribute` ( `id` );

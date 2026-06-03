@@ -6,7 +6,7 @@
 	<property name="ireport.zoom" value="2.0"/>
 	<property name="ireport.x" value="0"/>
 	<property name="ireport.y" value="0"/>
-	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="linapos"/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="donpos"/>
 	<import value="net.sf.jasperreports.engine.*"/>
 	<import value="java.util.*"/>
 	<import value="net.sf.jasperreports.engine.data.*"/>
@@ -35,15 +35,15 @@ order by name, datedocument desc;]]>
 	<field name="SUBTOTAL" class="java.lang.Double"/>
 	<field name="IMPUESTO" class="java.lang.Double"/>
 	<field name="TOTAL" class="java.lang.Double"/>
-	<variable name="SUM_SUBTOTAL" class="java.lang.Double" calculation="Sum">
+	<variable name="SUM_SUBTOTAL" class="java.lang.Double" resetType="Group" resetGroup="Categories" calculation="Sum">
 		<variableExpression><![CDATA[$F{SUBTOTAL}]]></variableExpression>
 		<initialValueExpression><![CDATA[new Double(0.0)]]></initialValueExpression>
 	</variable>
-	<variable name="SUM_TAX" class="java.lang.Double" calculation="Sum">
+	<variable name="SUM_TAX" class="java.lang.Double" resetType="Group" resetGroup="Categories" calculation="Sum">
 		<variableExpression><![CDATA[$F{IMPUESTO}]]></variableExpression>
 		<initialValueExpression><![CDATA[new Double(0.0)]]></initialValueExpression>
 	</variable>
-	<variable name="SUM_TOTAL" class="java.lang.Double" calculation="Sum">
+	<variable name="SUM_TOTAL" class="java.lang.Double" resetType="Group" resetGroup="Categories" calculation="Sum">
 		<variableExpression><![CDATA[$F{TOTAL}]]></variableExpression>
 		<initialValueExpression><![CDATA[new Double(0.0)]]></initialValueExpression>
 	</variable>

@@ -2975,18 +2975,20 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 
     public StaticSentence countProdutLots() {
         return new StaticSentence(s,
-                "select count(*) from products_lots "
+                "select count(*) from products_lots pl "
+                + "join lots l on l.id = pl.lot "
                 + "where product = ? "
-                + "and status = true",
+                + "and pl.status = true and l.status = true",
                 SerializerWriteString.INSTANCE,
                 SerializerReadInteger.INSTANCE);
     }
 
     public StaticSentence getLotOfProduct() {
         return new StaticSentence(s,
-                "select lot from products_lots "
+                "select lot from products_lots pl "
+                + "join lots l on l.id = pl.lot "
                 + "where product = ? "
-                + "and status = true",
+                + "and pl.status = true and l.status = true",
                 SerializerWriteString.INSTANCE,
                 SerializerReadString.INSTANCE);
     }

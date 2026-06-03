@@ -26,9 +26,12 @@
                       <Component id="cmdSave" min="-2" pref="180" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
                       <Component id="cmdInsert" min="-2" pref="180" max="-2" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Component id="cmdSearch" min="-2" pref="180" max="-2" attributes="0"/>
                       <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
                   </Group>
                   <Group type="102" attributes="0">
+                      <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
                       <Component id="panelAction" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
                       <Component id="panelLines" min="-2" pref="751" max="-2" attributes="0"/>
@@ -59,6 +62,7 @@
               <Group type="103" groupAlignment="0" attributes="0">
                   <Component id="cmdSave" min="-2" max="-2" attributes="0"/>
                   <Component id="cmdInsert" min="-2" max="-2" attributes="0"/>
+                  <Component id="cmdSearch" min="-2" max="-2" attributes="0"/>
               </Group>
               <EmptySpace min="-2" pref="14" max="-2" attributes="0"/>
           </Group>
@@ -84,6 +88,16 @@
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="cmdInsertActionPerformed"/>
+      </Events>
+    </Component>
+    <Component class="javax.swing.JButton" name="cmdSearch">
+      <Properties>
+        <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
+          <Image iconType="3" name="/com/unicenta/images/search24.png"/>
+        </Property>
+      </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="cmdSearchActionPerformed"/>
       </Events>
     </Component>
     <Container class="javax.swing.JPanel" name="panelHead">

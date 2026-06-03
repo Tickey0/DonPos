@@ -77,6 +77,7 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
 
         cmdSave = new javax.swing.JButton();
         cmdInsert = new javax.swing.JButton();
+        cmdSearch = new javax.swing.JButton();
         panelHead = new javax.swing.JPanel();
         lblNumber = new javax.swing.JLabel();
         txtNumber = new javax.swing.JTextField();
@@ -126,6 +127,13 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
         cmdInsert.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 cmdInsertActionPerformed(evt);
+            }
+        });
+
+        cmdSearch.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/unicenta/images/search24.png"))); // NOI18N
+        cmdSearch.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cmdSearchActionPerformed(evt);
             }
         });
 
@@ -462,8 +470,11 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
                         .addComponent(cmdSave, javax.swing.GroupLayout.PREFERRED_SIZE, 180, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(cmdInsert, javax.swing.GroupLayout.PREFERRED_SIZE, 180, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(cmdSearch, javax.swing.GroupLayout.PREFERRED_SIZE, 180, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(0, 0, Short.MAX_VALUE))
                     .addGroup(layout.createSequentialGroup()
+                        .addGap(0, 0, Short.MAX_VALUE)
                         .addComponent(panelAction, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(panelLines, javax.swing.GroupLayout.PREFERRED_SIZE, 751, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -488,7 +499,8 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(cmdSave)
-                    .addComponent(cmdInsert))
+                    .addComponent(cmdInsert)
+                    .addComponent(cmdSearch))
                 .addGap(14, 14, 14))
         );
     }// </editor-fold>//GEN-END:initComponents
@@ -703,6 +715,21 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
         }
     }//GEN-LAST:event_txtDatePurchaseFocusGained
 
+    private void cmdSearchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmdSearchActionPerformed
+        PurchaseFinderDialog dialog = new PurchaseFinderDialog(new javax.swing.JFrame(), dlPurchase);
+        dialog.addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosing(java.awt.event.WindowEvent e) {
+                dialog.setVisible(false);
+            }
+        });
+        dialog.setLocationRelativeTo(null);
+        dialog.setVisible(true);
+        if (dialog.getReturnStatus() == PurchaseProductDialog.RET_OK) {
+            System.out.println("Find puchase");
+        }
+    }//GEN-LAST:event_cmdSearchActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JComboBox<String> cboDocumentType;
     private javax.swing.JComboBox<String> cboLocation;
@@ -714,6 +741,7 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
     private javax.swing.JButton cmdFindProduct;
     private javax.swing.JButton cmdInsert;
     private javax.swing.JButton cmdSave;
+    private javax.swing.JButton cmdSearch;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel lblAuthorization;
     private javax.swing.JLabel lblCreatedAt;

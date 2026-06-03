@@ -246,4 +246,22 @@ public class DataLogicPurchase extends BeanFactoryDataSingle {
                     return taxSupport;
                 });
     }
+
+    public final SentenceList getPurchaseListByData(String data) {
+        return new StaticSentence(s,
+                "SELECT "
+                + "p.id, "
+                + "p.number purchase, "
+                + "p.created_at saved, "
+                + "s.name supplier, "
+                + "p.purchase_date date, "
+                + "d.name document, "
+                + "p.purchase_reference reference, "
+                + "p .observation "
+                + "from purchases p "
+                + "join suppliers s on s.id = p.supplier  "
+                + "join document_types d on d.id = p.purchase_document",
+                null,
+                PurchaseInfo.getSerializerRead());
+    }
 }
