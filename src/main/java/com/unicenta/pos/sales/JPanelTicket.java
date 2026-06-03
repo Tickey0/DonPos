@@ -981,6 +981,12 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
                         "Check", JOptionPane.WARNING_MESSAGE);
                 stateToZero();
             } else {
+                oProduct = findLot(oProduct);
+                if (oProduct == null) {
+                    stateToZero();
+                    return;
+                }
+
                 incProduct(oProduct);
             }
         } catch (BasicException eData) {
@@ -1051,16 +1057,41 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
      */
     protected void buttonTransition(ProductInfoExt prod) {
 
+        prod = findLot(prod);
+
+        if (prod == null) {
+            stateToZero();
+            return;
+        }
+
+        if (m_iNumberStatusInput == NUMBERZERO && m_iNumberStatusPor == NUMBERZERO) {
+            incProduct(prod);
+        } else if (m_iNumberStatusInput == NUMBERVALID && m_iNumberStatusPor == NUMBERZERO) {
+            incProduct(getInputValue(), prod);
+        } else if (prod.isVprice()) {
+            addTicketLine(prod, getPorValue(), getInputValue());
+        } else {
+            Toolkit.getDefaultToolkit().beep();
+        }
+    }
+
+    /**
+     * Find lot of product and return product with lot
+     *
+     * @param product
+     * @return product || null
+     */
+    private ProductInfoExt findLot(ProductInfoExt product) {
         try {
-            int countProductLots = (int) dlSales.countProdutLots().find(prod.getID());
+            int countProductLots = (int) dlSales.countProdutLots().find(product.getID());
 
             if (countProductLots == 0) {
                 JOptionPane.showMessageDialog(this, AppLocal.getIntString("message.lot.noAssigned"), "", JOptionPane.ERROR_MESSAGE);
-                return;
+                return null;
             }
 
             if (countProductLots == 1) {
-                prod.setLot(dlSales.getLotOfProduct().find(prod.getID()).toString());
+                product.setLot(dlSales.getLotOfProduct().find(product.getID()).toString());
             }
 
             if (countProductLots > 1) {
@@ -1068,7 +1099,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
                         m_App,
                         new javax.swing.JFrame(),
                         true,
-                        prod.getID()
+                        product.getID()
                 );
 
                 dialog.addWindowListener(new java.awt.event.WindowAdapter() {
@@ -1082,27 +1113,19 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
                 dialog.setVisible(true);
 
                 if (dialog.getReturnStatus() == LotDialog.RET_CANCEL) {
-                    return;
+                    return null;
                 }
 
                 if (dialog.getReturnStatus() == LotDialog.RET_OK) {
-                    prod.setLot(dialog.getLot());
+                    product.setLot(dialog.getLot());
                 }
             }
         } catch (BasicException ex) {
             JOptionPane.showMessageDialog(this, AppLocal.getIntString("message.lot.error"), "", JOptionPane.ERROR_MESSAGE);
-            return;
+            return null;
         }
 
-        if (m_iNumberStatusInput == NUMBERZERO && m_iNumberStatusPor == NUMBERZERO) {
-            incProduct(prod);
-        } else if (m_iNumberStatusInput == NUMBERVALID && m_iNumberStatusPor == NUMBERZERO) {
-            incProduct(getInputValue(), prod);
-        } else if (prod.isVprice()) {
-            addTicketLine(prod, getPorValue(), getInputValue());
-        } else {
-            Toolkit.getDefaultToolkit().beep();
-        }
+        return product;
     }
 
     /*
