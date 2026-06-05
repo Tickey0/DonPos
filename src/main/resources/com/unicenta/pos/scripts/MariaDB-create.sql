@@ -770,11 +770,13 @@ CREATE TABLE `purchases` (
         `purchase_date` datetime default NULL,
         `purchase_authorization` varchar(255) default NULL,
         `observation` varchar(900) default NULL,
+        `location` varchar(255) NOT NULL,
         `status` BOOLEAN DEFAULT true,
         PRIMARY KEY  ( `id` ),
         UNIQUE INDEX `purchases_uk` ( `number` ),
 	KEY `purchases_inx_1` ( `created_at` ),
-        KEY `purchases_supplier_fk` ( `supplier` )
+        KEY `purchases_supplier_fk` ( `supplier` ),
+        KEY `purchases_location_fk` ( `location` )
 ) ENGINE = InnoDB DEFAULT CHARSET=utf8 ;
 
 CREATE TABLE `purchaselines` (
@@ -840,6 +842,9 @@ ALTER TABLE `purchases` ADD CONSTRAINT `purchases_receipts_fk`
 
 ALTER TABLE `purchases` ADD CONSTRAINT `purchases_document_types_FK`
         FOREIGN KEY (`purchase_document`) REFERENCES document_types(`id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
+
+ALTER TABLE `purchases` ADD CONSTRAINT `purchases_location_fk`
+        FOREIGN KEY (`location`) REFERENCES locations(`id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
 
 -- Update foreign keys of attributeinstance
 ALTER TABLE `attributeinstance` ADD CONSTRAINT `attinst_att`

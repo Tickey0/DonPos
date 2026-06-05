@@ -1,12 +1,22 @@
 package dev.resolvedor.pos.inventory.management;
 
 import com.unicenta.basic.BasicException;
+import com.unicenta.beans.DateUtils;
+import com.unicenta.beans.JCalendarDialog;
+import com.unicenta.data.user.ListProvider;
+import com.unicenta.data.user.ListProviderCreator;
+import com.unicenta.format.Formats;
+import com.unicenta.pos.forms.AppLocal;
+import com.unicenta.pos.forms.AppView;
+import com.unicenta.pos.forms.DataLogicSales;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
+import java.util.Date;
 import javax.swing.AbstractAction;
 import javax.swing.ActionMap;
 import javax.swing.InputMap;
 import javax.swing.JComponent;
+import javax.swing.JOptionPane;
 import javax.swing.KeyStroke;
 import lombok.extern.slf4j.Slf4j;
 
@@ -20,14 +30,27 @@ import lombok.extern.slf4j.Slf4j;
 public class PurchaseFinderDialog extends javax.swing.JDialog {
 
     private DataLogicPurchase dlPurchase;
+    private DataLogicSales dlSales;
+    private PurchaseInfo selectedPurchase;
+    private ListProvider lpr;
 
     public static final int RET_CANCEL = 0;
     public static final int RET_OK = 1;
 
-    public PurchaseFinderDialog(java.awt.Frame parent, DataLogicPurchase dlPurchase) {
+    public PurchaseFinderDialog(AppView app, java.awt.Frame parent) {
         super(parent, true);
         initComponents();
-        this.dlPurchase = dlPurchase;
+
+        dlPurchase = (DataLogicPurchase) app.getBean("dev.resolvedor.pos.inventory.management.DataLogicPurchase");
+        dlSales = (DataLogicSales) app.getBean("com.unicenta.pos.forms.DataLogicSales");
+
+        txtStartDate.setText(
+                Formats.DATE.formatValue(DateUtils.getFirstDayOfMonth())
+        );
+
+        txtEndDate.setText(
+                Formats.DATE.formatValue(DateUtils.getTodayMinutes())
+        );
 
         // Close the dialog when Esc is pressed
         String cancelName = "cancel";
@@ -49,6 +72,10 @@ public class PurchaseFinderDialog extends javax.swing.JDialog {
         return returnStatus;
     }
 
+    public PurchaseInfo getSelectedPurchase() {
+        return selectedPurchase;
+    }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -64,10 +91,14 @@ public class PurchaseFinderDialog extends javax.swing.JDialog {
         lblPurchase = new javax.swing.JLabel();
         txtPurchase = new javax.swing.JTextField();
         cmdFinder = new javax.swing.JButton();
+        lblDates = new javax.swing.JLabel();
+        txtStartDate = new javax.swing.JTextField();
+        cmdStartDate = new javax.swing.JButton();
+        txtEndDate = new javax.swing.JTextField();
+        cmdEndDate = new javax.swing.JButton();
         jScrollPane1 = new javax.swing.JScrollPane();
-        jListPurchases = new javax.swing.JList<>();
+        jListPurchases = new javax.swing.JList();
 
-        setPreferredSize(new java.awt.Dimension(540, 360));
         addWindowListener(new java.awt.event.WindowAdapter() {
             public void windowClosing(java.awt.event.WindowEvent evt) {
                 closeDialog(evt);
@@ -85,17 +116,31 @@ public class PurchaseFinderDialog extends javax.swing.JDialog {
         lblPurchase.setText(bundle.getString("Menu.Suppliers.Reports.Purchases")); // NOI18N
         lblPurchase.setPreferredSize(new java.awt.Dimension(120, 36));
 
-        txtPurchase.setPreferredSize(new java.awt.Dimension(300, 36));
+        txtPurchase.setPreferredSize(new java.awt.Dimension(330, 36));
+        txtPurchase.addActionListener(this::txtPurchaseActionPerformed);
 
         cmdFinder.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/unicenta/images/search24.png"))); // NOI18N
         cmdFinder.setPreferredSize(new java.awt.Dimension(36, 36));
         cmdFinder.addActionListener(this::cmdFinderActionPerformed);
 
-        jListPurchases.setModel(new javax.swing.AbstractListModel<String>() {
-            String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
-            public int getSize() { return strings.length; }
-            public String getElementAt(int i) { return strings[i]; }
-        });
+        lblDates.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
+        lblDates.setText(bundle.getString("label.datestitle")); // NOI18N
+        lblDates.setPreferredSize(new java.awt.Dimension(120, 36));
+
+        txtStartDate.setPreferredSize(new java.awt.Dimension(120, 36));
+
+        cmdStartDate.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/unicenta/images/date.png"))); // NOI18N
+        cmdStartDate.setPreferredSize(new java.awt.Dimension(36, 36));
+        cmdStartDate.addActionListener(this::cmdStartDateActionPerformed);
+
+        txtEndDate.setPreferredSize(new java.awt.Dimension(120, 36));
+
+        cmdEndDate.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/unicenta/images/date.png"))); // NOI18N
+        cmdEndDate.setPreferredSize(new java.awt.Dimension(36, 36));
+        cmdEndDate.addActionListener(this::cmdEndDateActionPerformed);
+
+        jListPurchases.setFont(new java.awt.Font("Noto Sans", 0, 18)); // NOI18N
+        jListPurchases.addListSelectionListener(this::jListPurchasesValueChanged);
         jScrollPane1.setViewportView(jListPurchases);
 
         javax.swing.GroupLayout panelFinderLayout = new javax.swing.GroupLayout(panelFinder);
@@ -107,11 +152,23 @@ public class PurchaseFinderDialog extends javax.swing.JDialog {
                 .addGroup(panelFinderLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jScrollPane1)
                     .addGroup(panelFinderLayout.createSequentialGroup()
-                        .addComponent(lblPurchase, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(txtPurchase, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(cmdFinder, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGroup(panelFinderLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(panelFinderLayout.createSequentialGroup()
+                                .addComponent(lblPurchase, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(txtPurchase, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(cmdFinder, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(panelFinderLayout.createSequentialGroup()
+                                .addComponent(lblDates, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(txtStartDate, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(cmdStartDate, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(txtEndDate, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(cmdEndDate, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                         .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
@@ -124,9 +181,17 @@ public class PurchaseFinderDialog extends javax.swing.JDialog {
                     .addGroup(panelFinderLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                         .addComponent(lblPurchase, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addComponent(txtPurchase, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addGap(18, 18, 18)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(54, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(panelFinderLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(panelFinderLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(lblDates, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(txtStartDate, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(cmdStartDate, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(txtEndDate, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(cmdEndDate, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 203, Short.MAX_VALUE)
+                .addContainerGap())
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -137,7 +202,7 @@ public class PurchaseFinderDialog extends javax.swing.JDialog {
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addGap(0, 342, Short.MAX_VALUE)
+                        .addGap(0, 432, Short.MAX_VALUE)
                         .addComponent(okButton, javax.swing.GroupLayout.PREFERRED_SIZE, 67, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(cancelButton))
@@ -165,6 +230,16 @@ public class PurchaseFinderDialog extends javax.swing.JDialog {
     }// </editor-fold>//GEN-END:initComponents
 
     private void okButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_okButtonActionPerformed
+        if (selectedPurchase == null) {
+            return;
+        }
+
+        try {
+            selectedPurchase = dlPurchase.loadPurchase(selectedPurchase.getId(), dlSales);
+        } catch (BasicException ex) {
+            log.error(PurchaseFinderDialog.class.getName() + " okButtonActionPerformed " + ex);
+        }
+
         doClose(RET_OK);
     }//GEN-LAST:event_okButtonActionPerformed
 
@@ -177,12 +252,67 @@ public class PurchaseFinderDialog extends javax.swing.JDialog {
     }//GEN-LAST:event_closeDialog
 
     private void cmdFinderActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmdFinderActionPerformed
+        findPurchase();
+    }//GEN-LAST:event_cmdFinderActionPerformed
+
+    private void txtPurchaseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtPurchaseActionPerformed
+        findPurchase();
+    }//GEN-LAST:event_txtPurchaseActionPerformed
+
+    private void jListPurchasesValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_jListPurchasesValueChanged
+        selectedPurchase = (PurchaseInfo) jListPurchases.getSelectedValue();
+    }//GEN-LAST:event_jListPurchasesValueChanged
+
+    private void cmdStartDateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmdStartDateActionPerformed
+        setDate(txtStartDate);
+    }//GEN-LAST:event_cmdStartDateActionPerformed
+
+    private void cmdEndDateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmdEndDateActionPerformed
+        setDate(txtEndDate);
+    }//GEN-LAST:event_cmdEndDateActionPerformed
+
+    private void setDate(javax.swing.JTextField txtField) {
+        Date date;
         try {
-            var list = dlPurchase.getPurchaseListByData("").list();
+            date = (Date) Formats.DATE.parseValue(txtField.getText());
+        } catch (BasicException e) {
+            date = null;
+        }
+        date = JCalendarDialog.showCalendarTime(this, date);
+        if (date != null) {
+            txtField.setText(Formats.DATE.formatValue(date));
+        }
+    }
+
+    private void findPurchase() {
+        Date startDate = null;
+        Date endDate = null;
+        try {
+            startDate = (Date) Formats.DATE.parseValue(txtStartDate.getText());
+            endDate = (Date) Formats.DATE.parseValue(txtEndDate.getText());
+        } catch (BasicException ex) {
+            JOptionPane.showMessageDialog(this, AppLocal.getIntString("label.datestitle"), "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        try {
+
+            lpr = new ListProviderCreator(
+                    dlPurchase.getPurchaseListByData(
+                            startDate,
+                            endDate,
+                            txtPurchase.getText()
+                    )
+            );
+
+            jListPurchases.setModel(new PurchaseFinderDialog.MyListData(lpr.loadData()));
+            if (jListPurchases.getModel().getSize() > 0) {
+                jListPurchases.setSelectedIndex(0);
+                jListPurchases.requestFocus();
+            }
         } catch (BasicException ex) {
             log.error(PurchaseFinderDialog.class.getName() + " cmdFinderActionPerformed " + ex);
         }
-    }//GEN-LAST:event_cmdFinderActionPerformed
+    }
 
     private void doClose(int retStatus) {
         returnStatus = retStatus;
@@ -190,15 +320,39 @@ public class PurchaseFinderDialog extends javax.swing.JDialog {
         dispose();
     }
 
+    private static class MyListData extends javax.swing.AbstractListModel {
+
+        private final java.util.List m_data;
+
+        public MyListData(java.util.List data) {
+            m_data = data;
+        }
+
+        @Override
+        public Object getElementAt(int index) {
+            return m_data.get(index);
+        }
+
+        @Override
+        public int getSize() {
+            return m_data.size();
+        }
+    }
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton cancelButton;
+    private javax.swing.JButton cmdEndDate;
     private javax.swing.JButton cmdFinder;
-    private javax.swing.JList<String> jListPurchases;
+    private javax.swing.JButton cmdStartDate;
+    private javax.swing.JList jListPurchases;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JLabel lblDates;
     private javax.swing.JLabel lblPurchase;
     private javax.swing.JButton okButton;
     private javax.swing.JPanel panelFinder;
+    private javax.swing.JTextField txtEndDate;
     private javax.swing.JTextField txtPurchase;
+    private javax.swing.JTextField txtStartDate;
     // End of variables declaration//GEN-END:variables
 
     private int returnStatus = RET_CANCEL;

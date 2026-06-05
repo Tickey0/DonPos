@@ -6,6 +6,7 @@ import com.unicenta.data.loader.SerializableRead;
 import com.unicenta.data.loader.SerializerRead;
 import com.unicenta.format.Formats;
 import com.unicenta.pos.inventory.InventoryLine;
+import com.unicenta.pos.suppliers.SupplierInfo;
 import com.unicenta.pos.ticket.UserInfo;
 import java.util.Date;
 import java.util.List;
@@ -28,12 +29,13 @@ public class PurchaseInfo implements SerializableRead {
     private Integer number;
     private Date createdAt;
     private Integer reason;
-    private String supplier;
+    private SupplierInfo supplier;
     private String purchaseTaxSupport;
     private String purchaseDocument;
     private String purchaseReference;
     private Date purchaseDate;
     private String purchaseAuthorization;
+    private String location;
     private String observation;
     private Boolean status;
 
@@ -84,19 +86,29 @@ public class PurchaseInfo implements SerializableRead {
         return Formats.CURRENCY.formatValue(getTotal());
     }
 
+    public InventoryLine getLine(int index) {
+        return invLines.get(index);
+    }
+
+    public int getLinesCount() {
+        return invLines.size();
+    }
+
     @Override
     public void readValues(DataRead dr) throws BasicException {
-        number = dr.getInt(1);
-        createdAt = dr.getTimestamp(2);
-        reason = dr.getInt(3);
-        supplier = dr.getString(4);
-        purchaseTaxSupport = dr.getString(5);
-        purchaseDocument = dr.getString(6);
-        purchaseReference = dr.getString(7);
-        purchaseDate = dr.getTimestamp(8);
-        purchaseAuthorization = dr.getString(9);
-        observation = dr.getString(10);
-        status = dr.getBoolean(11);
+        id = dr.getString(1);
+        number = dr.getInt(2);
+        createdAt = dr.getTimestamp(3);
+        reason = dr.getInt(4);
+        supplier = new SupplierInfo(dr.getString(5));
+        purchaseTaxSupport = dr.getString(6);
+        purchaseDocument = dr.getString(7);
+        purchaseReference = dr.getString(8);
+        purchaseDate = dr.getTimestamp(9);
+        purchaseAuthorization = dr.getString(10);
+        location = dr.getString(11);
+        observation = dr.getString(12);
+        status = dr.getBoolean(13);
     }
 
     public static SerializerRead getSerializerRead() {
@@ -108,14 +120,23 @@ public class PurchaseInfo implements SerializableRead {
                 purchase.id = dr.getString(1);
                 purchase.number = dr.getInt(2);
                 purchase.createdAt = dr.getTimestamp(3);
-                purchase.supplier = dr.getString(4);
-                purchase.purchaseDate = dr.getTimestamp(5);
-                purchase.purchaseDocument = dr.getString(6);
-                purchase.purchaseReference = dr.getString(7);
-                purchase.observation = dr.getString(8);
+                purchase.supplier = new SupplierInfo(dr.getString(4));
+                purchase.getSupplier().setName(dr.getString(5));
+                purchase.purchaseDate = dr.getTimestamp(6);
+                purchase.purchaseDocument = dr.getString(7);
+                purchase.purchaseReference = dr.getString(8);
+                purchase.observation = dr.getString(9);
 
                 return purchase;
             }
         };
+    }
+
+    @Override
+    public String toString() {
+        var createdAtFormated = Formats.DATE.formatValue(createdAt);
+        var purchaseDateFormated = Formats.DATE.formatValue(purchaseDate);
+
+        return "# " + number + " " + createdAtFormated + " | " + supplier.getName() + " - " + purchaseDocument + " " + purchaseReference + " " + purchaseDateFormated + " - " + observation;
     }
 }

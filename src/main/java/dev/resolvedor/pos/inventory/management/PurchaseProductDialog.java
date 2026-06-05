@@ -6,6 +6,7 @@ import com.unicenta.data.loader.LocalRes;
 import com.unicenta.data.loader.SentenceList;
 import com.unicenta.data.user.ListProvider;
 import com.unicenta.data.user.ListProviderCreator;
+import com.unicenta.format.Formats;
 import com.unicenta.pos.forms.AppLocal;
 import com.unicenta.pos.forms.AppView;
 import com.unicenta.pos.forms.DataLogicSales;
@@ -14,6 +15,7 @@ import com.unicenta.pos.ticket.ProductInfoExt;
 import com.unicenta.pos.ticket.TaxInfo;
 import dev.resolvedor.util.StringUtils;
 import dev.resolvedor.pos.inventory.lot.DataLogicLot;
+import dev.resolvedor.util.Read;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import javax.swing.AbstractAction;
@@ -318,7 +320,7 @@ public class PurchaseProductDialog extends javax.swing.JDialog {
         tax = taxeslogic.getTaxInfo(selectedProduct.getTaxCategoryID(), null);
 
         selectedProduct.setQuantity(Double.parseDouble(txtQuantiy.getText()));
-        selectedProduct.setTotalCost(Double.parseDouble(txtTotalCost.getText()));
+        selectedProduct.setTotalCost(Read.currency(txtTotalCost.getText().trim()));
 
         double costWithTax = selectedProduct.getTotalCost() / selectedProduct.getQuantity();
         double taxValue = tax.getRate() + 1;
@@ -349,11 +351,11 @@ public class PurchaseProductDialog extends javax.swing.JDialog {
             return false;
         }
 
-        if (!StringUtils.isNumber(txtTotalCost.getText().trim())) {
+        if (Read.currency(txtTotalCost.getText().trim()) == null) {
             JOptionPane.showMessageDialog(this, LocalRes.getIntString("message.numericTotal"), AppLocal.getIntString("label.total"), JOptionPane.ERROR_MESSAGE);
             return false;
         } else {
-            var validNumber = Double.parseDouble(txtTotalCost.getText().trim());
+            var validNumber = Read.currency(txtTotalCost.getText().trim());
             if (validNumber < 0) {
                 JOptionPane.showMessageDialog(this, LocalRes.getIntString("exception.nonegativenumberorzero"), AppLocal.getIntString("label.total"), JOptionPane.ERROR_MESSAGE);
                 return false;
@@ -413,6 +415,8 @@ public class PurchaseProductDialog extends javax.swing.JDialog {
                 );
                 cboLot.setModel(modelLot);
                 modelLot.setSelectedFirst();
+
+                txtTotalCost.setText(Formats.CURRENCY.formatValue(selectedProduct.getPriceBuy()));
             } catch (BasicException ex) {
                 log.error(PurchaseProductDialog.class.getName() + " " + ex.getMessage());
                 modelLot = new ComboBoxValModel();

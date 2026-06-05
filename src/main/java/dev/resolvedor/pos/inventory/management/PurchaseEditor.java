@@ -64,6 +64,7 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
         panelLines.add(purchaseLines, BorderLayout.CENTER);
 
         AutoCompleteDecorator.decorate(cboSupplier);
+        enableForm(true);
     }
 
     /**
@@ -78,6 +79,7 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
         cmdSave = new javax.swing.JButton();
         cmdInsert = new javax.swing.JButton();
         cmdSearch = new javax.swing.JButton();
+        cmdDelete = new javax.swing.JButton();
         panelHead = new javax.swing.JPanel();
         lblNumber = new javax.swing.JLabel();
         txtNumber = new javax.swing.JTextField();
@@ -134,6 +136,13 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
         cmdSearch.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 cmdSearchActionPerformed(evt);
+            }
+        });
+
+        cmdDelete.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/unicenta/images/editdelete.png"))); // NOI18N
+        cmdDelete.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cmdDeleteActionPerformed(evt);
             }
         });
 
@@ -472,6 +481,8 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
                         .addComponent(cmdInsert, javax.swing.GroupLayout.PREFERRED_SIZE, 180, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(cmdSearch, javax.swing.GroupLayout.PREFERRED_SIZE, 180, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(cmdDelete, javax.swing.GroupLayout.PREFERRED_SIZE, 180, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(0, 0, Short.MAX_VALUE))
                     .addGroup(layout.createSequentialGroup()
                         .addGap(0, 0, Short.MAX_VALUE)
@@ -500,7 +511,8 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(cmdSave)
                     .addComponent(cmdInsert)
-                    .addComponent(cmdSearch))
+                    .addComponent(cmdSearch)
+                    .addComponent(cmdDelete))
                 .addGap(14, 14, 14))
         );
     }// </editor-fold>//GEN-END:initComponents
@@ -522,8 +534,8 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
             purchase.setMoney(app.getActiveCashIndex());
             purchase.setCreatedAt(new Date());
             purchase.setReason((Integer) modelReason.getSelectedKey());
-            purchase.setSupplier(modelSupplier.getSelectedKey().toString());
-
+            purchase.setSupplier(new SupplierInfo(modelSupplier.getSelectedKey().toString()));
+            purchase.setLocation((String) modelLocation.getSelectedKey());
             // Purchase tax support
             purchase.setPurchaseTaxSupport(modelTaxSupport.getSelectedKey().toString());
             purchase.setPurchaseDocument(modelDocumentType.getSelectedKey().toString());
@@ -651,6 +663,7 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
     }
 
     private void cmdInsertActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmdInsertActionPerformed
+        enableForm(true);
         stateToInsert();
         cboReason.requestFocus();
     }//GEN-LAST:event_cmdInsertActionPerformed
@@ -716,7 +729,7 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
     }//GEN-LAST:event_txtDatePurchaseFocusGained
 
     private void cmdSearchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmdSearchActionPerformed
-        PurchaseFinderDialog dialog = new PurchaseFinderDialog(new javax.swing.JFrame(), dlPurchase);
+        PurchaseFinderDialog dialog = new PurchaseFinderDialog(app, new javax.swing.JFrame());
         dialog.addWindowListener(new java.awt.event.WindowAdapter() {
             @Override
             public void windowClosing(java.awt.event.WindowEvent e) {
@@ -726,9 +739,55 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
         dialog.setLocationRelativeTo(null);
         dialog.setVisible(true);
         if (dialog.getReturnStatus() == PurchaseProductDialog.RET_OK) {
-            System.out.println("Find puchase");
+            loadPurchase(dialog.getSelectedPurchase());
         }
     }//GEN-LAST:event_cmdSearchActionPerformed
+
+    private void cmdDeleteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmdDeleteActionPerformed
+        var status = JOptionPane.showConfirmDialog(
+                this,
+                AppLocal.getIntString("message.deletelineyes"),
+                AppLocal.getIntString("label.purchase"),
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE
+        );
+        if (status == JOptionPane.YES_OPTION) {
+            if (purchase != null) {
+                try {
+                    dlPurchase.deleteTicket(purchase, dlSales);
+                    enableForm(true);
+                    stateToInsert();
+                    cboReason.requestFocus();
+                } catch (BasicException ex) {
+                    log.error(PurchaseEditor.class.getName() + " cmdDeleteActionPerformed " + ex);
+                }
+            }
+        }
+    }//GEN-LAST:event_cmdDeleteActionPerformed
+
+    private void loadPurchase(PurchaseInfo purchase) {
+        this.purchase = purchase;
+
+        txtNumber.setText(purchase.getNumber() == null ? null : purchase.getNumber().toString());
+        txtCreatedAt.setText(purchase.getCreatedAt() == null ? null : Formats.TIMESTAMP.formatValue(purchase.getCreatedAt()));
+        txtObservation.setText(purchase.getObservation());
+        txtSerie.setText(purchase.getPurchaseReference());
+        txtDatePurchase.setText(purchase.getPurchaseDate() == null ? null : Formats.DATE.formatValue(purchase.getPurchaseDate()));
+        txtAuthorization.setText(purchase.getPurchaseAuthorization());
+
+        modelReason.setSelectedKey(purchase.getReason());
+        modelSupplier.setSelectedKey(purchase.getSupplier().getID());
+        modelDocumentType.setSelectedKey(purchase.getPurchaseDocument());
+        modelTaxSupport.setSelectedKey(purchase.getPurchaseTaxSupport());
+
+        purchaseLines.clear();
+        for (InventoryLine line : purchase.getInvLines()) {
+            purchaseLines.addLine(line);
+        }
+
+        printInvLines();
+        enableForm(false);
+    }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JComboBox<String> cboDocumentType;
@@ -736,6 +795,7 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
     private javax.swing.JComboBox<String> cboReason;
     private javax.swing.JComboBox<String> cboSupplier;
     private javax.swing.JComboBox<String> cboTaxSupport;
+    private javax.swing.JButton cmdDelete;
     private javax.swing.JButton cmdDeleteAll;
     private javax.swing.JButton cmdDeleteProduct;
     private javax.swing.JButton cmdFindProduct;
@@ -889,13 +949,34 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
     }
 
     private void printInvLines() {
-        for (int i = 0; i < this.purchase.getInvLines().size(); i++) {
-            InventoryLine inv = this.purchase.getInvLines().get(i);
-//            System.out.println(i + " Product: " + inv.getProductName() + " #: " + inv.getMultiply() + " Total: " + inv.getPrice() * inv.getMultiply());
-        }
-
         lblSubtotal.setText(purchase.printSubTotal());
         lblTax.setText(purchase.printTax());
         lblTotal.setText(purchase.printTotal());
+    }
+
+    private void enableForm(boolean status) {
+        txtNumber.setEnabled(status);
+        txtCreatedAt.setEnabled(status);
+        txtObservation.setEnabled(status);
+        txtSerie.setEnabled(status);
+        txtDatePurchase.setEnabled(status);
+        txtAuthorization.setEnabled(status);
+
+        cboLocation.setEnabled(status);
+        cboReason.setEnabled(status);
+        cboSupplier.setEnabled(status);
+        cboTaxSupport.setEnabled(status);
+        cboDocumentType.setEnabled(status);
+
+        cmdDeleteProduct.setEnabled(status);
+        cmdFindProduct.setEnabled(status);
+        cmdDeleteAll.setEnabled(status);
+        cmdSave.setEnabled(status);
+
+        if (status) {
+            cmdDelete.setEnabled(false);
+        } else {
+            cmdDelete.setEnabled(true);
+        }
     }
 }
