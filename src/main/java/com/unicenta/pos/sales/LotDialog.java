@@ -2,10 +2,14 @@ package com.unicenta.pos.sales;
 
 import com.unicenta.basic.BasicException;
 import com.unicenta.data.gui.ComboBoxValModel;
+import com.unicenta.pos.forms.AppLocal;
 import com.unicenta.pos.forms.AppView;
 import dev.resolvedor.pos.inventory.lot.DataLogicLot;
+import dev.resolvedor.pos.inventory.lot.LotInfo;
+import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
+import java.util.Date;
 import javax.swing.AbstractAction;
 import javax.swing.ActionMap;
 import javax.swing.InputMap;
@@ -76,6 +80,7 @@ public class LotDialog extends javax.swing.JDialog {
         cancelButton = new javax.swing.JButton();
         jPanel1 = new javax.swing.JPanel();
         cboLot = new javax.swing.JComboBox<>();
+        lblMessage = new javax.swing.JLabel();
 
         addWindowListener(new java.awt.event.WindowAdapter() {
             public void windowClosing(java.awt.event.WindowEvent evt) {
@@ -97,13 +102,27 @@ public class LotDialog extends javax.swing.JDialog {
             }
         });
 
+        cboLot.setFont(new java.awt.Font("Noto Sans", 0, 18)); // NOI18N
+        cboLot.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cboLotActionPerformed(evt);
+            }
+        });
+
+        lblMessage.setFont(new java.awt.Font("Noto Sans", 1, 21)); // NOI18N
+        lblMessage.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        lblMessage.setText("...");
+        lblMessage.setPreferredSize(new java.awt.Dimension(90, 36));
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(cboLot, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(cboLot, 0, 418, Short.MAX_VALUE)
+                    .addComponent(lblMessage, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
@@ -111,7 +130,9 @@ public class LotDialog extends javax.swing.JDialog {
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addGap(22, 22, 22)
                 .addComponent(cboLot, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(36, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(lblMessage, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap())
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -137,7 +158,7 @@ public class LotDialog extends javax.swing.JDialog {
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 23, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 18, Short.MAX_VALUE)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(cancelButton)
                     .addComponent(okButton))
@@ -164,6 +185,29 @@ public class LotDialog extends javax.swing.JDialog {
         doClose(RET_CANCEL);
     }//GEN-LAST:event_closeDialog
 
+    private void cboLotActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboLotActionPerformed
+        try {
+            var selectedLot = (LotInfo) dlLot.getLotInfo()
+                    .find(modelLot.getSelectedKey().toString());
+
+            if (selectedLot.getExpirationDate() != null) {
+                Date now = new Date();
+                if (selectedLot.getExpirationDate().before(now)) {
+                    lblMessage.setForeground(Color.RED);
+                    lblMessage.setText(AppLocal.getIntString("label.expired"));
+                } else {
+                    lblMessage.setForeground(Color.BLACK);
+                    lblMessage.setText("...");
+                }
+            } else {
+                lblMessage.setForeground(Color.BLACK);
+                lblMessage.setText("...");
+            }
+        } catch (BasicException ex) {
+            log.error(LotDialog.class.getName() + " cboLotActionPerformed " + ex);
+        }
+    }//GEN-LAST:event_cboLotActionPerformed
+
     private void doClose(int retStatus) {
         returnStatus = retStatus;
         setVisible(false);
@@ -178,6 +222,7 @@ public class LotDialog extends javax.swing.JDialog {
     private javax.swing.JButton cancelButton;
     private javax.swing.JComboBox<String> cboLot;
     private javax.swing.JPanel jPanel1;
+    private javax.swing.JLabel lblMessage;
     private javax.swing.JButton okButton;
     // End of variables declaration//GEN-END:variables
 
