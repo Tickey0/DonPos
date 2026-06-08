@@ -17,7 +17,7 @@
 	products.CATEGORY,
 	categories.NAME AS CATEGORYNAME,
 	products.SUPPLIER,
-	SUM(stockcurrent.UNITS) AS UNITS,
+	stockcurrent.UNITS AS UNITS,
 	products.PRICEBUY,
 	products.PRICESELL,
 	COALESCE(products.STOCKVOLUME, 0) AS STOCKVOLUME,
@@ -45,6 +45,7 @@ LEFT OUTER JOIN stocklevel stocklevel ON
 	AND stockcurrent.PRODUCT = stocklevel.PRODUCT
 GROUP BY
 	stockcurrent.LOCATION,
+        stockcurrent.lot,
 	locations.NAME,
 	products.REFERENCE,
 	products.NAME,

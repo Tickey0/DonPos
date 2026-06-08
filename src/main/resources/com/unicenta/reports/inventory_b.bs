@@ -27,14 +27,14 @@ report.setSentence("SELECT " +
         "stockcurrent.LOCATION AS LOCATIONID, locations.NAME AS LOCATIONNAME, " +
         "products.REFERENCE, products.NAME AS PRODUCTNAME, " +
         "products.CATEGORY, categories.NAME AS CATEGORYNAME, " +
-        "MIN(products.SUPPLIER), " +
-        "SUM(stockcurrent.UNITS) AS UNITS, " +
+        "products.SUPPLIER, " +
+        "stockcurrent.UNITS AS UNITS, " +
         "products.PRICEBUY, products.PRICESELL, " +
         "COALESCE(products.STOCKVOLUME, 0) AS STOCKVOLUME, " +
         "COALESCE(products.STOCKCOST, 0) AS STOCKCOST, " +
         "COALESCE(stocklevel.STOCKSECURITY, 0) AS STOCKSECURITY, " +
         "COALESCE(stocklevel.STOCKMAXIMUM, 0) AS STOCKMAXIMUM, " +
-        "MIN(suppliers.NAME) AS SUPPLIERNAME, MIN(uom.NAME) AS UOM " +
+        "suppliers.NAME AS SUPPLIERNAME, uom.NAME AS UOM " +
     "FROM stockcurrent stockcurrent INNER JOIN locations locations " +
     "ON stockcurrent.LOCATION = locations.id " +
     "INNER JOIN products products ON stockcurrent.PRODUCT = products.ID " +
@@ -45,7 +45,7 @@ report.setSentence("SELECT " +
     "LEFT OUTER JOIN stocklevel stocklevel ON stockcurrent.LOCATION = stocklevel.LOCATION " +
     "AND stockcurrent.PRODUCT = stocklevel.PRODUCT " +
     "WHERE ?(QBF_FILTER)" +      
-    "GROUP BY stockcurrent.LOCATION, locations.NAME, products.REFERENCE, products.NAME, " +
+    "GROUP BY stockcurrent.LOCATION, stockcurrent.lot, locations.NAME, products.REFERENCE, products.NAME, " +
         "products.CATEGORY, categories.NAME, products.PRICEBUY, products.PRICESELL, " +
         "products.STOCKVOLUME, products.STOCKCOST, stocklevel.STOCKSECURITY, stocklevel.STOCKMAXIMUM " +
     "ORDER BY LOCATIONID ASC, CATEGORYNAME ASC, PRODUCTNAME ASC");
