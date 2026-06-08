@@ -36,8 +36,8 @@ report.setSentence("SELECT "
             + "INNER JOIN products products "
                 + "ON (stockdiary.product = products.id)) "
             + "LEFT OUTER JOIN suppliers suppliers "
-                + "ON (products.supplier = suppliers.id) "
-        + "WHERE VISIBLE = " + app.getSession().DB.TRUE() + " AND ?(QBF_FILTER) " 
+                + "ON (stockdiary.supplier = suppliers.id) "
+        + "WHERE ?(QBF_FILTER) " 
         + "GROUP BY locations.name, stockdiary.reason, stockdiary.datenew, products.name");
 
 report.addParameter("stockdiary.DATENEW");

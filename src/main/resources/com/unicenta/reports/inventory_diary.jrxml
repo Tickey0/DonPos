@@ -10,7 +10,23 @@
 	<import value="net.sf.jasperreports.engine.data.*"/>
 	<parameter name="ARG" class="java.lang.Object" isForPrompting="false"/>
 	<queryString>
-		<![CDATA[]]>
+		<![CDATA[SELECT
+	TIMESTAMP(stockdiary.datenew),
+	stockdiary.reason,
+	MIN(stockdiary.supplierdoc),
+	sum(stockdiary.units),
+	MIN(stockdiary.price),
+	sum(stockdiary.UNITS * stockdiary.PRICE) AS TOTALP,
+	MIN(suppliers.name) AS SUPPLIERNAME,
+	products.name,
+	MIN(products.reference),
+	MIN(products.code),
+	locations.name
+FROM stockdiary stockdiary
+INNER JOIN locations locations ON stockdiary.location = locations.id
+INNER JOIN products products ON	stockdiary.product = products.id
+LEFT OUTER JOIN suppliers suppliers ON stockdiary.supplier = suppliers.id
+GROUP BY locations.name, stockdiary.reason, stockdiary.datenew, products.name]]>
 	</queryString>
 	<field name="DATENEW" class="java.util.Date"/>
 	<field name="REASON" class="java.lang.Integer"/>

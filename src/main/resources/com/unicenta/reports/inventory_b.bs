@@ -35,14 +35,15 @@ report.setSentence("SELECT " +
         "COALESCE(stocklevel.STOCKSECURITY, 0) AS STOCKSECURITY, " +
         "COALESCE(stocklevel.STOCKMAXIMUM, 0) AS STOCKMAXIMUM, " +
         "MIN(suppliers.NAME) AS SUPPLIERNAME, MIN(uom.NAME) AS UOM " +
-    "FROM (((((stockcurrent stockcurrent INNER JOIN locations locations " +
-            "ON (stockcurrent.LOCATION = locations.id)) " +
-            "INNER JOIN products products ON (stockcurrent.PRODUCT = products.ID)) " +
-            "INNER JOIN categories categories ON (products.CATEGORY = categories.ID)) " +
-        "RIGHT OUTER JOIN suppliers suppliers ON (suppliers.id = products.SUPPLIER)) " +
-            "INNER JOIN uom uom ON (uom.id = products.UOM)) " +
-        "LEFT OUTER JOIN stocklevel stocklevel ON (stockcurrent.LOCATION = stocklevel.LOCATION) " +
-            "AND (stockcurrent.PRODUCT = stocklevel.PRODUCT) " +
+    "FROM stockcurrent stockcurrent INNER JOIN locations locations " +
+    "ON stockcurrent.LOCATION = locations.id " +
+    "INNER JOIN products products ON stockcurrent.PRODUCT = products.ID " +
+    "INNER JOIN stockdiary stockdiary ON stockdiary.product = products.id " +
+    "INNER JOIN categories categories ON products.CATEGORY = categories.ID " +
+    "RIGHT OUTER JOIN suppliers suppliers ON suppliers.id = stockdiary.SUPPLIER " +
+    "INNER JOIN uom uom ON uom.id = products.UOM " +
+    "LEFT OUTER JOIN stocklevel stocklevel ON stockcurrent.LOCATION = stocklevel.LOCATION " +
+    "AND stockcurrent.PRODUCT = stocklevel.PRODUCT " +
     "WHERE ?(QBF_FILTER)" +      
     "GROUP BY stockcurrent.LOCATION, locations.NAME, products.REFERENCE, products.NAME, " +
         "products.CATEGORY, categories.NAME, products.PRICEBUY, products.PRICESELL, " +
