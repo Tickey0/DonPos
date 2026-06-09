@@ -828,6 +828,20 @@ CREATE TABLE `document_types` (
         PRIMARY KEY  ( `id` )   
 ) ENGINE = InnoDB DEFAULT CHARSET=utf8 ;
 
+CREATE TABLE `volume_discount` (
+        `id` INT NOT NULL AUTO_INCREMENT,
+        `product` VARCHAR(255) NOT NULL,
+        `minimum_quantity` INT NOT NULL DEFAULT 0,
+        `type` VARCHAR(45) NOT NULL DEFAULT 'percentage' COMMENT 'percentage/amount',
+        `value` DOUBLE NOT NULL DEFAULT 0,
+        `status` BOOLEAN DEFAULT true,
+        `created_at` datetime DEFAULT NOW(),
+        PRIMARY KEY (`id`)
+) ENGINE = InnoDB DEFAULT CHARSET=utf8 ;
+
+ALTER TABLE `volume_discount` ADD CONSTRAINT `volume_discount_product_fk`
+	FOREIGN KEY ( `product` ) REFERENCES `products` ( `id` );
+
 ALTER TABLE `products_lots` ADD CONSTRAINT `product_lot_fk`
 	FOREIGN KEY ( `product` ) REFERENCES `products` ( `id` );
 
