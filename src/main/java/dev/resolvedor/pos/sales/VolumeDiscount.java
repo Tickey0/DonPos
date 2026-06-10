@@ -8,6 +8,7 @@ import com.unicenta.pos.forms.AppView;
 import com.unicenta.pos.forms.BeanFactoryApp;
 import com.unicenta.pos.forms.BeanFactoryException;
 import com.unicenta.pos.forms.JPanelView;
+import com.unicenta.pos.ticket.ProductInfoExt;
 import java.awt.Font;
 import java.util.List;
 import javax.swing.JComponent;
@@ -41,12 +42,75 @@ public class VolumeDiscount extends JPanel implements JPanelView, BeanFactoryApp
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        panFilter = new javax.swing.JPanel();
+        lblCategories = new javax.swing.JLabel();
         cboCategories = new javax.swing.JComboBox<>();
+        cmdReload = new javax.swing.JButton();
+        panProduct = new javax.swing.JPanel();
+        cmdFindProduct = new javax.swing.JButton();
         jScrollPane2 = new javax.swing.JScrollPane();
         tableProducts = new javax.swing.JTable();
         cmdOkProducts = new javax.swing.JButton();
 
+        java.util.ResourceBundle bundle = java.util.ResourceBundle.getBundle("pos_messages"); // NOI18N
+        panFilter.setBorder(javax.swing.BorderFactory.createTitledBorder(bundle.getString("label.find"))); // NOI18N
+
+        lblCategories.setText(bundle.getString("label.prodcategory")); // NOI18N
+        lblCategories.setPreferredSize(new java.awt.Dimension(90, 36));
+
+        cboCategories.setPreferredSize(new java.awt.Dimension(90, 36));
         cboCategories.addActionListener(this::cboCategoriesActionPerformed);
+
+        cmdReload.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/unicenta/images/reload.png"))); // NOI18N
+        cmdReload.setPreferredSize(new java.awt.Dimension(36, 36));
+        cmdReload.addActionListener(this::cmdReloadActionPerformed);
+
+        javax.swing.GroupLayout panFilterLayout = new javax.swing.GroupLayout(panFilter);
+        panFilter.setLayout(panFilterLayout);
+        panFilterLayout.setHorizontalGroup(
+            panFilterLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(panFilterLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(lblCategories, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(cboCategories, javax.swing.GroupLayout.PREFERRED_SIZE, 300, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(cmdReload, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(260, Short.MAX_VALUE))
+        );
+        panFilterLayout.setVerticalGroup(
+            panFilterLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(panFilterLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(panFilterLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(lblCategories, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(cboCategories, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(cmdReload, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+
+        panProduct.setBorder(javax.swing.BorderFactory.createTitledBorder(bundle.getString("label.stockproduct"))); // NOI18N
+
+        cmdFindProduct.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/unicenta/images/search24.png"))); // NOI18N
+        cmdFindProduct.setPreferredSize(new java.awt.Dimension(36, 36));
+        cmdFindProduct.addActionListener(this::cmdFindProductActionPerformed);
+
+        javax.swing.GroupLayout panProductLayout = new javax.swing.GroupLayout(panProduct);
+        panProduct.setLayout(panProductLayout);
+        panProductLayout.setHorizontalGroup(
+            panProductLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(panProductLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(cmdFindProduct, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+        panProductLayout.setVerticalGroup(
+            panProductLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(panProductLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(cmdFindProduct, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
 
         tableProducts.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -66,33 +130,38 @@ public class VolumeDiscount extends JPanel implements JPanelView, BeanFactoryApp
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(cmdOkProducts, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap())
             .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(cboCategories, javax.swing.GroupLayout.PREFERRED_SIZE, 300, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(294, Short.MAX_VALUE))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(panFilter, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(layout.createSequentialGroup()
+                        .addContainerGap()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(layout.createSequentialGroup()
+                                .addGap(0, 0, Short.MAX_VALUE)
+                                .addComponent(cmdOkProducts, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(panProduct, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                .addContainerGap())
             .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(layout.createSequentialGroup()
                     .addContainerGap()
-                    .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 588, Short.MAX_VALUE)
+                    .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 708, Short.MAX_VALUE)
                     .addContainerGap()))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(cboCategories, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 448, Short.MAX_VALUE)
+                .addComponent(panFilter, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(panProduct, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 341, Short.MAX_VALUE)
                 .addComponent(cmdOkProducts, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
             .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(layout.createSequentialGroup()
-                    .addGap(80, 80, 80)
-                    .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 377, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addContainerGap(68, Short.MAX_VALUE)))
+                    .addGap(177, 177, 177)
+                    .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 280, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addContainerGap(90, Short.MAX_VALUE)))
         );
     }// </editor-fold>//GEN-END:initComponents
 
@@ -123,6 +192,32 @@ public class VolumeDiscount extends JPanel implements JPanelView, BeanFactoryApp
         loadVolumeDiscount(modelCategory.getSelectedKey().toString());
     }//GEN-LAST:event_cboCategoriesActionPerformed
 
+    private void cmdFindProductActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmdFindProductActionPerformed
+        java.awt.EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                ProductFinder dialog = new ProductFinder(app, new javax.swing.JFrame());
+                dialog.addWindowListener(new java.awt.event.WindowAdapter() {
+                    @Override
+                    public void windowClosing(java.awt.event.WindowEvent e) {
+                        dialog.setVisible(false);
+                    }
+                });
+                dialog.setLocationRelativeTo(null);
+                dialog.setVisible(true);
+                if (dialog.getReturnStatus() == ProductFinder.RET_OK) {
+                    ProductInfoExt product = dialog.getProduct();
+                    System.out.println(product);
+                    //incProduct(product, dialog.getTax());
+                }
+            }
+        });
+    }//GEN-LAST:event_cmdFindProductActionPerformed
+
+    private void cmdReloadActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmdReloadActionPerformed
+        loadCategory();
+        loadVolumeDiscount("");
+    }//GEN-LAST:event_cmdReloadActionPerformed
+
     @Override
     public String getTitle() {
         return AppLocal.getIntString("Menu.Discounts");
@@ -131,6 +226,7 @@ public class VolumeDiscount extends JPanel implements JPanelView, BeanFactoryApp
     @Override
     public void activate() throws BasicException {
         loadCategory();
+        loadVolumeDiscount("");
     }
 
     @Override
@@ -255,8 +351,13 @@ public class VolumeDiscount extends JPanel implements JPanelView, BeanFactoryApp
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JComboBox<String> cboCategories;
+    private javax.swing.JButton cmdFindProduct;
     private javax.swing.JButton cmdOkProducts;
+    private javax.swing.JButton cmdReload;
     private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JLabel lblCategories;
+    private javax.swing.JPanel panFilter;
+    private javax.swing.JPanel panProduct;
     private javax.swing.JTable tableProducts;
     // End of variables declaration//GEN-END:variables
 }

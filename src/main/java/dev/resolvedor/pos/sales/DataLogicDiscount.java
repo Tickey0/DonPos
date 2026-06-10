@@ -34,7 +34,7 @@ public class DataLogicDiscount extends BeanFactoryDataSingle {
         return new StaticSentence(s,
                 "SELECT d.id, p.code, p.name, p.pricesell, d.minimum_quantity, d.value, d.status "
                 + "from products p inner join volume_discount d on p.id = d.product "
-                + "where p.category = '" + categoryId + "' "
+                + "where (p.category = '" + categoryId + "' or '' = '" + categoryId + "')"
                 + "order by p.name asc",
                 null,
                 new SerializerReadClass(VolumeDiscountInfo.class));
