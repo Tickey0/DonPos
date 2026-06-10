@@ -1,10 +1,8 @@
 package dev.resolvedor.pos.sales;
 
 import com.unicenta.basic.BasicException;
-import com.unicenta.data.loader.Datas;
 import com.unicenta.data.loader.SentenceList;
 import com.unicenta.data.loader.SerializerReadClass;
-import com.unicenta.data.loader.SerializerWriteBasic;
 import com.unicenta.data.loader.Session;
 import com.unicenta.data.loader.StaticSentence;
 import com.unicenta.pos.forms.BeanFactoryDataSingle;
@@ -42,13 +40,13 @@ public class DataLogicDiscount extends BeanFactoryDataSingle {
                 new SerializerReadClass(VolumeDiscountInfo.class));
     }
 
-    public void updateProductCommission(String productId, double commission) throws BasicException {
+    public void updateDiscount(String productId, double value) throws BasicException {
         //TODO discounts
         /*
         new StaticSentence(s,
                 "UPDATE products SET discount = ? WHERE id = ?",
                 new SerializerWriteBasic(new Datas[]{Datas.DOUBLE, Datas.STRING}))
-                .exec(new Object[]{commission, productId});
+                .exec(new Object[]{value, productId});
          */
     }
 }
