@@ -24,15 +24,15 @@ import lombok.extern.slf4j.Slf4j;
  * @mail jorgeluis@resolvedor.dev
  */
 @Slf4j
-public class Discount extends JPanel implements JPanelView, BeanFactoryApp {
+public class VolumeDiscount extends JPanel implements JPanelView, BeanFactoryApp {
 
     private AppView app;
     private DataLogicDiscount dlDiscount;
 
-    private Discount.CategoryTableModel categoryModel;
-    private Discount.ProductTableModel productModel;
+    private VolumeDiscount.CategoryTableModel categoryModel;
+    private VolumeDiscount.DiscountTableModel discountModel;
 
-    public Discount() {
+    public VolumeDiscount() {
         initComponents();
     }
 
@@ -44,7 +44,7 @@ public class Discount extends JPanel implements JPanelView, BeanFactoryApp {
         panCategories = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
         tableCategories = new javax.swing.JTable();
-        panProduct = new javax.swing.JPanel();
+        panDiscount = new javax.swing.JPanel();
         jScrollPane2 = new javax.swing.JScrollPane();
         tableProducts = new javax.swing.JTable();
         cmdOkProducts = new javax.swing.JButton();
@@ -90,42 +90,34 @@ public class Discount extends JPanel implements JPanelView, BeanFactoryApp {
         java.util.ResourceBundle bundle = java.util.ResourceBundle.getBundle("pos_messages"); // NOI18N
         tabPanel.addTab(bundle.getString("Menu.Categories"), panCategories); // NOI18N
 
-        panProduct.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
+        panDiscount.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
 
         tableProducts.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
 
             },
             new String [] {
-                "Title 1", "Title 2", "Title 3"
-            }
-        ) {
-            Class[] types = new Class [] {
-                java.lang.String.class, java.lang.String.class, java.lang.Double.class
-            };
 
-            public Class getColumnClass(int columnIndex) {
-                return types [columnIndex];
             }
-        });
+        ));
         jScrollPane2.setViewportView(tableProducts);
 
         cmdOkProducts.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/unicenta/images/ok.png"))); // NOI18N
         cmdOkProducts.setPreferredSize(new java.awt.Dimension(120, 36));
         cmdOkProducts.addActionListener(this::cmdOkProductsActionPerformed);
 
-        javax.swing.GroupLayout panProductLayout = new javax.swing.GroupLayout(panProduct);
-        panProduct.setLayout(panProductLayout);
-        panProductLayout.setHorizontalGroup(
-            panProductLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+        javax.swing.GroupLayout panDiscountLayout = new javax.swing.GroupLayout(panDiscount);
+        panDiscount.setLayout(panDiscountLayout);
+        panDiscountLayout.setHorizontalGroup(
+            panDiscountLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 588, Short.MAX_VALUE)
-            .addGroup(panProductLayout.createSequentialGroup()
+            .addGroup(panDiscountLayout.createSequentialGroup()
                 .addGap(0, 0, Short.MAX_VALUE)
                 .addComponent(cmdOkProducts, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
-        panProductLayout.setVerticalGroup(
-            panProductLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(panProductLayout.createSequentialGroup()
+        panDiscountLayout.setVerticalGroup(
+            panDiscountLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(panDiscountLayout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 415, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -133,7 +125,7 @@ public class Discount extends JPanel implements JPanelView, BeanFactoryApp {
                 .addContainerGap())
         );
 
-        tabPanel.addTab(bundle.getString("Menu.Products"), panProduct); // NOI18N
+        tabPanel.addTab(bundle.getString("button.discount"), panDiscount); // NOI18N
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
@@ -155,8 +147,8 @@ public class Discount extends JPanel implements JPanelView, BeanFactoryApp {
 
     private void cmdOkProductsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmdOkProductsActionPerformed
         try {
-            for (int i = 0; i < productModel.getRowCount(); i++) {
-                ProductInfo product = productModel.product.get(i);
+            for (int i = 0; i < discountModel.getRowCount(); i++) {
+                VolumeDiscountInfo product = discountModel.discount.get(i);
                 dlDiscount.updateProductCommission(
                         product.getId(),
                         Math.abs(0)
@@ -169,12 +161,12 @@ public class Discount extends JPanel implements JPanelView, BeanFactoryApp {
                     JOptionPane.INFORMATION_MESSAGE
             );
         } catch (BasicException ex) {
-            log.error(Discount.class.getName() + " cmdOkProductsActionPerformed " + ex);
+            log.error(VolumeDiscount.class.getName() + " cmdOkProductsActionPerformed " + ex);
         }
         int selectedRow = tableCategories.getSelectedRow();
         if (selectedRow >= 0) {
             String categoryId = (String) categoryModel.getValueAt(tableCategories.convertRowIndexToModel(selectedRow), 0);
-            loadProductData(categoryId);
+            loadVolumeDiscount(categoryId);
         }
     }//GEN-LAST:event_cmdOkProductsActionPerformed
 
@@ -184,7 +176,7 @@ public class Discount extends JPanel implements JPanelView, BeanFactoryApp {
             int selectedRow = tableCategories.getSelectedRow();
             if (selectedRow >= 0) {
                 String categoryId = (String) categoryModel.getValueAt(tableCategories.convertRowIndexToModel(selectedRow), 0);
-                loadProductData(categoryId);
+                loadVolumeDiscount(categoryId);
             }
         }
     }//GEN-LAST:event_tabPanelStateChanged
@@ -196,7 +188,7 @@ public class Discount extends JPanel implements JPanelView, BeanFactoryApp {
 
     @Override
     public void activate() throws BasicException {
-        loadCategoryData();
+        loadCategory();
     }
 
     @Override
@@ -220,28 +212,28 @@ public class Discount extends JPanel implements JPanelView, BeanFactoryApp {
         return this;
     }
 
-    private void loadCategoryData() {
+    private void loadCategory() {
         try {
             List<CategoryInfo> categories = dlDiscount.getCategoryList().list();
 
-            categoryModel = new Discount.CategoryTableModel(categories);
+            categoryModel = new VolumeDiscount.CategoryTableModel(categories);
             tableCategories.setModel(categoryModel);
 
         } catch (BasicException ex) {
-            log.error(Discount.class.getName() + " loadCategoryData() " + ex);
+            log.error(VolumeDiscount.class.getName() + " loadCategory " + ex);
         }
         resetTable(tableCategories);
     }
 
-    private void loadProductData(String categoryId) {
+    private void loadVolumeDiscount(String categoryId) {
         try {
-            List<ProductInfo> products = dlDiscount.getProductList(categoryId).list();
+            List<VolumeDiscountInfo> discount = dlDiscount.getVolumeDiscountList(categoryId).list();
 
-            productModel = new Discount.ProductTableModel(products);
-            tableProducts.setModel(productModel);
+            discountModel = new VolumeDiscount.DiscountTableModel(discount);
+            tableProducts.setModel(discountModel);
 
         } catch (BasicException ex) {
-            log.error(Discount.class.getName() + " loadProductData() " + ex);
+            log.error(VolumeDiscount.class.getName() + " loadVolumeDiscount " + ex);
         }
         resetTable(tableProducts);
     }
@@ -307,37 +299,52 @@ public class Discount extends JPanel implements JPanelView, BeanFactoryApp {
         }
     }
 
-    class ProductTableModel extends AbstractTableModel {
+    class DiscountTableModel extends AbstractTableModel {
 
         String id = AppLocal.getIntString("label.catid");
-        String name = AppLocal.getIntString("label.catname");
+        String code = AppLocal.getIntString("label.prodbarcode");
+        String name = AppLocal.getIntString("label.name");
+        String priceSell = AppLocal.getIntString("label.price");
+        String minimumQuantity = AppLocal.getIntString("label.units2");
+        String value = AppLocal.getIntString("button.discount");
+        String status = AppLocal.getIntString("label.Status");
 
-        List<ProductInfo> product;
-        String[] columnNames = {id, name};
+        List<VolumeDiscountInfo> discount;
+        String[] columnNames = {id, code, name, priceSell, minimumQuantity, value, status};
 
-        public ProductTableModel(List<ProductInfo> list) {
-            product = list;
+        public DiscountTableModel(List<VolumeDiscountInfo> list) {
+            discount = list;
         }
 
         @Override
         public int getColumnCount() {
-            return 2;
+            return 7;
         }
 
         @Override
         public int getRowCount() {
-            return product.size();
+            return discount.size();
         }
 
         @Override
         public Object getValueAt(int row, int column) {
-            ProductInfo productStock = product.get(row);
+            VolumeDiscountInfo volumeDiscount = discount.get(row);
 
             switch (column) {
                 case 0:
-                    return productStock.getId();
+                    return volumeDiscount.getId();
                 case 1:
-                    return productStock.getName();
+                    return volumeDiscount.getCode();
+                case 2:
+                    return volumeDiscount.getName();
+                case 3:
+                    return volumeDiscount.getPriceSell();
+                case 4:
+                    return volumeDiscount.getMinimumQuantity();
+                case 5:
+                    return volumeDiscount.getValue();
+                case 6:
+                    return volumeDiscount.getStatus();
                 default:
                     return "";
             }
@@ -354,7 +361,7 @@ public class Discount extends JPanel implements JPanelView, BeanFactoryApp {
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JPanel panCategories;
-    private javax.swing.JPanel panProduct;
+    private javax.swing.JPanel panDiscount;
     private javax.swing.JTabbedPane tabPanel;
     private javax.swing.JTable tableCategories;
     private javax.swing.JTable tableProducts;

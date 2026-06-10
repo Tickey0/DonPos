@@ -32,13 +32,14 @@ public class DataLogicDiscount extends BeanFactoryDataSingle {
                 new SerializerReadClass(CategoryInfo.class));
     }
 
-    public final SentenceList getProductList(String categoryId) throws BasicException {
+    public final SentenceList getVolumeDiscountList(String categoryId) throws BasicException {
         return new StaticSentence(s,
-                "select id, name from products "
-                + "where category = '" + categoryId + "' "
-                + "order by name",
+                "SELECT d.id, p.code, p.name, p.pricesell, d.minimum_quantity, d.value, d.status "
+                + "from products p inner join volume_discount d on p.id = d.product "
+                + "where p.category = '" + categoryId + "' "
+                + "order by p.name asc",
                 null,
-                new SerializerReadClass(ProductInfo.class));
+                new SerializerReadClass(VolumeDiscountInfo.class));
     }
 
     public void updateProductCommission(String productId, double commission) throws BasicException {

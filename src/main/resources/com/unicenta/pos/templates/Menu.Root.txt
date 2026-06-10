@@ -70,7 +70,7 @@ group = menu.addGroup("Menu.Backoffice");
 
     submenu = group.addSubmenu("/com/unicenta/images/sales.png", "Menu.SalesManagement", "com.unicenta.pos.forms.MenuSalesManagement");
     submenu.addTitle("Menu.Panel.Sales.Forms");
-        submenu.addPanel("/com/unicenta/images/category.png", "Menu.Discounts", "dev.resolvedor.pos.sales.Discount");
+        submenu.addPanel("/com/unicenta/images/category.png", "Menu.Discounts", "dev.resolvedor.pos.sales.VolumeDiscount");
     submenu.addTitle("Menu.Panel.Sales.Reports");
         submenu.addPanel("/com/unicenta/images/reports.png", "Menu.Closing", "/com/unicenta/reports/sales_closedpos.bs");
         submenu.addPanel("/com/unicenta/images/reports.png", "Menu.Closing1", "/com/unicenta/reports/sales_closedpos_1.bs");

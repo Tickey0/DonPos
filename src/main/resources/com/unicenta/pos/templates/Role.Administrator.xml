@@ -134,7 +134,7 @@
             <class name="/com/unicenta/reports/salecatalog.bs"/>
 
 <class name="com.unicenta.pos.forms.MenuSalesManagement"/>
-            <class name="dev.resolvedor.pos.sales.Discount"/>
+            <class name="dev.resolvedor.pos.sales.VolumeDiscount"/>
             <class name="/com/unicenta/reports/sales_cashflow.bs"/>
             <class name="/com/unicenta/reports/sales_cashregisterlog.bs"/>
             <class name="/com/unicenta/reports/sales_categorysales.bs"/>
