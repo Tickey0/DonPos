@@ -168,14 +168,10 @@ public class VolumeDiscount extends JPanel implements JPanelView, BeanFactoryApp
         try {
             for (int i = 0; i < modelDiscount.getRowCount(); i++) {
                 VolumeDiscountInfo d = modelDiscount.discount.get(i);
-                dlDiscount.updateStatusDiscount(d.getId(), true);
+                dlDiscount.update(d);
             }
-            JOptionPane.showMessageDialog(
-                    this,
-                    AppLocal.getIntString("button.discount"),
-                    LocalRes.getIntString("sgn.success"),
-                    JOptionPane.INFORMATION_MESSAGE
-            );
+            JOptionPane.showMessageDialog(this, AppLocal.getIntString("button.discount"),
+                    LocalRes.getIntString("sgn.success"), JOptionPane.INFORMATION_MESSAGE);
         } catch (BasicException ex) {
             log.error(VolumeDiscount.class.getName() + " cmdOkProductsActionPerformed " + ex);
         }
@@ -254,11 +250,19 @@ public class VolumeDiscount extends JPanel implements JPanelView, BeanFactoryApp
                         .getValueAt(tableProducts.getSelectedRow(), 0);
 
                 if (tableProducts.getValueAt(tableProducts.getSelectedRow(), 7).equals("Active")) {
-                    dlDiscount.updateStatusDiscount(id, false);
+                    int status = dlDiscount.updateStatusDiscount(id, false);
+                    if (status == 1) {
+                        modelDiscount.discount.get(tableProducts.getSelectedRow()).setStatus("Inactive");
+                        tableProducts.repaint();
+                    }
                 } else {
-                    dlDiscount.updateStatusDiscount(id, true);
+                    int status = dlDiscount.updateStatusDiscount(id, true);
+                    if (status == 1) {
+                        modelDiscount.discount.get(tableProducts.getSelectedRow()).setStatus("Active");
+                        tableProducts.repaint();
+                    }
                 }
-                reset();
+
             } catch (BasicException ex) {
                 JOptionPane.showMessageDialog(this, LocalRes.getIntString("exception.noupdate"));
                 log.error(VolumeDiscount.class.getName() + " cmdUpdateStatusActionPerformed " + ex.getMessage());

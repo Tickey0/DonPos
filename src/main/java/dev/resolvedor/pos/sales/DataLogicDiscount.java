@@ -72,4 +72,8 @@ public class DataLogicDiscount extends BeanFactoryDataSingle {
                 new SerializerWriteBasic(new Datas[]{Datas.BOOLEAN, Datas.INT}))
                 .exec(new Object[]{status, id});
     }
+    
+    public int update(VolumeDiscountInfo discount) throws BasicException {
+        return 1;
+    }
 }
