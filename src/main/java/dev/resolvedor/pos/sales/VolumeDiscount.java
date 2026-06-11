@@ -3,12 +3,18 @@ package dev.resolvedor.pos.sales;
 import com.unicenta.basic.BasicException;
 import com.unicenta.data.gui.ComboBoxValModel;
 import com.unicenta.data.loader.LocalRes;
+import com.unicenta.data.loader.SentenceList;
 import com.unicenta.pos.forms.AppLocal;
 import com.unicenta.pos.forms.AppView;
 import com.unicenta.pos.forms.BeanFactoryApp;
 import com.unicenta.pos.forms.BeanFactoryException;
+import com.unicenta.pos.forms.DataLogicSales;
 import com.unicenta.pos.forms.JPanelView;
+import com.unicenta.pos.sales.TaxesLogic;
+import com.unicenta.pos.ticket.TaxInfo;
 import java.awt.Font;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
@@ -31,9 +37,14 @@ public class VolumeDiscount extends JPanel implements JPanelView, BeanFactoryApp
 
     private AppView app;
     private DataLogicDiscount dlDiscount;
+    private DataLogicSales dlSales;
 
     private ComboBoxValModel modelCategory;
     private VolumeDiscount.DiscountTableModel modelDiscount;
+
+    private SentenceList sentTax;
+    private TaxInfo tax;
+    private TaxesLogic taxeslogic;
 
     public VolumeDiscount() {
         initComponents();
@@ -77,7 +88,7 @@ public class VolumeDiscount extends JPanel implements JPanelView, BeanFactoryApp
                 .addComponent(cboCategories, javax.swing.GroupLayout.PREFERRED_SIZE, 300, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(cmdReload, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(260, Short.MAX_VALUE))
+                .addContainerGap(348, Short.MAX_VALUE))
         );
         panFilterLayout.setVerticalGroup(
             panFilterLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -126,7 +137,7 @@ public class VolumeDiscount extends JPanel implements JPanelView, BeanFactoryApp
                         .addComponent(cmdFindProduct, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(cmdOkProducts, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addComponent(jScrollPane2, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 714, Short.MAX_VALUE))
+                    .addComponent(jScrollPane2, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 804, Short.MAX_VALUE))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -174,7 +185,7 @@ public class VolumeDiscount extends JPanel implements JPanelView, BeanFactoryApp
     private void cmdFindProductActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmdFindProductActionPerformed
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                ProductFinder dialog = new ProductFinder(app, new javax.swing.JFrame());
+                ProductFinder dialog = new ProductFinder(dlSales, new javax.swing.JFrame());
                 dialog.addWindowListener(new java.awt.event.WindowAdapter() {
                     @Override
                     public void windowClosing(java.awt.event.WindowEvent e) {
@@ -238,6 +249,17 @@ public class VolumeDiscount extends JPanel implements JPanelView, BeanFactoryApp
 
     @Override
     public void activate() throws BasicException {
+        dlSales = (DataLogicSales) app.getBean("com.unicenta.pos.forms.DataLogicSales");
+
+        sentTax = dlSales.getTaxList();
+        java.util.List<TaxInfo> taxlist;
+        try {
+            taxlist = sentTax.list();
+            taxeslogic = new TaxesLogic(taxlist);
+        } catch (BasicException ex) {
+            log.error(ProductFinder.class.getName() + " " + ex.getMessage());
+        }
+
         loadCategory();
         loadVolumeDiscount("");
     }
@@ -278,6 +300,21 @@ public class VolumeDiscount extends JPanel implements JPanelView, BeanFactoryApp
             List<VolumeDiscountInfo> discount = dlDiscount.getVolumeDiscountList(categoryId).list();
 
             modelDiscount = new VolumeDiscount.DiscountTableModel(discount);
+
+            for (int i = 0; i < modelDiscount.getRowCount(); i++) {
+                var volumeDiscount = modelDiscount.discount.get(i);
+                var priceSell = volumeDiscount.getPriceSell();
+                double priceSellFinal = priceSell - (priceSell * (volumeDiscount.getValue() / 100));
+
+                tax = taxeslogic.getTaxInfo(volumeDiscount.getProduct().getTaxCategoryID(), null);
+                double taxValue = tax.getRate() + 1;
+
+                modelDiscount.discount.get(i).setPriceSell(priceSell * taxValue);
+                double rounded = BigDecimal.valueOf(priceSellFinal * taxValue)
+                        .setScale(2, RoundingMode.HALF_UP).doubleValue();
+                modelDiscount.discount.get(i).setPriceSellFinal(rounded);
+            }
+
             tableProducts.setModel(modelDiscount);
 
         } catch (BasicException ex) {
@@ -333,9 +370,10 @@ public class VolumeDiscount extends JPanel implements JPanelView, BeanFactoryApp
         table.setAutoCreateRowSorter(true);
 
         table.getColumnModel().getColumn(3).setCellRenderer(rightRenderer);
-        table.getColumnModel().getColumn(4).setCellRenderer(rightRendererEdit);
+        table.getColumnModel().getColumn(4).setCellRenderer(rightRenderer);
         table.getColumnModel().getColumn(5).setCellRenderer(rightRendererEdit);
-        table.getColumnModel().getColumn(6).setCellRenderer(rightRenderer);
+        table.getColumnModel().getColumn(6).setCellRenderer(rightRendererEdit);
+        table.getColumnModel().getColumn(7).setCellRenderer(rightRenderer);
 
         table.repaint();
     }
@@ -345,13 +383,14 @@ public class VolumeDiscount extends JPanel implements JPanelView, BeanFactoryApp
         String id = AppLocal.getIntString("label.catid");
         String code = AppLocal.getIntString("label.prodbarcode");
         String name = AppLocal.getIntString("label.name");
-        String priceSell = AppLocal.getIntString("label.price");
+        String priceSell = AppLocal.getIntString("label.pricetax");
+        String priceSellFinal = AppLocal.getIntString("label.pricetax.final");
         String minimumQuantity = AppLocal.getIntString("label.units2");
         String value = AppLocal.getIntString("button.discount");
         String status = AppLocal.getIntString("label.Status");
 
         List<VolumeDiscountInfo> discount;
-        String[] columnNames = {id, code, name, priceSell, minimumQuantity, value, status};
+        String[] columnNames = {id, code, name, priceSell, priceSellFinal, minimumQuantity, value, status};
 
         public DiscountTableModel(List<VolumeDiscountInfo> list) {
             discount = list;
@@ -359,7 +398,7 @@ public class VolumeDiscount extends JPanel implements JPanelView, BeanFactoryApp
 
         @Override
         public int getColumnCount() {
-            return 7;
+            return 8;
         }
 
         @Override
@@ -381,10 +420,12 @@ public class VolumeDiscount extends JPanel implements JPanelView, BeanFactoryApp
                 case 3:
                     return volumeDiscount.getPriceSell();
                 case 4:
-                    return volumeDiscount.getMinimumQuantity();
+                    return volumeDiscount.getPriceSellFinal();
                 case 5:
-                    return volumeDiscount.getValue();
+                    return volumeDiscount.getMinimumQuantity();
                 case 6:
+                    return volumeDiscount.getValue();
+                case 7:
                     return volumeDiscount.getStatus();
                 default:
                     return "";
@@ -393,7 +434,7 @@ public class VolumeDiscount extends JPanel implements JPanelView, BeanFactoryApp
 
         @Override
         public void setValueAt(Object value, int row, int column) {
-            if (column == 5 && row >= 0 && row < discount.size()) {
+            if (column == 6 && row >= 0 && row < discount.size()) {
                 VolumeDiscountInfo productStock = discount.get(row);
                 if (value instanceof Number) {
                     productStock.setValue(((Number) value).doubleValue());
@@ -410,7 +451,7 @@ public class VolumeDiscount extends JPanel implements JPanelView, BeanFactoryApp
 
         @Override
         public boolean isCellEditable(int rowIndex, int columnIndex) {
-            return columnIndex == 5;
+            return columnIndex == 6;
         }
 
         @Override

@@ -49,11 +49,11 @@ public class ProductFinder extends javax.swing.JDialog {
     public static final int RET_CANCEL = 0;
     public static final int RET_OK = 1;
 
-    public ProductFinder(AppView app, java.awt.Frame parent) {
+    public ProductFinder(DataLogicSales dlSales, java.awt.Frame parent) {
         super(parent, true);
         initComponents();
 
-        dlSales = (DataLogicSales) app.getBean("com.unicenta.pos.forms.DataLogicSales");
+        this.dlSales = dlSales;
 
         // Render in finder list
         jListProducts.setCellRenderer(new ProductRenderer());
@@ -119,6 +119,8 @@ public class ProductFinder extends javax.swing.JDialog {
         txtDiscount = new javax.swing.JTextField();
         lblPrice = new javax.swing.JLabel();
         txtPrice = new javax.swing.JTextField();
+        lblPriceFinal = new javax.swing.JLabel();
+        txtPriceFinal = new javax.swing.JTextField();
 
         addWindowListener(new java.awt.event.WindowAdapter() {
             public void windowClosing(java.awt.event.WindowEvent evt) {
@@ -226,12 +228,20 @@ public class ProductFinder extends javax.swing.JDialog {
         txtDiscount.setText("0");
 
         lblPrice.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
-        lblPrice.setText(bundle.getString("label.value2")); // NOI18N
+        lblPrice.setText(bundle.getString("label.pricetax")); // NOI18N
         lblPrice.setPreferredSize(new java.awt.Dimension(120, 26));
 
         txtPrice.setEditable(false);
         txtPrice.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
         txtPrice.setText("0");
+
+        lblPriceFinal.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
+        lblPriceFinal.setText(bundle.getString("label.pricetax.final")); // NOI18N
+        lblPriceFinal.setPreferredSize(new java.awt.Dimension(120, 26));
+
+        txtPriceFinal.setEditable(false);
+        txtPriceFinal.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+        txtPriceFinal.setText("0");
 
         javax.swing.GroupLayout panelFeaturesLayout = new javax.swing.GroupLayout(panelFeatures);
         panelFeatures.setLayout(panelFeaturesLayout);
@@ -251,7 +261,11 @@ public class ProductFinder extends javax.swing.JDialog {
                     .addGroup(panelFeaturesLayout.createSequentialGroup()
                         .addComponent(lblDiscount, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(txtDiscount, javax.swing.GroupLayout.PREFERRED_SIZE, 360, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addComponent(txtDiscount, javax.swing.GroupLayout.PREFERRED_SIZE, 360, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(panelFeaturesLayout.createSequentialGroup()
+                        .addComponent(lblPriceFinal, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(txtPriceFinal, javax.swing.GroupLayout.PREFERRED_SIZE, 360, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         panelFeaturesLayout.setVerticalGroup(
@@ -269,7 +283,11 @@ public class ProductFinder extends javax.swing.JDialog {
                 .addGroup(panelFeaturesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(txtPrice, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(lblPrice, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(panelFeaturesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(txtPriceFinal, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(lblPriceFinal, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(25, Short.MAX_VALUE))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -297,8 +315,8 @@ public class ProductFinder extends javax.swing.JDialog {
                 .addContainerGap()
                 .addComponent(panelFinder, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(panelFeatures, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 19, Short.MAX_VALUE)
+                .addComponent(panelFeatures, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGap(18, 18, 18)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(cancelButton)
                     .addComponent(okButton))
@@ -454,6 +472,7 @@ public class ProductFinder extends javax.swing.JDialog {
     private javax.swing.JLabel lblDiscount;
     private javax.swing.JLabel lblName;
     private javax.swing.JLabel lblPrice;
+    private javax.swing.JLabel lblPriceFinal;
     private javax.swing.JLabel lblProduct;
     private javax.swing.JLabel lblQuantity;
     private javax.swing.JButton okButton;
@@ -461,6 +480,7 @@ public class ProductFinder extends javax.swing.JDialog {
     private javax.swing.JPanel panelFinder;
     private javax.swing.JTextField txtDiscount;
     private javax.swing.JTextField txtPrice;
+    private javax.swing.JTextField txtPriceFinal;
     private javax.swing.JTextField txtProductName;
     private javax.swing.JTextField txtQuantity;
     // End of variables declaration//GEN-END:variables

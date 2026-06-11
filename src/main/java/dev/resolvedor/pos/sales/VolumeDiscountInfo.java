@@ -20,6 +20,7 @@ public class VolumeDiscountInfo implements SerializableRead {
     private Integer id;
     private ProductInfoExt product;
     private double priceSell;
+    private double priceSellFinal;
     private int minimumQuantity;
     private double value;
     private String status;
@@ -39,5 +40,7 @@ public class VolumeDiscountInfo implements SerializableRead {
         } else {
             status = "Inactive";
         }
+        product.setID(dr.getString(8));
+        product.setTaxCategoryID(dr.getString(9));
     }
 }
