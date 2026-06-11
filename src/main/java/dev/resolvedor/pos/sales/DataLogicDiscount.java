@@ -66,13 +66,10 @@ public class DataLogicDiscount extends BeanFactoryDataSingle {
         ).exec(id);
     }
 
-    public void updateDiscount(Integer id, double value) throws BasicException {
-        //TODO discounts
-        /*
-        new StaticSentence(s,
-                "UPDATE products SET discount = ? WHERE id = ?",
-                new SerializerWriteBasic(new Datas[]{Datas.DOUBLE, Datas.STRING}))
-                .exec(new Object[]{value, productId});
-         */
+    public int updateStatusDiscount(Integer id, boolean status) throws BasicException {
+        return new StaticSentence(s,
+                "update volume_discount set status = ? where id = ?",
+                new SerializerWriteBasic(new Datas[]{Datas.BOOLEAN, Datas.INT}))
+                .exec(new Object[]{status, id});
     }
 }

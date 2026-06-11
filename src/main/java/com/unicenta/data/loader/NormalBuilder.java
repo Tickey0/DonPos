@@ -129,7 +129,7 @@ public class NormalBuilder implements ISQLBuilderStatic {
                 iLast = iPos + 1;
             }
             sNewSentence.append(m_sSentence.substring(iLast));
-            
+            System.out.println("SQL: " + sNewSentence.toString());
             return sNewSentence.toString(); // sustituida
         }                
     }    

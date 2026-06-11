@@ -270,7 +270,7 @@ public class ProductLotDialog extends JDialog {
                 loadTable(tableProducts, products);
             } catch (BasicException ex) {
                 JOptionPane.showMessageDialog(this, LocalRes.getIntString("exception.noupdate"));
-                log.error(ProductLotDialog.class.getName() + " " + ex.getMessage());
+                log.error(ProductLotDialog.class.getName() + " cmdStatusActionPerformed " + ex.getMessage());
             }
         }
     }//GEN-LAST:event_cmdStatusActionPerformed

@@ -8,7 +8,6 @@ import com.unicenta.data.user.ListProvider;
 import com.unicenta.data.user.ListProviderCreator;
 import com.unicenta.format.Formats;
 import com.unicenta.pos.forms.AppLocal;
-import com.unicenta.pos.forms.AppView;
 import com.unicenta.pos.forms.DataLogicSales;
 import com.unicenta.pos.sales.TaxesLogic;
 import com.unicenta.pos.ticket.ProductInfoExt;
@@ -226,6 +225,11 @@ public class ProductFinder extends javax.swing.JDialog {
 
         txtDiscount.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
         txtDiscount.setText("0");
+        txtDiscount.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                txtDiscountActionPerformed(evt);
+            }
+        });
 
         lblPrice.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
         lblPrice.setText(bundle.getString("label.pricetax")); // NOI18N
@@ -420,12 +424,29 @@ public class ProductFinder extends javax.swing.JDialog {
 
     private void jListProductsValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_jListProductsValueChanged
         loadProduct();
+        calculatePriceFinal();
     }//GEN-LAST:event_jListProductsValueChanged
 
     private void cmdFindProductActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmdFindProductActionPerformed
         findProduct();
     }//GEN-LAST:event_cmdFindProductActionPerformed
 
+    private void txtDiscountActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtDiscountActionPerformed
+        calculatePriceFinal();
+        txtPrice.requestFocus();
+    }//GEN-LAST:event_txtDiscountActionPerformed
+
+    private void calculatePriceFinal() {
+        if (selectedProduct != null) {
+            tax = taxeslogic.getTaxInfo(selectedProduct.getTaxCategoryID(), null);
+            double taxValue = tax.getRate() + 1;
+            var priceSell = selectedProduct.getPriceSell();
+
+            double priceSellFinal = priceSell - (priceSell * (Double.parseDouble(txtDiscount.getText().trim()) / 100));
+            priceSellFinal = priceSellFinal * taxValue;
+            txtPriceFinal.setText(Formats.CURRENCY.formatValue(priceSellFinal));            
+        }
+    }
     private void loadProduct() {
         selectedProduct = (ProductInfoExt) jListProducts.getSelectedValue();
 
