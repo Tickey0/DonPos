@@ -2,15 +2,19 @@ package dev.resolvedor.pos.sales;
 
 import dev.resolvedor.pos.inventory.management.*;
 import com.unicenta.basic.BasicException;
+import com.unicenta.data.loader.LocalRes;
 import com.unicenta.data.loader.SentenceList;
 import com.unicenta.data.user.ListProvider;
 import com.unicenta.data.user.ListProviderCreator;
+import com.unicenta.format.Formats;
 import com.unicenta.pos.forms.AppLocal;
 import com.unicenta.pos.forms.AppView;
 import com.unicenta.pos.forms.DataLogicSales;
 import com.unicenta.pos.sales.TaxesLogic;
 import com.unicenta.pos.ticket.ProductInfoExt;
 import com.unicenta.pos.ticket.TaxInfo;
+import dev.resolvedor.util.StringUtils;
+import dev.resolvedor.util.Read;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import javax.swing.AbstractAction;
@@ -31,6 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 public class ProductFinder extends javax.swing.JDialog {
 
     private ProductInfoExt selectedProduct;
+    private VolumeDiscountInfo selectedDiscount;
     private TaxInfo tax;
 
     private DataLogicSales dlSales;
@@ -81,8 +86,8 @@ public class ProductFinder extends javax.swing.JDialog {
         return returnStatus;
     }
 
-    public ProductInfoExt getProduct() {
-        return selectedProduct;
+    public VolumeDiscountInfo getSelectedDiscount() {
+        return selectedDiscount;
     }
 
     public TaxInfo getTax() {
@@ -107,6 +112,13 @@ public class ProductFinder extends javax.swing.JDialog {
         jScrollPane1 = new javax.swing.JScrollPane();
         jListProducts = new javax.swing.JList();
         lblProduct = new javax.swing.JLabel();
+        panelFeatures = new javax.swing.JPanel();
+        lblQuantity = new javax.swing.JLabel();
+        txtQuantity = new javax.swing.JTextField();
+        lblDiscount = new javax.swing.JLabel();
+        txtDiscount = new javax.swing.JTextField();
+        lblPrice = new javax.swing.JLabel();
+        txtPrice = new javax.swing.JTextField();
 
         addWindowListener(new java.awt.event.WindowAdapter() {
             public void windowClosing(java.awt.event.WindowEvent evt) {
@@ -192,11 +204,72 @@ public class ProductFinder extends javax.swing.JDialog {
                     .addComponent(cmdFindProduct, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(panelFinderLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(panelFinderLayout.createSequentialGroup()
-                        .addComponent(lblProduct, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(0, 0, Short.MAX_VALUE))
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 299, Short.MAX_VALUE))
-                .addContainerGap())
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 132, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(lblProduct, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+
+        panelFeatures.setBorder(javax.swing.BorderFactory.createTitledBorder(bundle.getString("button.discount"))); // NOI18N
+
+        lblQuantity.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
+        lblQuantity.setText(bundle.getString("label.units2")); // NOI18N
+        lblQuantity.setPreferredSize(new java.awt.Dimension(120, 26));
+
+        txtQuantity.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+        txtQuantity.setText("1");
+
+        lblDiscount.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
+        lblDiscount.setText(bundle.getString("button.discount")); // NOI18N
+        lblDiscount.setPreferredSize(new java.awt.Dimension(120, 26));
+
+        txtDiscount.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+        txtDiscount.setText("0");
+
+        lblPrice.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
+        lblPrice.setText(bundle.getString("label.value2")); // NOI18N
+        lblPrice.setPreferredSize(new java.awt.Dimension(120, 26));
+
+        txtPrice.setEditable(false);
+        txtPrice.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+        txtPrice.setText("0");
+
+        javax.swing.GroupLayout panelFeaturesLayout = new javax.swing.GroupLayout(panelFeatures);
+        panelFeatures.setLayout(panelFeaturesLayout);
+        panelFeaturesLayout.setHorizontalGroup(
+            panelFeaturesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(panelFeaturesLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(panelFeaturesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(panelFeaturesLayout.createSequentialGroup()
+                        .addComponent(lblQuantity, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(txtQuantity, javax.swing.GroupLayout.PREFERRED_SIZE, 360, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(panelFeaturesLayout.createSequentialGroup()
+                        .addComponent(lblPrice, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(txtPrice, javax.swing.GroupLayout.PREFERRED_SIZE, 360, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(panelFeaturesLayout.createSequentialGroup()
+                        .addComponent(lblDiscount, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(txtDiscount, javax.swing.GroupLayout.PREFERRED_SIZE, 360, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+        panelFeaturesLayout.setVerticalGroup(
+            panelFeaturesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(panelFeaturesLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(panelFeaturesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(txtQuantity, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(lblQuantity, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(panelFeaturesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(lblDiscount, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(txtDiscount, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(panelFeaturesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(txtPrice, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(lblPrice, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -211,7 +284,8 @@ public class ProductFinder extends javax.swing.JDialog {
                         .addGap(0, 0, Short.MAX_VALUE)
                         .addComponent(okButton, javax.swing.GroupLayout.PREFERRED_SIZE, 67, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(cancelButton)))
+                        .addComponent(cancelButton))
+                    .addComponent(panelFeatures, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
 
@@ -221,8 +295,10 @@ public class ProductFinder extends javax.swing.JDialog {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(panelFinder, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addGap(18, 18, 18)
+                .addComponent(panelFinder, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(panelFeatures, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 19, Short.MAX_VALUE)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(cancelButton)
                     .addComponent(okButton))
@@ -242,6 +318,11 @@ public class ProductFinder extends javax.swing.JDialog {
 
         tax = taxeslogic.getTaxInfo(selectedProduct.getTaxCategoryID(), null);
 
+        selectedDiscount = new VolumeDiscountInfo();
+        selectedDiscount.setProduct(selectedProduct);
+        selectedDiscount.setMinimumQuantity(Integer.parseInt(txtQuantity.getText()));
+        selectedDiscount.setValue(Double.parseDouble(txtDiscount.getText()));
+
         doClose(RET_OK);
     }//GEN-LAST:event_okButtonActionPerformed
 
@@ -249,6 +330,39 @@ public class ProductFinder extends javax.swing.JDialog {
         if (selectedProduct == null) {
             JOptionPane.showMessageDialog(this, AppLocal.getIntString("message.noproduct"), AppLocal.getIntString("label.stockproduct"), JOptionPane.ERROR_MESSAGE);
             return false;
+        }
+
+        if (!StringUtils.isNumber(txtQuantity.getText().trim())) {
+            JOptionPane.showMessageDialog(this, LocalRes.getIntString("message.numericamount"), AppLocal.getIntString("label.units2"), JOptionPane.ERROR_MESSAGE);
+            return false;
+        } else {
+            var validNumber = Double.parseDouble(txtQuantity.getText().trim());
+            if (validNumber <= 0) {
+                JOptionPane.showMessageDialog(this, LocalRes.getIntString("exception.nonegativenumberorzero"), AppLocal.getIntString("label.units2"), JOptionPane.ERROR_MESSAGE);
+                return false;
+            }
+        }
+
+        if (!StringUtils.isNumber(txtDiscount.getText().trim())) {
+            JOptionPane.showMessageDialog(this, LocalRes.getIntString("message.numericamount"), AppLocal.getIntString("button.discount"), JOptionPane.ERROR_MESSAGE);
+            return false;
+        } else {
+            var validNumber = Double.parseDouble(txtDiscount.getText().trim());
+            if (validNumber <= 0) {
+                JOptionPane.showMessageDialog(this, LocalRes.getIntString("exception.nonegativenumberorzero"), AppLocal.getIntString("button.discount"), JOptionPane.ERROR_MESSAGE);
+                return false;
+            }
+        }
+
+        if (Read.currency(txtPrice.getText().trim()) == null) {
+            JOptionPane.showMessageDialog(this, LocalRes.getIntString("message.numericTotal"), AppLocal.getIntString("label.total"), JOptionPane.ERROR_MESSAGE);
+            return false;
+        } else {
+            var validNumber = Read.currency(txtPrice.getText().trim());
+            if (validNumber < 0) {
+                JOptionPane.showMessageDialog(this, LocalRes.getIntString("exception.nonegativenumberorzero"), AppLocal.getIntString("label.total"), JOptionPane.ERROR_MESSAGE);
+                return false;
+            }
         }
 
         return true;
@@ -287,12 +401,25 @@ public class ProductFinder extends javax.swing.JDialog {
     }
 
     private void jListProductsValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_jListProductsValueChanged
-        selectedProduct = (ProductInfoExt) jListProducts.getSelectedValue();
+        loadProduct();
     }//GEN-LAST:event_jListProductsValueChanged
 
     private void cmdFindProductActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmdFindProductActionPerformed
         findProduct();
     }//GEN-LAST:event_cmdFindProductActionPerformed
+
+    private void loadProduct() {
+        selectedProduct = (ProductInfoExt) jListProducts.getSelectedValue();
+
+        if (selectedProduct != null) {
+            tax = taxeslogic.getTaxInfo(selectedProduct.getTaxCategoryID(), null);
+
+            double taxValue = tax.getRate() + 1;
+            txtPrice.setText(Formats.CURRENCY.formatValue(
+                    selectedProduct.getPriceSell() * taxValue
+            ));
+        }
+    }
 
     private void doClose(int retStatus) {
         returnStatus = retStatus;
@@ -324,11 +451,18 @@ public class ProductFinder extends javax.swing.JDialog {
     private javax.swing.JButton cmdFindProduct;
     private javax.swing.JList jListProducts;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JLabel lblDiscount;
     private javax.swing.JLabel lblName;
+    private javax.swing.JLabel lblPrice;
     private javax.swing.JLabel lblProduct;
+    private javax.swing.JLabel lblQuantity;
     private javax.swing.JButton okButton;
+    private javax.swing.JPanel panelFeatures;
     private javax.swing.JPanel panelFinder;
+    private javax.swing.JTextField txtDiscount;
+    private javax.swing.JTextField txtPrice;
     private javax.swing.JTextField txtProductName;
+    private javax.swing.JTextField txtQuantity;
     // End of variables declaration//GEN-END:variables
 
     private int returnStatus = RET_CANCEL;

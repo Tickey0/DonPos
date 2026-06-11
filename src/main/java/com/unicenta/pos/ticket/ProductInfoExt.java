@@ -39,7 +39,7 @@ public class ProductInfoExt {
     protected String m_ID;
     protected String m_sRef;
     protected String m_sCode;
-    protected String m_sCodetype;    
+    protected String m_sCodetype;
     protected String m_sName;
     protected double m_dPriceBuy;
     protected double m_dPriceSell;
@@ -53,7 +53,7 @@ public class ProductInfoExt {
     protected boolean m_bScale;
     protected boolean m_bConstant;
     protected boolean m_bPrintKB;
-    protected boolean m_bSendStatus;    
+    protected boolean m_bSendStatus;
     private boolean m_bService;
     protected Properties attributes;
     protected String m_sDisplay;
@@ -64,9 +64,9 @@ public class ProductInfoExt {
     public double m_dStockUnits;
     public String m_sPrinter;
     public String supplierid;
-    private String uomid;   
+    private String uomid;
     protected String memodate;
-    
+
     private double totalCost;
     private String lot;
     private double quantity;
@@ -100,7 +100,7 @@ public class ProductInfoExt {
         m_dStockUnits = 0.0;
         m_sPrinter = null;
         supplierid = "0";
-        uomid = "0";        
+        uomid = "0";
         memodate = null;
         quantity = 0;
         totalCost = 0.0;
@@ -113,6 +113,7 @@ public class ProductInfoExt {
     public final String getID() {
         return m_ID;
     }
+
     public final void setID(String id) {
         m_ID = id;
     }
@@ -120,6 +121,7 @@ public class ProductInfoExt {
     public final String getReference() {
         return m_sRef;
     }
+
     public final void setReference(String sRef) {
         m_sRef = sRef;
     }
@@ -127,6 +129,7 @@ public class ProductInfoExt {
     public final String getCode() {
         return m_sCode;
     }
+
     public final void setCode(String sCode) {
         m_sCode = sCode;
     }
@@ -134,13 +137,15 @@ public class ProductInfoExt {
     public final String getCodetype() {
         return m_sCodetype;
     }
+
     public final void setCodetype(String sCodetype) {
         m_sCodetype = sCodetype;
     }
-    
+
     public final String getName() {
         return m_sName;
     }
+
     public final void setName(String sName) {
         m_sName = sName;
     }
@@ -148,6 +153,7 @@ public class ProductInfoExt {
     public final double getPriceBuy() {
         return m_dPriceBuy;
     }
+
     public final void setPriceBuy(double dPrice) {
         m_dPriceBuy = dPrice;
     }
@@ -155,13 +161,15 @@ public class ProductInfoExt {
     public final double getPriceSell() {
         return m_dPriceSell;
     }
+
     public final void setPriceSell(double dPrice) {
         m_dPriceSell = dPrice;
-    }    
+    }
 
     public final String getCategoryID() {
         return categoryid;
     }
+
     public final void setCategoryID(String sCategoryID) {
         categoryid = sCategoryID;
     }
@@ -169,6 +177,7 @@ public class ProductInfoExt {
     public final String getTaxCategoryID() {
         return taxcategoryid;
     }
+
     public final void setTaxCategoryID(String value) {
         taxcategoryid = value;
     }
@@ -176,6 +185,7 @@ public class ProductInfoExt {
     public final String getAttributeSetID() {
         return attributesetid;
     }
+
     public final void setAttributeSetID(String value) {
         attributesetid = value;
     }
@@ -183,6 +193,7 @@ public class ProductInfoExt {
     public final double getStockCost() {
         return m_stockCost;
     }
+
     public final void setStockCost(double dPrice) {
         m_stockCost = dPrice;
     }
@@ -190,6 +201,7 @@ public class ProductInfoExt {
     public final double getStockVolume() {
         return m_stockVolume;
     }
+
     public final void setStockVolume(double dStockVolume) {
         m_stockVolume = dStockVolume;
     }
@@ -197,13 +209,15 @@ public class ProductInfoExt {
     public BufferedImage getImage() {
         return m_Image;
     }
+
     public void setImage(BufferedImage img) {
         m_Image = img;
     }
-    
+
     public final boolean isCom() {
         return m_bCom;
     }
+
     public final void setCom(boolean bValue) {
         m_bCom = bValue;
     }
@@ -211,6 +225,7 @@ public class ProductInfoExt {
     public final boolean isScale() {
         return m_bScale;
     }
+
     public final void setScale(boolean bValue) {
         m_bScale = bValue;
     }
@@ -218,6 +233,7 @@ public class ProductInfoExt {
     public final boolean isConstant() {
         return m_bConstant;
     }
+
     public final void setConstant(boolean bValue) {
         m_bConstant = bValue;
     }
@@ -225,13 +241,15 @@ public class ProductInfoExt {
     public final boolean isPrintKB() {
         return m_bPrintKB;
     }
+
     public final void setPrintKB(boolean bValue) {
         m_bPrintKB = bValue;
     }
-    
+
     public final boolean isSendStatus() {
         return m_bSendStatus;
     }
+
     public final void setSendStatus(boolean bValue) {
         m_bSendStatus = bValue;
     }
@@ -239,6 +257,7 @@ public class ProductInfoExt {
     public final boolean isService() {
         return m_bService;
     }
+
     public final void setService(boolean bValue) {
         m_bService = bValue;
     }
@@ -246,12 +265,15 @@ public class ProductInfoExt {
     public String getProperty(String key) {
         return attributes.getProperty(key);
     }
+
     public String getProperty(String key, String defaultvalue) {
         return attributes.getProperty(key, defaultvalue);
     }
+
     public void setProperty(String key, String value) {
         attributes.setProperty(key, value);
     }
+
     public Properties getProperties() {
         return attributes;
     }
@@ -259,6 +281,7 @@ public class ProductInfoExt {
     public final String getDisplay() {
         return m_sDisplay;
     }
+
     public final void setDisplay(String sDisplay) {
         m_sDisplay = sDisplay;
     }
@@ -274,6 +297,7 @@ public class ProductInfoExt {
     public final String getTextTip() {
         return m_sTextTip;
     }
+
     public final void setTextTip(String value) {
         m_sTextTip = value;
     }
@@ -281,49 +305,55 @@ public class ProductInfoExt {
     public final boolean getWarranty() {
         return m_bWarranty;
     }
+
     public final void setWarranty(boolean bValue) {
         m_bWarranty = bValue;
     }
 
-    public final Double getStockUnits() { 
+    public final Double getStockUnits() {
         return m_dStockUnits;
     }
-    public final void setStockUnits(double dStockUnits) {    
+
+    public final void setStockUnits(double dStockUnits) {
         m_dStockUnits = dStockUnits;
     }
 
     public String printPriceSell() {
         return Formats.CURRENCY.formatValue(getPriceSell());
     }
-    
+
     public final double getPriceSellTax(TaxInfo tax) {
         return m_dPriceSell * (1.0 + tax.getRate());
     }
-    public String printPriceSellTax(TaxInfo tax) {        
+
+    public String printPriceSellTax(TaxInfo tax) {
         return Formats.CURRENCY.formatValue(getPriceSellTax(tax));
     }
-    
+
     public final String getPrinter() {
         return m_sPrinter;
     }
+
     public final void setPrinter(String value) {
         m_sPrinter = value;
-    }    
+    }
 
     public final String getSupplierID() {
         return supplierid;
     }
+
     public final void setSupplierID(String sSupplierID) {
         supplierid = sSupplierID;
     }
-    
+
     public final String getUomID() {
-          return uomid;
+        return uomid;
     }
+
     public final void setUomID(String sUomID) {
-	uomid = sUomID;
-    }    
-    
+        uomid = sUomID;
+    }
+
     /**
      *
      * @return memo date string
@@ -331,12 +361,14 @@ public class ProductInfoExt {
     public String getMemoDate() {
         return memodate;
     }
+
     public void setMemoDate(String memodate) {
         this.memodate = memodate;
     }
-    public String printMemoDate() {       
+
+    public String printMemoDate() {
         return Formats.STRING.formatValue(memodate);
-    }    
+    }
 
     /**
      *
@@ -347,32 +379,32 @@ public class ProductInfoExt {
             @Override
             public Object readValues(DataRead dr) throws BasicException {
                 ProductInfoExt product = new ProductInfoExt();
-                product.m_ID = dr.getString(1);                                 
-                product.m_sRef = dr.getString(2);                               
-                product.m_sCode = dr.getString(3);                              
-                product.m_sCodetype = dr.getString(4);                              
-                product.m_sName = dr.getString(5);                              
-                product.m_dPriceBuy = dr.getDouble(6);                          
-                product.m_dPriceSell = dr.getDouble(7);                         
-                product.categoryid = dr.getString(8);                          
-                product.taxcategoryid = dr.getString(9);                        
-                product.attributesetid = dr.getString(10); 
+                product.m_ID = dr.getString(1);
+                product.m_sRef = dr.getString(2);
+                product.m_sCode = dr.getString(3);
+                product.m_sCodetype = dr.getString(4);
+                product.m_sName = dr.getString(5);
+                product.m_dPriceBuy = dr.getDouble(6);
+                product.m_dPriceSell = dr.getDouble(7);
+                product.categoryid = dr.getString(8);
+                product.taxcategoryid = dr.getString(9);
+                product.attributesetid = dr.getString(10);
                 product.m_stockCost = dr.getDouble(11);
                 product.m_stockVolume = dr.getDouble(12);
-                product.m_Image = ImageUtils.readImage(dr.getBytes(13));            
-                product.m_bCom = dr.getBoolean(14);                              
-                product.m_bScale = dr.getBoolean(15);                            
-                product.m_bConstant = dr.getBoolean(16);                         
-                product.m_bPrintKB = dr.getBoolean(17);                         
-                product.m_bSendStatus = dr.getBoolean(18);                                         
-                product.m_bService = dr.getBoolean(19);                                         
+                product.m_Image = ImageUtils.readImage(dr.getBytes(13));
+                product.m_bCom = dr.getBoolean(14);
+                product.m_bScale = dr.getBoolean(15);
+                product.m_bConstant = dr.getBoolean(16);
+                product.m_bPrintKB = dr.getBoolean(17);
+                product.m_bSendStatus = dr.getBoolean(18);
+                product.m_bService = dr.getBoolean(19);
                 product.attributes = ImageUtils.readProperties(dr.getBytes(20));
-                product.m_sDisplay = dr.getString(21); 
-                product.m_bVprice = dr.getBoolean(22);                          
-                product.m_bVerpatrib = dr.getBoolean(23);                                       
-                product.m_sTextTip = dr.getString(24);                          
-                product.m_bWarranty = dr.getBoolean(25);                        
-                product.m_dStockUnits = dr.getDouble(26); 
+                product.m_sDisplay = dr.getString(21);
+                product.m_bVprice = dr.getBoolean(22);
+                product.m_bVerpatrib = dr.getBoolean(23);
+                product.m_sTextTip = dr.getString(24);
+                product.m_bWarranty = dr.getBoolean(25);
+                product.m_dStockUnits = dr.getDouble(26);
                 product.m_sPrinter = dr.getString(27);
                 product.supplierid = dr.getString(28);
                 product.uomid = dr.getString(29);
@@ -397,7 +429,7 @@ public class ProductInfoExt {
 
     public void setLot(String lot) {
         this.lot = lot;
-    }        
+    }
 
     public double getQuantity() {
         return quantity;
@@ -405,7 +437,7 @@ public class ProductInfoExt {
 
     public void setQuantity(double quantity) {
         this.quantity = quantity;
-    }        
+    }
 
     @Override
     public final String toString() {

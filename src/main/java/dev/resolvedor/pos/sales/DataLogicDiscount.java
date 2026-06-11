@@ -1,8 +1,11 @@
 package dev.resolvedor.pos.sales;
 
 import com.unicenta.basic.BasicException;
+import com.unicenta.data.loader.Datas;
 import com.unicenta.data.loader.SentenceList;
 import com.unicenta.data.loader.SerializerReadClass;
+import com.unicenta.data.loader.SerializerWriteBasic;
+import com.unicenta.data.loader.SerializerWriteInteger;
 import com.unicenta.data.loader.Session;
 import com.unicenta.data.loader.StaticSentence;
 import com.unicenta.pos.forms.BeanFactoryDataSingle;
@@ -40,7 +43,29 @@ public class DataLogicDiscount extends BeanFactoryDataSingle {
                 new SerializerReadClass(VolumeDiscountInfo.class));
     }
 
-    public void updateDiscount(String productId, double value) throws BasicException {
+    public final int add(VolumeDiscountInfo discount) throws BasicException {
+        var result = new StaticSentence(
+                s,
+                "insert into volume_discount (product, minimum_quantity, value) values (?, ?, ?)",
+                new SerializerWriteBasic(new Datas[]{Datas.STRING, Datas.INT, Datas.DOUBLE})
+        ).exec(new Object[]{
+            discount.getProduct().getID(),
+            discount.getMinimumQuantity(),
+            discount.getValue()
+        });
+
+        return result;
+    }
+
+    public final void delete(Integer id) throws BasicException {
+        new StaticSentence(
+                s,
+                "delete from volume_discount where id = ?",
+                SerializerWriteInteger.INSTANCE
+        ).exec(id);
+    }
+
+    public void updateDiscount(Integer id, double value) throws BasicException {
         //TODO discounts
         /*
         new StaticSentence(s,

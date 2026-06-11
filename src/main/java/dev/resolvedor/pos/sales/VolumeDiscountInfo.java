@@ -3,6 +3,7 @@ package dev.resolvedor.pos.sales;
 import com.unicenta.basic.BasicException;
 import com.unicenta.data.loader.DataRead;
 import com.unicenta.data.loader.SerializableRead;
+import com.unicenta.pos.ticket.ProductInfoExt;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -16,9 +17,8 @@ import lombok.Setter;
 @Setter
 public class VolumeDiscountInfo implements SerializableRead {
 
-    private String id;
-    private String code;
-    private String name;
+    private Integer id;
+    private ProductInfoExt product;
     private double priceSell;
     private int minimumQuantity;
     private double value;
@@ -26,9 +26,11 @@ public class VolumeDiscountInfo implements SerializableRead {
 
     @Override
     public void readValues(DataRead dr) throws BasicException {
-        id = dr.getString(1);
-        code = dr.getString(2);
-        name = dr.getString(3);
+        product = new ProductInfoExt();
+        
+        id = dr.getInt(1);        
+        product.setCode(dr.getString(2));
+        product.setName(dr.getString(3));
         priceSell = dr.getDouble(4);
         minimumQuantity = dr.getInt(5);
         value = dr.getDouble(6);
