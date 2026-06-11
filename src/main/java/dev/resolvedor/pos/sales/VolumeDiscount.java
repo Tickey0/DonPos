@@ -11,10 +11,12 @@ import com.unicenta.pos.forms.JPanelView;
 import java.awt.Font;
 import java.util.List;
 import javax.swing.JComponent;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTable;
 import javax.swing.table.AbstractTableModel;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.JTableHeader;
 import lombok.extern.slf4j.Slf4j;
 
@@ -98,7 +100,7 @@ public class VolumeDiscount extends JPanel implements JPanelView, BeanFactoryApp
         ));
         jScrollPane2.setViewportView(tableProducts);
 
-        cmdFindProduct.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/unicenta/images/search24.png"))); // NOI18N
+        cmdFindProduct.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/unicenta/images/editnew.png"))); // NOI18N
         cmdFindProduct.setPreferredSize(new java.awt.Dimension(120, 36));
         cmdFindProduct.addActionListener(this::cmdFindProductActionPerformed);
 
@@ -286,6 +288,36 @@ public class VolumeDiscount extends JPanel implements JPanelView, BeanFactoryApp
 
     public void resetTable(JTable table) {
 
+        DefaultTableCellRenderer rightRendererEdit = new DefaultTableCellRenderer() {
+            @Override
+            public java.awt.Component getTableCellRendererComponent(JTable table, Object value,
+                    boolean isSelected, boolean hasFocus, int row, int column) {
+                java.awt.Component component = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                setHorizontalAlignment(JLabel.RIGHT);
+
+                if (isSelected) {
+                    component.setBackground(new java.awt.Color(100, 150, 255)); // Custom selection color
+                    component.setForeground(java.awt.Color.WHITE);
+                } else {
+                    component.setBackground(java.awt.Color.WHITE);
+                    component.setForeground(java.awt.Color.BLACK);
+                }
+
+                return component;
+            }
+        };
+
+        DefaultTableCellRenderer rightRenderer = new DefaultTableCellRenderer() {
+            @Override
+            public java.awt.Component getTableCellRendererComponent(JTable table, Object value,
+                    boolean isSelected, boolean hasFocus, int row, int column) {
+                java.awt.Component component = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                setHorizontalAlignment(JLabel.RIGHT);
+
+                return component;
+            }
+        };
+
         Font headerFont = new Font("Arial", Font.BOLD, 14);
         Font bodyFont = new Font("Arial", Font.PLAIN, 18);
 
@@ -299,6 +331,11 @@ public class VolumeDiscount extends JPanel implements JPanelView, BeanFactoryApp
 
         table.getTableHeader().setReorderingAllowed(true);
         table.setAutoCreateRowSorter(true);
+
+        table.getColumnModel().getColumn(3).setCellRenderer(rightRenderer);
+        table.getColumnModel().getColumn(4).setCellRenderer(rightRendererEdit);
+        table.getColumnModel().getColumn(5).setCellRenderer(rightRendererEdit);
+        table.getColumnModel().getColumn(6).setCellRenderer(rightRenderer);
 
         table.repaint();
     }
@@ -352,6 +389,28 @@ public class VolumeDiscount extends JPanel implements JPanelView, BeanFactoryApp
                 default:
                     return "";
             }
+        }
+
+        @Override
+        public void setValueAt(Object value, int row, int column) {
+            if (column == 5 && row >= 0 && row < discount.size()) {
+                VolumeDiscountInfo productStock = discount.get(row);
+                if (value instanceof Number) {
+                    productStock.setValue(((Number) value).doubleValue());
+                } else if (value instanceof String) {
+                    try {
+                        productStock.setValue(Double.parseDouble((String) value));
+                    } catch (NumberFormatException ex) {
+                        // ignore invalid input and keep existing value
+                    }
+                }
+                fireTableCellUpdated(row, column);
+            }
+        }
+
+        @Override
+        public boolean isCellEditable(int rowIndex, int columnIndex) {
+            return columnIndex == 5;
         }
 
         @Override
