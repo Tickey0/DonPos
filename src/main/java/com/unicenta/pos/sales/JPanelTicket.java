@@ -603,6 +603,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
             jCheckStock.setText(null);
             m_jSubtotalIVA.setText(null);
             m_jSubtotalIVA_0.setText(null);
+            m_jDiscount.setText(null);
 
             checkStock();
             stateToZero();
@@ -702,12 +703,14 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
             m_jTotalEuros.setText(null);
             m_jSubtotalIVA.setText(null);
             m_jSubtotalIVA_0.setText(null);
+            m_jDiscount.setText(null);
         } else {
             m_jSubtotalEuros.setText(m_oTicket.printSubTotal());
             m_jTaxesEuros.setText(m_oTicket.printTax());
             m_jTotalEuros.setText(m_oTicket.printTotal());
             m_jSubtotalIVA.setText(m_oTicket.printSubTotalIVA());
             m_jSubtotalIVA_0.setText(m_oTicket.printSubTotalIVA0());
+            m_jDiscount.setText(m_oTicket.printDiscount());
         }
         repaint();
     }
@@ -2792,11 +2795,13 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
         filler2 = new javax.swing.Box.Filler(new java.awt.Dimension(5, 0), new java.awt.Dimension(5, 0), new java.awt.Dimension(5, 32767));
         m_jTicketId = new javax.swing.JLabel();
         m_jPanTotals = new javax.swing.JPanel();
+        lblDiscount = new javax.swing.JLabel();
         lblTaxIva = new javax.swing.JLabel();
         lblSubtotalTax0 = new javax.swing.JLabel();
         m_jLblTotalEuros3 = new javax.swing.JLabel();
         m_jLblTotalEuros2 = new javax.swing.JLabel();
         m_jLblTotalEuros1 = new javax.swing.JLabel();
+        m_jDiscount = new javax.swing.JLabel();
         m_jSubtotalIVA = new javax.swing.JLabel();
         m_jSubtotalIVA_0 = new javax.swing.JLabel();
         m_jSubtotalEuros = new javax.swing.JLabel();
@@ -3104,16 +3109,23 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
         m_jPanTotals.setPreferredSize(new java.awt.Dimension(375, 45));
         m_jPanTotals.setLayout(new java.awt.GridLayout(2, 3, 4, 0));
 
+        lblDiscount.setFont(new java.awt.Font("Arial", 1, 14)); // NOI18N
+        lblDiscount.setForeground(new java.awt.Color(0, 153, 0));
+        lblDiscount.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        lblDiscount.setText(bundle.getString("button.discount")); // NOI18N
+        lblDiscount.setPreferredSize(new java.awt.Dimension(60, 15));
+        m_jPanTotals.add(lblDiscount);
+
         lblTaxIva.setFont(new java.awt.Font("Arial", 1, 14)); // NOI18N
         lblTaxIva.setForeground(new java.awt.Color(0, 102, 255));
-        lblTaxIva.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
+        lblTaxIva.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         lblTaxIva.setText(bundle.getString("label.subtotalTaxNo0")); // NOI18N
         lblTaxIva.setPreferredSize(new java.awt.Dimension(60, 15));
         m_jPanTotals.add(lblTaxIva);
 
         lblSubtotalTax0.setFont(new java.awt.Font("Arial", 1, 14)); // NOI18N
         lblSubtotalTax0.setForeground(new java.awt.Color(0, 102, 255));
-        lblSubtotalTax0.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
+        lblSubtotalTax0.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         lblSubtotalTax0.setText(bundle.getString("label.subtotalTax0")); // NOI18N
         lblSubtotalTax0.setPreferredSize(new java.awt.Dimension(60, 15));
         m_jPanTotals.add(lblSubtotalTax0);
@@ -3139,7 +3151,20 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
         m_jLblTotalEuros1.setPreferredSize(new java.awt.Dimension(35, 15));
         m_jPanTotals.add(m_jLblTotalEuros1);
 
+        m_jDiscount.setBackground(m_jEditLine.getBackground());
+        m_jDiscount.setFont(new java.awt.Font("Arial", 0, 18)); // NOI18N
+        m_jDiscount.setForeground(m_jEditLine.getForeground());
+        m_jDiscount.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        m_jDiscount.setToolTipText(bundle.getString("tooltip.salesubtotal")); // NOI18N
+        m_jDiscount.setMaximumSize(new java.awt.Dimension(125, 25));
+        m_jDiscount.setMinimumSize(new java.awt.Dimension(80, 25));
+        m_jDiscount.setPreferredSize(new java.awt.Dimension(80, 25));
+        m_jDiscount.setRequestFocusEnabled(false);
+        m_jPanTotals.add(m_jDiscount);
+
+        m_jSubtotalIVA.setBackground(m_jEditLine.getBackground());
         m_jSubtotalIVA.setFont(new java.awt.Font("Arial", 0, 18)); // NOI18N
+        m_jSubtotalIVA.setForeground(m_jEditLine.getForeground());
         m_jSubtotalIVA.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         m_jSubtotalIVA.setToolTipText(bundle.getString("tooltip.salesubtotal")); // NOI18N
         m_jSubtotalIVA.setMaximumSize(new java.awt.Dimension(125, 25));
@@ -3148,7 +3173,9 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
         m_jSubtotalIVA.setRequestFocusEnabled(false);
         m_jPanTotals.add(m_jSubtotalIVA);
 
+        m_jSubtotalIVA_0.setBackground(m_jEditLine.getBackground());
         m_jSubtotalIVA_0.setFont(new java.awt.Font("Arial", 0, 18)); // NOI18N
+        m_jSubtotalIVA_0.setForeground(m_jEditLine.getForeground());
         m_jSubtotalIVA_0.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         m_jSubtotalIVA_0.setToolTipText(bundle.getString("tooltip.salesubtotal")); // NOI18N
         m_jSubtotalIVA_0.setMaximumSize(new java.awt.Dimension(125, 25));
@@ -3823,12 +3850,14 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
     private javax.swing.JToggleButton jTBtnShow;
     private javax.swing.JButton j_btnRemotePrt;
     private javax.swing.JButton jbtnMooring;
+    private javax.swing.JLabel lblDiscount;
     private javax.swing.JLabel lblSubtotalTax0;
     private javax.swing.JLabel lblTaxIva;
     private javax.swing.JPanel m_jButtons;
     private javax.swing.JPanel m_jButtonsExt;
     private javax.swing.JPanel m_jContEntries;
     private javax.swing.JButton m_jDelete;
+    private javax.swing.JLabel m_jDiscount;
     private javax.swing.JButton m_jEditLine;
     private javax.swing.JButton m_jEnter;
     private javax.swing.JTextField m_jKeyFactory;
