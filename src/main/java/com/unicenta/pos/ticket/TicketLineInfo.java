@@ -52,6 +52,7 @@ public class TicketLineInfo implements SerializableWrite, SerializableRead, Seri
     private String productid;
     private String attsetinstid;
     private String lot;
+    private double discount;
     private Boolean updated = false;
 
     private double newprice = 0.0;
@@ -557,5 +558,9 @@ public class TicketLineInfo implements SerializableWrite, SerializableRead, Seri
 
     public void setLot(String lot) {
         this.lot = lot;
+    }
+
+    public void setDiscount(double discount) {
+        this.discount = discount;
     }
 }

@@ -62,6 +62,7 @@ import dev.joguenco.pos.taxpayer.TaxpayerInfo;
 import dev.joguenco.pos.ticketsnum.DataLogicTicketsNum;
 import dev.joguenco.pos.ticketsnum.TicketsNumInfo;
 import dev.joguenco.pos.ticketsnumrefund.DataLogicTicketsNumRefund;
+import dev.resolvedor.pos.sales.VolumeDiscountInfo;
 import dev.resolvedor.util.Size;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.jasperreports.engine.*;
@@ -790,6 +791,16 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
      * @param oLine
      */
     protected void addTicketLine(TicketLineInfo oLine) {
+
+        var discount = findDiscount(oLine.getProductID());
+
+        if (discount != null) {
+            if (oLine.getMultiply() >= discount.getMinimumQuantity()) {
+                oLine.setDiscount(discount.getValue());
+                oLine.setPrice(oLine.getPrice() * (1 - discount.getValue() / 100));
+            }
+        }
+
         if (executeEventAndRefresh("ticket.addline", new ScriptArg("line", oLine)) == null) {
             if (oLine.isProductCom()) {
                 int i = m_ticketlines.getSelectedIndex();
@@ -1129,6 +1140,14 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
         }
 
         return product;
+    }
+
+    private VolumeDiscountInfo findDiscount(String productId) {
+        try {
+            return (VolumeDiscountInfo) dlSales.getVolumeDiscount().find(productId);
+        } catch (BasicException ex) {
+            return null;
+        }
     }
 
     /*

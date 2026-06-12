@@ -37,6 +37,7 @@ import com.unicenta.pos.suppliers.SupplierInfo;
 import com.unicenta.pos.suppliers.SupplierInfoExt;
 import com.unicenta.pos.ticket.*;
 import com.unicenta.pos.voucher.VoucherInfo;
+import dev.resolvedor.pos.sales.VolumeDiscountInfo;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Date;
@@ -2991,5 +2992,15 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                 + "and pl.status = true and l.status = true",
                 SerializerWriteString.INSTANCE,
                 SerializerReadString.INSTANCE);
+    }
+
+    public final StaticSentence getVolumeDiscount() throws BasicException {
+        return new StaticSentence(s,
+                "SELECT id, '', '', 0, minimum_quantity, value, true, '', '' "
+                + "from volume_discount "
+                + "where product = ? "
+                + "and status = true and type = 'percentage'",
+                SerializerWriteString.INSTANCE,
+                new SerializerReadClass(VolumeDiscountInfo.class));
     }
 }

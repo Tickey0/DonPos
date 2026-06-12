@@ -624,6 +624,8 @@ CREATE TABLE `ticketlines` (
 	`taxid` varchar(255) NOT NULL,
 	`attributes` mediumblob default NULL,
         `lot` varchar(255) NOT NULL,
+        `discount` double NOT NULL default '0',
+        `discount_type` varchar(45) NOT NULL DEFAULT 'percentage',
 	PRIMARY KEY  ( `ticket`, `line` ),
 	KEY `ticketlines_attsetinst` ( `attributesetinstance_id` ),
 	KEY `ticketlines_fk_2` ( `product` ),
