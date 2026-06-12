@@ -792,13 +792,12 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
      */
     protected void addTicketLine(TicketLineInfo oLine) {
 
-        var discount = findDiscount(oLine.getProductID());
+        var discount = findDiscount(oLine.getProductID(), oLine.getMultiply());
 
+        oLine.setPriceNormal(oLine.getPrice());
         if (discount != null) {
-            if (oLine.getMultiply() >= discount.getMinimumQuantity()) {
-                oLine.setDiscount(discount.getValue());
-                oLine.setPrice(oLine.getPrice() * (1 - discount.getValue() / 100));
-            }
+            oLine.setDiscount(discount.getValue());            
+            oLine.setPrice(oLine.getPrice() * (1 - discount.getValue() / 100));
         }
 
         if (executeEventAndRefresh("ticket.addline", new ScriptArg("line", oLine)) == null) {
@@ -1142,9 +1141,9 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
         return product;
     }
 
-    private VolumeDiscountInfo findDiscount(String productId) {
+    private VolumeDiscountInfo findDiscount(String productId, double quantity) {
         try {
-            return (VolumeDiscountInfo) dlSales.getVolumeDiscount().find(productId);
+            return (VolumeDiscountInfo) dlSales.getVolumeDiscount().find(productId, quantity);
         } catch (BasicException ex) {
             return null;
         }

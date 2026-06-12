@@ -47,6 +47,7 @@ public class TicketLineInfo implements SerializableWrite, SerializableRead, Seri
     }
 
     private double price;
+    private double priceNormal = 0.0;
     private TaxInfo tax;
     private Properties attributes;
     private String productid;
@@ -562,5 +563,17 @@ public class TicketLineInfo implements SerializableWrite, SerializableRead, Seri
 
     public void setDiscount(double discount) {
         this.discount = discount;
+    }
+
+    public double getDiscount() {
+        return discount;
+    }
+
+    public void setPriceNormal(double priceNormal) {
+        this.priceNormal = priceNormal;
+    }
+
+    public double getDiscountValue() {
+        return (priceNormal * discount / 100) * multiply ;
     }
 }

@@ -833,7 +833,7 @@ CREATE TABLE `document_types` (
 CREATE TABLE `volume_discount` (
         `id` INT NOT NULL AUTO_INCREMENT,
         `product` VARCHAR(255) NOT NULL,
-        `minimum_quantity` INT NOT NULL DEFAULT 0,
+        `minimum_quantity` DOUBLE NOT NULL DEFAULT 0,
         `type` VARCHAR(45) NOT NULL DEFAULT 'percentage' COMMENT 'percentage/amount',
         `value` DOUBLE NOT NULL DEFAULT 0,
         `status` BOOLEAN DEFAULT true,

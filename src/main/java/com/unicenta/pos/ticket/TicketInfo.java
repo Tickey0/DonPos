@@ -581,6 +581,14 @@ public final class TicketInfo implements SerializableRead, Externalizable {
         return sum;
     }
 
+    public double getDiscount() {
+        double sum = 0.0;
+        sum = m_aLines.stream().map((line)
+                -> line.getDiscountValue()).reduce(sum, (accumulator, _item)
+                -> accumulator + _item);
+        return sum;
+    }
+
     public double getTotal() {
         return getSubTotal() + getTax();
 
@@ -780,7 +788,7 @@ public final class TicketInfo implements SerializableRead, Externalizable {
     }
 
     public String printDiscount() {
-        return Formats.CURRENCY.formatValue(0);
+        return Formats.CURRENCY.formatValue(getDiscount());
     }
 
     public String printTotal() {
@@ -809,7 +817,7 @@ public final class TicketInfo implements SerializableRead, Externalizable {
 
     public String getTicketHeaderFooterData(String data) {
         AppConfig m_config = new AppConfig(new File((System.getProperty("user.home")),
-                 AppLocal.APP_ID + ".properties"));
+                AppLocal.APP_ID + ".properties"));
         m_config.load();
         String row = (m_config.getProperty("tkt." + data));
 

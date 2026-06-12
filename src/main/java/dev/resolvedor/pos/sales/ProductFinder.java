@@ -342,7 +342,7 @@ public class ProductFinder extends javax.swing.JDialog {
 
         selectedDiscount = new VolumeDiscountInfo();
         selectedDiscount.setProduct(selectedProduct);
-        selectedDiscount.setMinimumQuantity(Integer.parseInt(txtQuantity.getText()));
+        selectedDiscount.setMinimumQuantity(Double.parseDouble(txtQuantity.getText()));
         selectedDiscount.setValue(Double.parseDouble(txtDiscount.getText()));
 
         doClose(RET_OK);

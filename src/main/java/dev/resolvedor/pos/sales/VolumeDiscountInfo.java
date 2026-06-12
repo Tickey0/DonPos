@@ -21,7 +21,7 @@ public class VolumeDiscountInfo implements SerializableRead {
     private ProductInfoExt product;
     private double priceSell;
     private double priceSellFinal;
-    private int minimumQuantity;
+    private double minimumQuantity;
     private double value;
     private String status;
 
@@ -33,7 +33,7 @@ public class VolumeDiscountInfo implements SerializableRead {
         product.setCode(dr.getString(2));
         product.setName(dr.getString(3));
         priceSell = dr.getDouble(4);
-        minimumQuantity = dr.getInt(5);
+        minimumQuantity = dr.getDouble(5);
         value = dr.getDouble(6);
         if (dr.getBoolean(7)) {
             status = "Active";

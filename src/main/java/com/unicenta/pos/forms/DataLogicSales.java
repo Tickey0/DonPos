@@ -2999,8 +2999,11 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                 "SELECT id, '', '', 0, minimum_quantity, value, true, '', '' "
                 + "from volume_discount "
                 + "where product = ? "
-                + "and status = true and type = 'percentage'",
-                SerializerWriteString.INSTANCE,
+                + "and minimum_quantity <= ? "
+                + "and status = true and type = 'percentage' "
+                + "order by minimum_quantity desc "
+                + "limit 1",
+                new SerializerWriteBasic(new Datas[]{Datas.STRING, Datas.DOUBLE}),
                 new SerializerReadClass(VolumeDiscountInfo.class));
     }
 }

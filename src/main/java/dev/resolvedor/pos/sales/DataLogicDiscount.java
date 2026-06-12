@@ -48,7 +48,7 @@ public class DataLogicDiscount extends BeanFactoryDataSingle {
         var result = new StaticSentence(
                 s,
                 "insert into volume_discount (product, minimum_quantity, value) values (?, ?, ?)",
-                new SerializerWriteBasic(new Datas[]{Datas.STRING, Datas.INT, Datas.DOUBLE})
+                new SerializerWriteBasic(new Datas[]{Datas.STRING, Datas.DOUBLE, Datas.DOUBLE})
         ).exec(new Object[]{
             discount.getProduct().getID(),
             discount.getMinimumQuantity(),
