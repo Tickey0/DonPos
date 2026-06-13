@@ -230,6 +230,7 @@ public class TicketLineInfo implements SerializableWrite, SerializableRead, Seri
         m_iLine = -1;
 
         this.lot = lot;
+        discount = 0;
     }
 
     void setTicket(String ticket, int line) {
@@ -261,6 +262,7 @@ public class TicketLineInfo implements SerializableWrite, SerializableRead, Seri
         }
 
         dp.setString(9, lot);
+        dp.setDouble(10, discount);
     }
 
     /**
@@ -310,6 +312,7 @@ public class TicketLineInfo implements SerializableWrite, SerializableRead, Seri
         l.tax = tax;
         l.attributes = (Properties) attributes.clone();
         l.lot = lot;
+        l.discount = discount;
 
         return l;
     }

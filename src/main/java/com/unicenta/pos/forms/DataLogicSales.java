@@ -1783,8 +1783,8 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                 SentenceExec ticketlineinsert = new PreparedSentence(s,
                         "INSERT INTO ticketlines (TICKET, LINE, "
                         + "PRODUCT, ATTRIBUTESETINSTANCE_ID, "
-                        + "UNITS, PRICE, TAXID, ATTRIBUTES, LOT) "
-                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                        + "UNITS, PRICE, TAXID, ATTRIBUTES, LOT, DISCOUNT) "
+                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                         SerializerWriteBuilder.INSTANCE);
 
                 for (TicketLineInfo l : ticket.getLines()) {
@@ -1802,7 +1802,8 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                             l.getProductID(),
                             l.getProductAttSetInstId(), -l.getMultiply(), l.getPrice(),
                             ticket.getUser().getName(),
-                            l.getLot()
+                            l.getLot(),
+                            l.getDiscount()
                         });
                     }
                 }
