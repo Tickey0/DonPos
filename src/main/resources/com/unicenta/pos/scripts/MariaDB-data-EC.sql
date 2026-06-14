@@ -147,6 +147,7 @@ CREATE VIEW `v_ele_invoices_detail` as SELECT
     CAST(((`tl`.`UNITS` * `tl`.`PRICE`) * `tx`.`RATE`)
         AS DECIMAL (19 , 2 )) AS `value_iva`,
     CAST(0 AS DECIMAL (19 , 2 )) AS `discount`,
+    CAST((((100 * `tl`.`PRICE` / (100 - `tl`.`DISCOUNT`)) * (`tl`.`DISCOUNT` / 100)) * `tl`.`units`) AS DECIMAL (19 , 2 )) AS `discount`,
     CAST((`tl`.`UNITS` * `tl`.`PRICE`) AS DECIMAL (19 , 2 )) AS `total_price_without_tax`
 FROM
     (((`tickets` `t`
