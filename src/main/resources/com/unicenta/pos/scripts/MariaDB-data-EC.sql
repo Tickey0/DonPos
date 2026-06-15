@@ -85,6 +85,7 @@ CREATE VIEW `v_ele_invoices` AS select
     cast(lpad(`t`.`ticketid`, 9, '0') as char) AS `sequence`,
     cast(`r`.`datenew` as date) AS `date`,
     round(sum(cast(`tl`.`units` * `tl`.`price` as decimal(19, 2))), 2) as `total_without_taxes`,
+    round(sum(cast((((100 * `tl`.`price` / (100 - `tl`.`discount`)) * (`tl`.`discount` / 100)) * `tl`.`units`) AS DECIMAL (19 , 2 ))), 2) `discount`,
     round(sum(cast(`tl`.`units` * `tl`.`price` + if(`tx`.`rate` > 0, `tl`.`units` * `tl`.`price` * `tx`.`rate`, 0) as decimal(19, 2))) + `fun_tip`(`t`.`id`), 2) AS `total`,
     `i`.`legal_code` AS `identification_type`,
     `c`.`taxid` AS `identification`,
@@ -141,14 +142,13 @@ CREATE VIEW `v_ele_invoices_detail` as SELECT
     `p`.`name`,
     CAST(`tl`.`units` AS DECIMAL (19 , 2 )) AS `quantity`,
     CONVERT('UN', CHAR) AS `unit`,
-    CAST(`tl`.`PRICE` AS DECIMAL (19 , 2 )) AS `unit_price`,
+    CAST((100 * `tl`.`price` / (100 - `tl`.`discount`)) as DECIMAL(19, 2)) AS `unit_price`,
     CONVERT(`tx`.`legalcode`, CHAR) AS `tax_code`,
-    CAST((`tx`.`RATE` * 100) AS DECIMAL (19 , 2 )) AS `tax_iva`,
-    CAST(((`tl`.`UNITS` * `tl`.`PRICE`) * `tx`.`RATE`)
+    CAST((`tx`.`rate` * 100) AS DECIMAL (19 , 2 )) AS `tax_iva`,
+    CAST(((`tl`.`units` * `tl`.`price`) * `tx`.`rate`)
         AS DECIMAL (19 , 2 )) AS `value_iva`,
-    CAST(0 AS DECIMAL (19 , 2 )) AS `discount`,
-    CAST((((100 * `tl`.`PRICE` / (100 - `tl`.`DISCOUNT`)) * (`tl`.`DISCOUNT` / 100)) * `tl`.`units`) AS DECIMAL (19 , 2 )) AS `discount`,
-    CAST((`tl`.`UNITS` * `tl`.`PRICE`) AS DECIMAL (19 , 2 )) AS `total_price_without_tax`
+    CAST((((100 * `tl`.`price` / (100 - `tl`.`discount`)) * (`tl`.`discount` / 100)) * `tl`.`units`) AS DECIMAL (19 , 2 )) AS `discount`,
+    CAST((`tl`.`units` * `tl`.`price`) AS DECIMAL (19 , 2 )) AS `total_price_without_tax`
 FROM
     (((`tickets` `t`
     JOIN `ticketlines` `tl` ON ((`t`.`ID` = `tl`.`TICKET`)))
