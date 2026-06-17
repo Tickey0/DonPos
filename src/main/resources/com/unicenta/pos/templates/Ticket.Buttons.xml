@@ -115,7 +115,7 @@
 
 
          <taxesincluded value="true"/>
-         <taxcategoryid value="001"/>
+         <taxcategoryid value="000"/>
          <pricevisible value="true" />
          
 </configuration>

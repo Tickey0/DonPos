@@ -259,9 +259,7 @@ public abstract class BatchSentence extends BaseSentence {
                     // No es un comentario ni linea vacia
                     if (sLine.endsWith(";")) {
                         // ha terminado la sentencia
-                        sSentence.append(sLine.substring(0, sLine.length() - 1));                             
-                        
-                        System.out.println(sSentence.toString());
+                        sSentence.append(sLine.substring(0, sLine.length() - 1));                                                     
                         
                         // File parameters
                         Pattern pattern = Pattern.compile("\\$(\\w+)\\{([^}]*)\\}");

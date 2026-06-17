@@ -99,7 +99,7 @@ public class StartPOS {
             TicketInfo.setHostname(hostname);
 
             String screenmode = config.getProperty("machine.screenmode");
-            log.info("om mani padme hum");
+            log.info("om mani padme jum");
 
             if ("fullscreen".equals(screenmode)) {
                 JRootKiosk rootkiosk = new JRootKiosk();
