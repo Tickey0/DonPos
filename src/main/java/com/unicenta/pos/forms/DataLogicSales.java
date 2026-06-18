@@ -985,7 +985,8 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                 + "MIN(stocklevel.stockmaximum) AS Maximum, "
                 + "MIN(products.pricebuy), "
                 + "MIN(products.pricesell), "
-                + "MIN(products.memodate) "
+                + "MIN(products.memodate), "
+                + "stockcurrent.lot "
                 + "FROM locations "
                 + "INNER JOIN ((products "
                 + "INNER JOIN stockcurrent "
@@ -993,7 +994,8 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                 + "LEFT JOIN stocklevel ON products.id = stocklevel.product) "
                 + "ON locations.id = stockcurrent.location "
                 + "WHERE products.id = ? "
-                + "AND locations.id = ?",
+                + "AND locations.id = ? "
+                + "limit 1",
                 SerializerWriteString.INSTANCE,
                 ProductStock.getSerializerRead());
 

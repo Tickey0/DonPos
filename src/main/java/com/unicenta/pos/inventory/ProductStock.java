@@ -16,7 +16,6 @@
 //
 //    You should have received a copy of the GNU General Public License
 //    along with uniCenta oPOS.  If not, see <http://www.gnu.org/licenses/>.
-
 package com.unicenta.pos.inventory;
 
 import com.unicenta.basic.BasicException;
@@ -26,9 +25,8 @@ import java.util.Date;
 
 /**
  *
- * @author JG uniCenta May 15
- * Used in Product stock tab to display all this Product's
- * location values
+ * @author JG uniCenta May 15 Used in Product stock tab to display all this
+ * Product's location values
  */
 public class ProductStock {
 
@@ -39,10 +37,11 @@ public class ProductStock {
     Double maximum;
     Double pricebuy;
     Double pricesell;
-    Date memodate;    
+    Date memodate;
+    String lot;
 
     /**
-     * Main method to return a product's "live" stock position 
+     * Main method to return a product's "live" stock position
      */
     public ProductStock() {
     }
@@ -55,11 +54,13 @@ public class ProductStock {
      * @param minimum
      * @param maximum
      * @param pricebuy
-     * @param pricesell 
-     * @param memodate 
+     * @param pricesell
+     * @param memodate
+     * @param lot
      */
-    public ProductStock(String pId, String location, Double units, Double minimum, 
-            Double maximum, Double pricebuy, Double pricesell, Date memodate) {
+    public ProductStock(String pId, String location, Double units, Double minimum,
+            Double maximum, Double pricebuy, Double pricesell, Date memodate,
+            String lot) {
 
         this.pId = pId;
         this.location = location;
@@ -69,6 +70,7 @@ public class ProductStock {
         this.pricebuy = pricebuy;
         this.pricesell = pricesell;
         this.memodate = memodate;
+        this.lot = lot;
     }
 
     /**
@@ -78,20 +80,22 @@ public class ProductStock {
     public String getProductId() {
         return pId;
     }
+
     public void setProductId(String pId) {
         this.pId = pId;
     }
 
     /**
      *
-     * @return product's location string 
+     * @return product's location string
      */
     public String getLocation() {
         return location;
     }
+
     public void setLocation(String location) {
         this.location = location;
-    }    
+    }
 
     /**
      *
@@ -100,17 +104,19 @@ public class ProductStock {
     public Double getUnits() {
         return units;
     }
+
     public void setUnits(Double units) {
         this.units = units;
     }
 
     /**
      *
-     * @return 
+     * @return
      */
     public Double getMinimum() {
         return minimum;
     }
+
     public void setMinimum(Double minimum) {
         this.minimum = minimum;
     }
@@ -122,6 +128,7 @@ public class ProductStock {
     public Double getMaximum() {
         return maximum;
     }
+
     public void setMaximum(Double maximum) {
         this.maximum = maximum;
     }
@@ -133,10 +140,11 @@ public class ProductStock {
     public Double getPriceBuy() {
         return pricebuy;
     }
+
     public void setPriceBuy(Double pricebuy) {
         this.pricebuy = pricebuy;
     }
-    
+
     /**
      *
      * @return price sell
@@ -144,9 +152,11 @@ public class ProductStock {
     public Double getPriceSell() {
         return pricesell;
     }
+
     public void setPriceSell(Double pricesell) {
         this.pricesell = pricesell;
     }
+
     /**
      *
      * @return memodate Date value
@@ -154,11 +164,19 @@ public class ProductStock {
     public Date getMemoDate() {
         return memodate;
     }
+
     public void setMemoDate(Date memodate) {
         this.memodate = memodate;
-    }    
+    }
 
-    
+    public String getLot() {
+        return lot;
+    }
+
+    public void setLot(String lot) {
+        this.lot = lot;
+    }
+
     /**
      *
      * @return stock for this product
@@ -169,17 +187,27 @@ public class ProductStock {
             @Override
             public Object readValues(DataRead dr) throws BasicException {
 
-                String pId = dr.getString(1);                
+                String pId = dr.getString(1);
                 String location = dr.getString(2);
                 Double units = dr.getDouble(3);
                 Double minimum = dr.getDouble(4);
                 Double maximum = dr.getDouble(5);
-                Double pricebuy = dr.getDouble(6);                
+                Double pricebuy = dr.getDouble(6);
                 Double pricesell = dr.getDouble(7);
-                Date memodate = dr.getTimestamp(8);                
-                
-                return 
-                    new ProductStock(pId, location, units, minimum, maximum, pricebuy, pricesell, memodate);                
+                Date memodate = dr.getTimestamp(8);
+                String lot = dr.getString(9);
+
+                return new ProductStock(
+                        pId,
+                        location,
+                        units,
+                        minimum,
+                        maximum,
+                        pricebuy,
+                        pricesell,
+                        memodate,
+                        lot
+                );
             }
         };
     }

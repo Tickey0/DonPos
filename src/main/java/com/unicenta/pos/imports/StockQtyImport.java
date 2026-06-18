@@ -16,8 +16,6 @@
 //
 //    You should have received a copy of the GNU General Public License
 //    along with uniCenta oPOS.  If not, see <http://www.gnu.org/licenses/>.
-
-
 package com.unicenta.pos.imports;
 
 import com.csvreader.CsvReader;
@@ -44,524 +42,530 @@ import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
 
-
 /**
- * User Interface and code for CSV type data import to update Products
- * Current Stock quantity levels in table: stockcurrent
+ * User Interface and code for CSV type data import to update Products Current
+ * Stock quantity levels in table: stockcurrent
  */
 @Slf4j
 public class StockQtyImport extends JPanel implements JPanelView {
-  // the workspace
-  private AppProperties m_props;
-  private Properties m_propsdb = null;
-  private CsvReader products;
-  private DocumentListener documentListener;
+    // the workspace
 
-  // the db connection session
-  private Session s;
-  private Connection con;
-  private DataLogicSales m_dlSales;
-  private DataLogicSystem m_dlSystem;
-  private ProductInfoExt prodInfo;
-  private ProductStock prodStock;
+    private AppProperties m_props;
+    private Properties m_propsdb = null;
+    private CsvReader products;
+    private DocumentListener documentListener;
 
-  // Location
-  private String Location = "0";
-  private String m_sInventoryLocation;
+    // the db connection session
+    private Session s;
+    private Connection con;
+    private DataLogicSales m_dlSales;
+    private DataLogicSystem m_dlSystem;
+    private ProductInfoExt prodInfo;
+    private ProductStock prodStock;
 
-  // Product properties
-  private String productBarcode;
-  private Double productQty;
-  private double oldQty = 0;
-  private double newQty = 0;
-  private String recordType = null;
+    // Location
+    private String Location = "0";
+    private String m_sInventoryLocation;
 
-  // the csv filename
-  private String last_folder;
-  private File config_file;
-  private String csvFileName;
+    // Product properties
+    private String productBarcode;
+    private Double productQty;
+    private double oldQty = 0;
+    private double newQty = 0;
+    private String lot;
+    private String recordType = null;
 
-  //Status area messages
-  private Integer progress = 0;
-  private int currentRecord;
-  private int rowCount = 0;
-  private int qtyUpdates = 0;
+    // the csv filename
+    private String last_folder;
+    private File config_file;
+    private String csvFileName;
 
-  /**
-   * Constructs a new StockQtyImport object
-   *
-   * @param oApp AppView
-   */
-  public StockQtyImport(AppView oApp) {
-    this(oApp.getProperties());
-  }
+    //Status area messages
+    private Integer progress = 0;
+    private int currentRecord;
+    private int rowCount = 0;
+    private int qtyUpdates = 0;
 
-  /**
-   * Constructs a new StockQtyImport object
-   *
-   * @param props AppProperties
-   */
-  @SuppressWarnings("empty-statement")
-  public StockQtyImport(AppProperties props) {
+    /**
+     * Constructs a new StockQtyImport object
+     *
+     * @param oApp AppView
+     */
+    public StockQtyImport(AppView oApp) {
+        this(oApp.getProperties());
+    }
 
-    initComponents();
+    /**
+     * Constructs a new StockQtyImport object
+     *
+     * @param props AppProperties
+     */
+    @SuppressWarnings("empty-statement")
+    public StockQtyImport(AppProperties props) {
+
+        initComponents();
 
 // Get current db session connection        
-    AppProperties m_props = props;
+        AppProperties m_props = props;
 
-    try {
-      s = AppViewConnection.createSession(props);
-      con = s.getConnection();
-    } catch (BasicException | SQLException e) {
-      ;
-    }
+        try {
+            s = AppViewConnection.createSession(props);
+            con = s.getConnection();
+        } catch (BasicException | SQLException e) {
+            ;
+        }
 
 // Set db tables        
-    m_dlSales = new DataLogicSales();
-    m_dlSales.init(s);
-    m_dlSystem = new DataLogicSystem();
-    m_dlSystem.init(s);
+        m_dlSales = new DataLogicSales();
+        m_dlSales.init(s);
+        m_dlSystem = new DataLogicSystem();
+        m_dlSystem.init(s);
 
 // Get terminal's current resource property settings
-    Properties m_propsdb = m_dlSystem.getResourceAsProperties(m_props.getHost() + "/properties");
+        Properties m_propsdb = m_dlSystem.getResourceAsProperties(m_props.getHost() + "/properties");
 
 // Get terminal's set Location property <entry key="location">0</entry>
-    m_sInventoryLocation = m_propsdb.getProperty("location");
-    try {
-      Location = m_dlSystem.findLocationName(m_sInventoryLocation);
-    } catch (BasicException ex) {
-      log.error(ex.getMessage());
-    }
+        m_sInventoryLocation = m_propsdb.getProperty("location");
+        try {
+            Location = m_dlSystem.findLocationName(m_sInventoryLocation);
+        } catch (BasicException ex) {
+            log.error(ex.getMessage());
+        }
 
 // last used folder stored in unicentaopos.properties
-    last_folder = props.getProperty("CSV.last_folder");
-    config_file = props.getConfigFile();
+        last_folder = props.getProperty("CSV.last_folder");
+        config_file = props.getConfigFile();
 
-    jFileName.getDocument().addDocumentListener(documentListener);
-    documentListener = new DocumentListener() {
-      @Override
-      public void changedUpdate(DocumentEvent documentEvent) {
+        jFileName.getDocument().addDocumentListener(documentListener);
+        documentListener = new DocumentListener() {
+            @Override
+            public void changedUpdate(DocumentEvent documentEvent) {
+                jFileRead.setEnabled(true);
+            }
+
+            @Override
+            public void insertUpdate(DocumentEvent documentEvent) {
+                if (!"".equals(jFileName.getText().trim())) {
+                    jFileRead.setEnabled(true);
+                }
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent documentEvent) {
+                if (jFileName.getText().trim().equals("")) {
+                    jFileRead.setEnabled(false);
+                }
+            }
+        };
+    }
+
+    /**
+     * Enables form components
+     */
+    private void enableForm() {
         jFileRead.setEnabled(true);
-      }
+        jImport.setEnabled(true);
+        jbtnReset.setEnabled(true);
+        m_jLocation.setEnabled(true);
+    }
 
-      @Override
-      public void insertUpdate(DocumentEvent documentEvent) {
-        if (!"".equals(jFileName.getText().trim())) {
-          jFileRead.setEnabled(true);
-        }
-      }
+    /**
+     * This forms Title
+     *
+     * @return The name of the panel
+     */
+    @Override
+    public String getTitle() {
+        return AppLocal.getIntString("Menu.CSVImport");
+    }
 
-      @Override
-      public void removeUpdate(DocumentEvent documentEvent) {
-        if (jFileName.getText().trim().equals("")) {
-          jFileRead.setEnabled(false);
-        }
-      }
-    };
-  }
+    /**
+     * Returns this object
+     *
+     * @return
+     */
+    @Override
+    public JComponent getComponent() {
+        return this;
+    }
 
-  /**
-   * Enables form components
-   */
-  private void enableForm() {
-    jFileRead.setEnabled(true);
-    jImport.setEnabled(true);
-    jbtnReset.setEnabled(true);
-    m_jLocation.setEnabled(true);
-  }
+    /**
+     * Get this form object ready
+     *
+     * @throws com.unicenta.basic.BasicException
+     */
+    @Override
+    public void activate() throws BasicException {
+        // Current Location
+        m_jLocation.setText("Current Location : " + Location);
 
-  /**
-   * This forms Title
-   *
-   * @return The name of the panel
-   */
-  @Override
-  public String getTitle() {
-    return AppLocal.getIntString("Menu.CSVImport");
-  }
+        // Set the column delimiter
+        jComboSeparator.removeAllItems();
+        jComboSeparator.addItem(",");
+        jComboSeparator.addItem(";");
+        jComboSeparator.addItem("~");
+        jComboSeparator.addItem("^");
+    }
 
-  /**
-   * Returns this object
-   *
-   * @return
-   */
-  @Override
-  public JComponent getComponent() {
-    return this;
-  }
+    /**
+     * Resets all the form fields
+     */
+    public void resetForm() {
 
-  /**
-   * Get this form object ready
-   *
-   * @throws com.unicenta.basic.BasicException
-   */
-  @Override
-  public void activate() throws BasicException {
-    // Current Location
-    m_jLocation.setText("Current Location : " + Location);
-
-    // Set the column delimiter
-    jComboSeparator.removeAllItems();
-    jComboSeparator.addItem(",");
-    jComboSeparator.addItem(";");
-    jComboSeparator.addItem("~");
-    jComboSeparator.addItem("^");
-  }
-
-  /**
-   * Resets all the form fields
-   */
-  public void resetForm() {
-
-    m_jLocation.setEnabled(false);
-    jImport.setEnabled(false);
-    jbtnReset.setEnabled(true);
-    jFileRead.setEnabled(false);
-    jFileName.setText(null);
-    csvFileName = "";
+        m_jLocation.setEnabled(false);
+        jImport.setEnabled(false);
+        jbtnReset.setEnabled(true);
+        jFileRead.setEnabled(false);
+        jFileName.setText(null);
+        csvFileName = "";
 
 // Status area
-    progress = 0;
-    webPBar.setValue(progress);
-    jTextUpdate.setText("");
-    jTextRecords.setText("");
-    qtyUpdates = 0;
-  }
-
-  /**
-   * Deactivates and resets all form fields.
-   *
-   * @return
-   */
-  @Override
-  public boolean deactivate() {
-    resetForm();
-    return (true);
-  }
-
-  /**
-   * Check file can be opened, read and closed
-   * No Headers in the CSVFileName are required,
-   *
-   * @param CSVFileName Name of the file (including the path) to open and read
-   * @throws IOException If there is an issue reading the CSV file
-   */
-  private void checkFile(String CSVFileName) throws IOException {
-
-    File f = new File(CSVFileName);
-    if (f.exists()) {
-      products = new CsvReader(CSVFileName, ',', Charset.forName("UTF-8"));
-      products.setDelimiter(((String) jComboSeparator.getSelectedItem()).charAt(0));
-
-      rowCount = 0;
-      int i = 0;
-
-      while (products.readRecord()) {
-        ++rowCount;
-      }
-      jTextRecords.setText(Long.toString(rowCount));
-      products.close();
-
-      JOptionPane.showMessageDialog(null, "File Check "
-                      + CSVFileName,
-              "File read OK",
-              JOptionPane.WARNING_MESSAGE);
-
-      enableForm();
-
-    } else {
-      JOptionPane.showMessageDialog(null, "Unable to locate "
-                      + CSVFileName,
-              "File not found",
-              JOptionPane.WARNING_MESSAGE);
+        progress = 0;
+        webPBar.setValue(progress);
+        jTextUpdate.setText("");
+        jTextRecords.setText("");
+        qtyUpdates = 0;
     }
-  }
 
-  /**
-   * Imports the external file
-   *
-   * @param CSVFileName Name of the file (including path) to import.
-   * @throws IOException If there are file reading issues.
-   */
-  private void ImportCsvFile(String CSVFileName) throws IOException {
+    /**
+     * Deactivates and resets all form fields.
+     *
+     * @return
+     */
+    @Override
+    public boolean deactivate() {
+        resetForm();
+        return (true);
+    }
 
-    File f = new File(CSVFileName);
-    if (f.exists()) {
-      webPBar.setString("Starting...");
-      webPBar.setVisible(true);
-      jImport.setEnabled(true);
+    /**
+     * Check file can be opened, read and closed No Headers in the CSVFileName
+     * are required,
+     *
+     * @param CSVFileName Name of the file (including the path) to open and read
+     * @throws IOException If there is an issue reading the CSV file
+     */
+    private void checkFile(String CSVFileName) throws IOException {
+
+        File f = new File(CSVFileName);
+        if (f.exists()) {
+            products = new CsvReader(CSVFileName, ',', Charset.forName("UTF-8"));
+            products.setDelimiter(((String) jComboSeparator.getSelectedItem()).charAt(0));
+
+            rowCount = 0;
+            int i = 0;
+
+            while (products.readRecord()) {
+                ++rowCount;
+            }
+            jTextRecords.setText(Long.toString(rowCount));
+            products.close();
+
+            JOptionPane.showMessageDialog(null, "File Check "
+                    + CSVFileName,
+                    "File read OK",
+                    JOptionPane.WARNING_MESSAGE);
+
+            enableForm();
+
+        } else {
+            JOptionPane.showMessageDialog(null, "Unable to locate "
+                    + CSVFileName,
+                    "File not found",
+                    JOptionPane.WARNING_MESSAGE);
+        }
+    }
+
+    /**
+     * Imports the external file
+     *
+     * @param CSVFileName Name of the file (including path) to import.
+     * @throws IOException If there are file reading issues.
+     */
+    private void ImportCsvFile(String CSVFileName) throws IOException {
+
+        File f = new File(CSVFileName);
+        if (f.exists()) {
+            webPBar.setString("Starting...");
+            webPBar.setVisible(true);
+            jImport.setEnabled(true);
 
 // Read file
-      products = new CsvReader(CSVFileName, ',', Charset.forName("UTF-8"));
-      products.setDelimiter(((String) jComboSeparator.getSelectedItem()).charAt(0));
-      currentRecord = 0;
+            products = new CsvReader(CSVFileName, ',', Charset.forName("UTF-8"));
+            products.setDelimiter(((String) jComboSeparator.getSelectedItem()).charAt(0));
+            currentRecord = 0;
 
 // Prime: read the csv record and update to zero matching stockcurrent values
-      while (products.readRecord()) {
-        recordType = "delete";
-        deleteRecord(recordType);
-      }
-      products.close();
+            while (products.readRecord()) {
+                recordType = "delete";
+                deleteRecord(recordType);
+            }
+            products.close();
 
 // Work: read the file again and update stockcurrent values          
-      products = new CsvReader(CSVFileName, ',', Charset.forName("UTF-8"));
-      products.setDelimiter(((String) jComboSeparator.getSelectedItem()).charAt(0));
-      currentRecord = 0;
+            products = new CsvReader(CSVFileName, ',', Charset.forName("UTF-8"));
+            products.setDelimiter(((String) jComboSeparator.getSelectedItem()).charAt(0));
+            currentRecord = 0;
 
-      while (products.readRecord()) {
-        currentRecord++;
-        progress = currentRecord;
-        recordType = "update";
-        updateRecord(recordType);
-      }
-      products.close();
+            while (products.readRecord()) {
+                currentRecord++;
+                progress = currentRecord;
+                recordType = "update";
+                updateRecord(recordType);
+            }
+            products.close();
 
-    } else {
-      JOptionPane.showMessageDialog(null,
-              "Unable to locate "
-                      + CSVFileName,
-              "File not found",
-              JOptionPane.WARNING_MESSAGE);
+        } else {
+            JOptionPane.showMessageDialog(null,
+                    "Unable to locate "
+                    + CSVFileName,
+                    "File not found",
+                    JOptionPane.WARNING_MESSAGE);
+        }
+
+        jTextUpdate.setText(Integer.toString(qtyUpdates));
+
+        JOptionPane.showMessageDialog(null,
+                "Import Complete",
+                "Imported",
+                JOptionPane.WARNING_MESSAGE);
+
+        progress = 100;
+        webPBar.setValue(progress);
+        webPBar.setString("Imported" + progress);
     }
 
-    jTextUpdate.setText(Integer.toString(qtyUpdates));
+    /**
+     * Update the record in the database with the new Quantities
+     *
+     * @param pId Unique product id of the record to be updated
+     */
+    private void updateRecord(String pId) throws IOException {
+        prodInfo = new ProductInfoExt();
+        prodStock = new ProductStock();
+        try {
 
-    JOptionPane.showMessageDialog(null,
-            "Import Complete",
-            "Imported",
-            JOptionPane.WARNING_MESSAGE);
+            String sCode = products.get(0);
 
-    progress = 100;
-    webPBar.setValue(progress);
-    webPBar.setString("Imported" + progress);
-  }
+            prodInfo = m_dlSales.getProductInfoByCode(sCode);
 
-  /**
-   * Update the record in the database with the new Quantities
-   *
-   * @param pId Unique product id of the record to be updated
-   */
-  private void updateRecord(String pId) throws IOException {
-    prodInfo = new ProductInfoExt();
-    prodStock = new ProductStock();
-    try {
-
-      String sCode = products.get(0);
-
-      prodInfo = m_dlSales.getProductInfoByCode(sCode);
-
-      if (prodInfo != null) {
-        prodStock = m_dlSales.getProductStockState(prodInfo.getID(), m_sInventoryLocation);
-        productBarcode = products.get(0);
-        oldQty = prodStock.getUnits();
-        newQty = Double.valueOf(products.get(1));
-        productQty = oldQty + newQty;
-        updateStockCurrent(m_sInventoryLocation, prodInfo.getID(), productQty);
-        CSVStockUpdate(Location, productBarcode, newQty);
-        qtyUpdates++;
-      }
-    } catch (BasicException ex) {
-      log.error(ex.getMessage());
+            if (prodInfo != null) {
+                prodStock = m_dlSales.getProductStockState(prodInfo.getID(), m_sInventoryLocation);
+                productBarcode = products.get(0);
+                oldQty = prodStock.getUnits();
+                newQty = Double.valueOf(products.get(1));
+                productQty = oldQty + newQty;
+                lot = prodStock.getLot();
+                updateStockCurrent(m_sInventoryLocation, prodInfo.getID(), productQty, lot);
+                CSVStockUpdate(Location, productBarcode, newQty);
+                qtyUpdates++;
+            }
+        } catch (BasicException ex) {
+            log.error(ex.getMessage());
+        }
     }
-  }
 
-  /**
-   * Delete the record in the database with the new Quantities
-   *
-   * @param pId Unique product id of the record to be updated
-   */
-  private void deleteRecord(String pId) throws IOException {
-    prodInfo = new ProductInfoExt();
-    prodStock = new ProductStock();
-    try {
+    /**
+     * Delete the record in the database with the new Quantities
+     *
+     * @param pId Unique product id of the record to be updated
+     */
+    private void deleteRecord(String pId) throws IOException {
+        prodInfo = new ProductInfoExt();
+        prodStock = new ProductStock();
+        try {
 
-      String sCode = products.get(0);
+            String sCode = products.get(0);
 
-      prodInfo = m_dlSales.getProductInfoByCode(sCode);
+            prodInfo = m_dlSales.getProductInfoByCode(sCode);
 
-      if (prodInfo != null) {
-        prodStock = m_dlSales.getProductStockState(prodInfo.getID(), m_sInventoryLocation);
-        productQty = 0.;
+            if (prodInfo != null) {
+                prodStock = m_dlSales.getProductStockState(prodInfo.getID(), m_sInventoryLocation);
+                productQty = 0.;
 
-        deleteStockCurrent(m_sInventoryLocation, prodInfo.getID(), productQty);
-      }
-    } catch (BasicException ex) {
-      log.error(ex.getMessage());
+                deleteStockCurrent(m_sInventoryLocation, prodInfo.getID(), productQty);
+            }
+        } catch (BasicException ex) {
+            log.error(ex.getMessage());
+        }
     }
-  }
 
-  /**
-   * FUTURE - Add non existing minimal Products
-   *
-   * @param LocationID
-   * @param ProductID
-   * @param Units
-   * @throws com.unicenta.basic.BasicException
-   */
-  public void addStockCurrent(String LocationID, String ProductID, Double Units) throws BasicException {
+    /**
+     * FUTURE - Add non existing minimal Products
+     *
+     * @param LocationID
+     * @param ProductID
+     * @param Units
+     * @throws com.unicenta.basic.BasicException
+     */
+    public void addStockCurrent(String LocationID, String ProductID, Double Units) throws BasicException {
 
-    Object[] values = new Object[3];
-    values[0] = LocationID;
-    values[1] = ProductID;
-    values[2] = (double) Units;
+        Object[] values = new Object[3];
+        values[0] = LocationID;
+        values[1] = ProductID;
+        values[2] = (double) Units;
 
-    PreparedSentence sentence = new PreparedSentence(s,
-            "INSERT INTO stockcurrent ( "
-                    + "LOCATION, PRODUCT, UNITS) VALUES (?, ?, ?)"
-            , new SerializerWriteBasicExt((new Datas[]{
+        PreparedSentence sentence = new PreparedSentence(s,
+                "INSERT INTO stockcurrent ( "
+                + "LOCATION, PRODUCT, UNITS) VALUES (?, ?, ?)",
+                new SerializerWriteBasicExt((new Datas[]{
             Datas.STRING,
             Datas.STRING,
             Datas.DOUBLE
-    }),
-            new int[]{0, 1, 2
-            }));
+        }),
+                        new int[]{0, 1, 2
+                        }));
 
-    sentence.exec(values);
-  }
+        sentence.exec(values);
+    }
 
-  /**
-   * Update existing Product Current Quantity
-   *
-   * @param LocationID
-   * @param ProductID
-   * @param Units
-   * @throws com.unicenta.basic.BasicException
-   */
-  public void updateStockCurrent(String LocationID, String ProductID, Double Units) throws BasicException {
+    /**
+     * Update existing Product Current Quantity
+     *
+     * @param LocationID
+     * @param ProductID
+     * @param Units
+     * @param Lot
+     * @throws com.unicenta.basic.BasicException
+     */
+    public void updateStockCurrent(String LocationID, String ProductID, Double Units, String Lot) throws BasicException {
 
-    Object[] newValues = new Object[3];
-    newValues[0] = (double) Units;
-    newValues[1] = LocationID;
-    newValues[2] = ProductID;
+        Object[] newValues = new Object[4];
+        newValues[0] = (double) Units;
+        newValues[1] = LocationID;
+        newValues[2] = ProductID;
+        newValues[3] = Lot;
 
-    PreparedSentence sentence = new PreparedSentence(s,
-            "UPDATE stockcurrent SET "
-                    + "UNITS = ? "
-                    + "WHERE LOCATION = ? "
-                    + "AND PRODUCT = ?"
-            , new SerializerWriteBasicExt((new Datas[]{
+        PreparedSentence sentence = new PreparedSentence(s,
+                "UPDATE stockcurrent SET "
+                + "UNITS = ? "
+                + "WHERE LOCATION = ? "
+                + "AND PRODUCT = ? "
+                + "AND LOT = ?",
+                new SerializerWriteBasicExt((new Datas[]{
+            Datas.DOUBLE,
+            Datas.STRING,
+            Datas.STRING,
+            Datas.STRING
+        }),
+                        new int[]{
+                            0, 1, 2, 3}
+                ));
+
+        sentence.exec(newValues);
+    }
+
+    /**
+     * Reset existing Product Current Quantity to Zero
+     *
+     * @param LocationID
+     * @param ProductID
+     * @param Units
+     * @throws com.unicenta.basic.BasicException
+     */
+    public void deleteStockCurrent(String LocationID, String ProductID, Double Units) throws BasicException {
+
+        Object[] oldValues = new Object[3];
+        oldValues[0] = (double) Units;
+        oldValues[1] = LocationID;
+        oldValues[2] = ProductID;
+
+        PreparedSentence sentence = new PreparedSentence(s,
+                "UPDATE stockcurrent SET "
+                + "UNITS = ? "
+                + "WHERE LOCATION = ? "
+                + "AND PRODUCT = ?",
+                new SerializerWriteBasicExt((new Datas[]{
             Datas.DOUBLE,
             Datas.STRING,
             Datas.STRING
-    }),
-            new int[]{
-                    0, 1, 2}
-    ));
+        }),
+                        new int[]{
+                            0, 1, 2}
+                ));
 
-    sentence.exec(newValues);
-  }
-
-  /**
-   * Reset existing Product Current Quantity to Zero
-   *
-   * @param LocationID
-   * @param ProductID
-   * @param Units
-   * @throws com.unicenta.basic.BasicException
-   */
-  public void deleteStockCurrent(String LocationID, String ProductID, Double Units) throws BasicException {
-
-    Object[] oldValues = new Object[3];
-    oldValues[0] = (double) Units;
-    oldValues[1] = LocationID;
-    oldValues[2] = ProductID;
-
-    PreparedSentence sentence = new PreparedSentence(s,
-            "UPDATE stockcurrent SET "
-                    + "UNITS = ? "
-                    + "WHERE LOCATION = ? "
-                    + "AND PRODUCT = ?"
-            , new SerializerWriteBasicExt((new Datas[]{
-            Datas.DOUBLE,
-            Datas.STRING,
-            Datas.STRING
-    }),
-            new int[]{
-                    0, 1, 2}
-    ));
-
-    sentence.exec(oldValues);
-  }
-
-  /**
-   * Add Product Update log entry - Updates only
-   *
-   * @param LocationID
-   * @param Units
-   */
-  public void CSVStockUpdate(String LocationID, String Code, Double Units) {
-
-    Object[] myprod = new Object[6];
-    myprod[0] = UUID.randomUUID().toString();                               // ID string
-    myprod[1] = Integer.toString(currentRecord);                            // Record number
-    myprod[2] = "Qty update";                                               // Error description
-    myprod[3] = Location;                                                   // Location ID
-    myprod[4] = productBarcode;                                             // Product Barcode
-    myprod[5] = newQty;                                                     // Product Quantity
-
-    try {
-      m_dlSystem.execCSVStockUpdate(myprod);
-    } catch (BasicException ex) {
-      log.error(ex.getMessage());
+        sentence.exec(oldValues);
     }
-  }
 
-  /**
-   * Pushes the Import process into a new thread so it doesn't interfere with
-   * the UI responsiveness.
-   */
-  private void setWorker() {
-    progress = 0;
-    webPBar.setStringPainted(true);
+    /**
+     * Add Product Update log entry - Updates only
+     *
+     * @param LocationID
+     * @param Units
+     */
+    public void CSVStockUpdate(String LocationID, String Code, Double Units) {
 
-    final SwingWorker<Integer, Integer> pbWorker;
-    pbWorker = new SwingWorker<Integer, Integer>() {
+        Object[] myprod = new Object[6];
+        myprod[0] = UUID.randomUUID().toString();                               // ID string
+        myprod[1] = Integer.toString(currentRecord);                            // Record number
+        myprod[2] = "Qty update";                                               // Error description
+        myprod[3] = Location;                                                   // Location ID
+        myprod[4] = productBarcode;                                             // Product Barcode
+        myprod[5] = newQty;                                                     // Product Quantity
 
-      @Override
-      protected final Integer doInBackground() throws Exception {
-        while ((progress >= 0) && (progress < 100)) {
-          Thread.sleep(50);
-          this.publish(progress);
+        try {
+            m_dlSystem.execCSVStockUpdate(myprod);
+        } catch (BasicException ex) {
+            log.error(ex.getMessage());
         }
-        this.publish(100);
-        this.done();
-        return 100;
-      }
-
-      @Override
-      protected final void process(final List<Integer> chunks) {
-        webPBar.setValue(chunks.get(0));
-        if (progress > 100) {
-          progress = 100;
-          webPBar.setString("Imported 100%");
-        } else {
-          webPBar.setString("Imported " + progress + "%");
-        }
-      }
-    };
-    pbWorker.execute();
-  }
-
-  /**
-   * Runs the setWorker.
-   */
-  private class workProcess implements Runnable {
-
-    @Override
-    public void run() {
-      try {
-        ImportCsvFile(jFileName.getText());
-      } catch (IOException ex) {
-        log.error(ex.getMessage());
-      }
     }
-  }
 
-  /**
-   * This method is called from within the constructor to initialize the form.
-   * WARNING: Do NOT modify this code. The content of this method is always
-   * regenerated by the Form Editor.
-   */
+    /**
+     * Pushes the Import process into a new thread so it doesn't interfere with
+     * the UI responsiveness.
+     */
+    private void setWorker() {
+        progress = 0;
+        webPBar.setStringPainted(true);
+
+        final SwingWorker<Integer, Integer> pbWorker;
+        pbWorker = new SwingWorker<Integer, Integer>() {
+
+            @Override
+            protected final Integer doInBackground() throws Exception {
+                while ((progress >= 0) && (progress < 100)) {
+                    Thread.sleep(50);
+                    this.publish(progress);
+                }
+                this.publish(100);
+                this.done();
+                return 100;
+            }
+
+            @Override
+            protected final void process(final List<Integer> chunks) {
+                webPBar.setValue(chunks.get(0));
+                if (progress > 100) {
+                    progress = 100;
+                    webPBar.setString("Imported 100%");
+                } else {
+                    webPBar.setString("Imported " + progress + "%");
+                }
+            }
+        };
+        pbWorker.execute();
+    }
+
+    /**
+     * Runs the setWorker.
+     */
+    private class workProcess implements Runnable {
+
+        @Override
+        public void run() {
+            try {
+                ImportCsvFile(jFileName.getText());
+            } catch (IOException ex) {
+                log.error(ex.getMessage());
+            }
+        }
+    }
+
+    /**
+     * This method is called from within the constructor to initialize the form.
+     * WARNING: Do NOT modify this code. The content of this method is always
+     * regenerated by the Form Editor.
+     */
   // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
   private void initComponents() {
 
@@ -807,72 +811,72 @@ public class StockQtyImport extends JPanel implements JPanelView {
   }// </editor-fold>//GEN-END:initComponents
 
   private void jFileReadActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jFileReadActionPerformed
-    try {
-      checkFile(jFileName.getText());
-      webPBar.setString("Source file OK");
-      m_jLocation.setEnabled(true);
-    } catch (IOException ex) {
-      log.error(ex.getMessage());
-      webPBar.setString("Source file error!");
-      m_jLocation.setEnabled(false);
-    }
+      try {
+          checkFile(jFileName.getText());
+          webPBar.setString("Source file OK");
+          m_jLocation.setEnabled(true);
+      } catch (IOException ex) {
+          log.error(ex.getMessage());
+          webPBar.setString("Source file error!");
+          m_jLocation.setEnabled(false);
+      }
   }//GEN-LAST:event_jFileReadActionPerformed
 
   private void jFileNameActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jFileNameActionPerformed
-    jImport.setEnabled(false);
-    jFileRead.setEnabled(true);
+      jImport.setEnabled(false);
+      jFileRead.setEnabled(true);
   }//GEN-LAST:event_jFileNameActionPerformed
 
   private void jbtnFileChooseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbtnFileChooseActionPerformed
-    resetForm();
-    setWorker();
+      resetForm();
+      setWorker();
 
-    JFileChooser chooser = new JFileChooser(last_folder == null ? "C:\\" : last_folder);
-    FileNameExtensionFilter filter = new FileNameExtensionFilter("csv files", "csv");
-    chooser.setFileFilter(filter);
-    chooser.showOpenDialog(null);
-    File csvFile = chooser.getSelectedFile();
+      JFileChooser chooser = new JFileChooser(last_folder == null ? "C:\\" : last_folder);
+      FileNameExtensionFilter filter = new FileNameExtensionFilter("csv files", "csv");
+      chooser.setFileFilter(filter);
+      chooser.showOpenDialog(null);
+      File csvFile = chooser.getSelectedFile();
 
-    if (csvFile == null) {
-      return;
-    }
-
-    File current_folder = chooser.getCurrentDirectory();
-
-    if (last_folder == null || !last_folder.equals(current_folder.getAbsolutePath())) {
-      AppConfig CSVConfig = new AppConfig(config_file);
-      CSVConfig.load();
-      CSVConfig.setProperty("CSV.last_folder", current_folder.getAbsolutePath());
-      last_folder = current_folder.getAbsolutePath();
-      try {
-        CSVConfig.save();
-      } catch (IOException ex) {
-        log.error(ex.getMessage());
+      if (csvFile == null) {
+          return;
       }
-    }
 
-    String csv = csvFile.getName();
-    if (!(csv.trim().equals(""))) {
-      csvFileName = csvFile.getAbsolutePath();
-      jFileName.setText(csvFileName);
-      jFileRead.setEnabled(true);
-    }
+      File current_folder = chooser.getCurrentDirectory();
+
+      if (last_folder == null || !last_folder.equals(current_folder.getAbsolutePath())) {
+          AppConfig CSVConfig = new AppConfig(config_file);
+          CSVConfig.load();
+          CSVConfig.setProperty("CSV.last_folder", current_folder.getAbsolutePath());
+          last_folder = current_folder.getAbsolutePath();
+          try {
+              CSVConfig.save();
+          } catch (IOException ex) {
+              log.error(ex.getMessage());
+          }
+      }
+
+      String csv = csvFile.getName();
+      if (!(csv.trim().equals(""))) {
+          csvFileName = csvFile.getAbsolutePath();
+          jFileName.setText(csvFileName);
+          jFileRead.setEnabled(true);
+      }
   }//GEN-LAST:event_jbtnFileChooseActionPerformed
 
   private void jbtnResetActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbtnResetActionPerformed
-    resetForm();
-    progress = 0;
-    webPBar.setString("Waiting...");
+      resetForm();
+      progress = 0;
+      webPBar.setString("Waiting...");
   }//GEN-LAST:event_jbtnResetActionPerformed
 
   private void jImportActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jImportActionPerformed
 
-    jFileRead.setEnabled(false);
-    jImport.setEnabled(false);
+      jFileRead.setEnabled(false);
+      jImport.setEnabled(false);
 
-    workProcess work = new workProcess();
-    Thread thread2 = new Thread(work);
-    thread2.start();
+      workProcess work = new workProcess();
+      Thread thread2 = new Thread(work);
+      thread2.start();
   }//GEN-LAST:event_jImportActionPerformed
 
   // Variables declaration - do not modify//GEN-BEGIN:variables
