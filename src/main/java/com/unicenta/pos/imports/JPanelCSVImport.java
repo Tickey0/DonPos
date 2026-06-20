@@ -906,7 +906,7 @@ public class JPanelCSVImport extends JPanel implements JPanelView {
         myprod[25] = 0.0;                                                       // Stock Units
         myprod[26] = "1";                                                       // Printer         
         myprod[27] = dSupplier;                                                 // Supplier
-        myprod[28] = "0";                                                       // UOM
+        myprod[28] = "u";                                                       // UOM
         myprod[29] = null;                                                        // memodate
         myprod[30] = jCheckInCatalogue.isSelected();                            // In catalog flag
         myprod[31] = null;                                                      // catalog order                

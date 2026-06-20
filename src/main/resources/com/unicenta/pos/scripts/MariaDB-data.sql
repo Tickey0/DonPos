@@ -30,6 +30,9 @@ INSERT INTO taxes(id, name, category, custcategory, parentid, rate, ratecascade,
 INSERT INTO taxes(id, name, category, custcategory, parentid, rate, ratecascade, rateorder, legalcode) VALUES ('001', 'Tax Standard', '001', NULL, NULL, 0.20, FALSE, NULL, '0');
 INSERT INTO taxes(id, name, category, custcategory, parentid, rate, ratecascade, rateorder, legalcode) VALUES ('002', 'Tax Other', '002', NULL, NULL, 0, FALSE, NULL, '0');
 
+-- ADD UOM
+INSERT INTO uom(id, name) VALUES ('u','Each');
+
 -- ADD PRODUCTS
 INSERT INTO products(id, reference, code, name, category, taxcat, isservice, display, printto) 
 VALUES ('xxx999_999xxx_x9x9x9', 'xxx999', 'xxx999', 'Free Line entry', '000', '001', 1, '<html><center>Free Line entry', '1');
@@ -45,9 +48,6 @@ INSERT INTO locations(id, name, address) VALUES ('0','Location 1','Local');
 
 -- ADD SUPPLIERS
 INSERT INTO suppliers(id, searchkey, name) VALUES ('0','uniCenta','uniCenta');
-
--- ADD UOM
-INSERT INTO uom(id, name) VALUES ('0','Each');
 
 INSERT INTO categories(id, name) VALUES ('001', 'Category Local');
 INSERT INTO products(id, reference, code, name, pricesell, category, taxcat, isservice, display, printto, uom) 

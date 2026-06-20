@@ -440,6 +440,9 @@ INSERT INTO taxes(id, name, category, custcategory, parentid, rate, ratecascade,
 INSERT INTO taxes(id, name, category, custcategory, parentid, rate, ratecascade, rateorder, legalcode) VALUES ('013', 'IVA 13', '013', NULL, NULL, 0.13, FALSE, NULL, '10');
 INSERT INTO taxes(id, name, category, custcategory, parentid, rate, ratecascade, rateorder, legalcode) VALUES ('005', 'IVA 5', '005', NULL, NULL, 0.05, FALSE, NULL, '5');
 
+-- ADD UOM
+INSERT INTO uom(id, name) VALUES ('u','Unidad');
+
 -- ADD PRODUCTS
 INSERT INTO products(id, reference, code, name, category, taxcat, isservice, display, printto) 
 VALUES ('xxx999_999xxx_x9x9x9', 'xxx999', 'xxx999', 'Free Line entry', '000', '000', 1, '<html><center>Free Line entry', '1');
@@ -475,9 +478,6 @@ INSERT INTO locations(id, name, address) VALUES ('0','Location 1','Local');
 
 -- ADD SUPPLIERS
 INSERT INTO suppliers(id, searchkey, taxid, taxid_type, name) VALUES ('9999999999999','9999999999999', '9999999999999', 'CF', 'Otros Proveedores');
-
--- ADD UOM
-INSERT INTO uom(id, name) VALUES ('u','Unidad');
 
 INSERT INTO subscriptions (id,name,url,authentication_method,token,timeout,status) 
 VALUES ('1', 'ReIdi', 'https://reidi.ec.service.resolvedor.dev', 

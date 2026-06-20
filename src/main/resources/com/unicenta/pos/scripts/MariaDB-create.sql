@@ -338,7 +338,7 @@ CREATE TABLE `products` (
 	`stockunits` double NOT NULL default '0',
 	`printto` varchar(255) default '1',
 	`supplier` varchar(255) default NULL,
-        `uom` varchar(255) default '0',
+        `uom` varchar(255) default 'u',
 	`memodate` datetime default '2018-01-01 00:00:01',
 
 	PRIMARY KEY  ( `id` ),
@@ -913,6 +913,9 @@ ALTER TABLE `products` ADD CONSTRAINT `products_fk_1`
 
 ALTER TABLE `products` ADD CONSTRAINT `products_taxcat_fk`
 	FOREIGN KEY ( `taxcat` ) REFERENCES `taxcategories` ( `id` );
+
+ALTER TABLE `products` ADD CONSTRAINT `products_uom_fk` 
+        FOREIGN KEY (`uom`) REFERENCES `uom` (`id`);
 
 -- Update foreign keys of product_bundle
 ALTER TABLE `products_bundle` ADD CONSTRAINT `products_bundle_fk_1` 
