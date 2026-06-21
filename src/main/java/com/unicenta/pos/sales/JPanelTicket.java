@@ -796,7 +796,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 
         oLine.setPriceNormal(oLine.getPrice());
         if (discount != null) {
-            oLine.setDiscount(discount.getValue());            
+            oLine.setDiscount(discount.getValue());
             oLine.setPrice(oLine.getPrice() * (1 - discount.getValue() / 100));
         }
 
@@ -2626,12 +2626,13 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
             try {
                 TicketLineInfo line = m_oTicket.getLine(i);
                 String pId = line.getProductID();
+                String lot = line.getLot();
 
                 String lName = (m_App.getProperties().getProperty("machine.department"));
                 lName = "'" + lName + "'";
                 ProductStock checkProduct;
                 String location = m_App.getInventoryLocation();
-                checkProduct = dlSales.getProductStockState(pId, location);
+                checkProduct = dlSales.getProductStockState(pId, location, lot);
 
                 if (checkProduct != null) {
 
@@ -3609,9 +3610,10 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
           try {
               TicketLineInfo line = m_oTicket.getLine(i);
               String pId = line.getProductID();
+              String lot = line.getLot();
               String location = m_App.getInventoryLocation();
               ProductStock checkProduct;
-              checkProduct = dlSales.getProductStockState(pId, location);
+              checkProduct = dlSales.getProductStockState(pId, location, lot);
 
               if (checkProduct != null) {
 
@@ -3664,9 +3666,10 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
               try {
                   TicketLineInfo line = m_oTicket.getLine(i);
                   String pId = line.getProductID();
+                  String lot = line .getLot();
                   String location = m_App.getInventoryLocation();
                   ProductStock checkProduct;
-                  checkProduct = dlSales.getProductStockState(pId, location);
+                  checkProduct = dlSales.getProductStockState(pId, location, lot);
 
                   Double pMin;
                   Double pMax;
@@ -3674,50 +3677,53 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
                   Date pMemoDate;
                   String content;
 
-                  if (!location.equals(checkProduct.getLocation())) {
-                      content = AppLocal.getIntString("message.location.current");
-                      JFrame frame = new JFrame();
-                      JOptionPane.showMessageDialog(frame,
-                              content,
-                              "Info",
-                              JOptionPane.INFORMATION_MESSAGE);
-                  } else {
-                      if (checkProduct.getMinimum() != null) {
-                          pMin = checkProduct.getMinimum();
-                      } else {
-                          pMin = 0.;
-                      }
-                      if (checkProduct.getMaximum() != null) {
-                          pMax = checkProduct.getMaximum();
-                      } else {
-                          pMax = 0.;
-                      }
-                      if (checkProduct.getUnits() != null) {
-                          pUnits = checkProduct.getUnits();
-                      } else {
-                          pUnits = 0.;
-                      }
-                      if (checkProduct.getMemoDate() != null) {
-                          pMemoDate = checkProduct.getMemoDate();
-                      } else {
-                          pMemoDate = null;
-                      }
+                  if (checkProduct != null) {
 
-                      content = "<html>"
-                              + "<b>" + AppLocal.getIntString("label.currentstock")
-                              + " : " + "</b>" + checkProduct.getUnits() + "<br>"
-                              + "<b>" + AppLocal.getIntString("label.maximum")
-                              + " : " + "</b>" + pMax + "<br>"
-                              + "<b>" + AppLocal.getIntString("label.minimum")
-                              + " : " + "</b>" + pMin + "<br>"
-                              + "<b>" + AppLocal.getIntString("label.proddate")
-                              + " : " + "</b>" + pMemoDate + "<br>";
+                      if (!location.equals(checkProduct.getLocation())) {
+                          content = AppLocal.getIntString("message.location.current");
+                          JFrame frame = new JFrame();
+                          JOptionPane.showMessageDialog(frame,
+                                  content,
+                                  "Info",
+                                  JOptionPane.INFORMATION_MESSAGE);
+                      } else {
+                          if (checkProduct.getMinimum() != null) {
+                              pMin = checkProduct.getMinimum();
+                          } else {
+                              pMin = 0.;
+                          }
+                          if (checkProduct.getMaximum() != null) {
+                              pMax = checkProduct.getMaximum();
+                          } else {
+                              pMax = 0.;
+                          }
+                          if (checkProduct.getUnits() != null) {
+                              pUnits = checkProduct.getUnits();
+                          } else {
+                              pUnits = 0.;
+                          }
+                          if (checkProduct.getMemoDate() != null) {
+                              pMemoDate = checkProduct.getMemoDate();
+                          } else {
+                              pMemoDate = null;
+                          }
 
-                      JFrame frame = new JFrame();
-                      JOptionPane.showMessageDialog(frame,
-                              content,
-                              "Info",
-                              JOptionPane.INFORMATION_MESSAGE);
+                          content = "<html>"
+                                  + "<b>" + AppLocal.getIntString("label.currentstock")
+                                  + " : " + "</b>" + checkProduct.getUnits() + "<br>"
+                                  + "<b>" + AppLocal.getIntString("label.maximum")
+                                  + " : " + "</b>" + pMax + "<br>"
+                                  + "<b>" + AppLocal.getIntString("label.minimum")
+                                  + " : " + "</b>" + pMin + "<br>"
+                                  + "<b>" + AppLocal.getIntString("label.proddate")
+                                  + " : " + "</b>" + pMemoDate + "<br>";
+
+                          JFrame frame = new JFrame();
+                          JOptionPane.showMessageDialog(frame,
+                                  content,
+                                  "Info",
+                                  JOptionPane.INFORMATION_MESSAGE);
+                      }
                   }
               } catch (BasicException ex) {
                   log.error(ex.getMessage());

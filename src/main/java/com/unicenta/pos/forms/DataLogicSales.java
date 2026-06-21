@@ -974,7 +974,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
      * @return
      * @throws BasicException
      */
-    public final ProductStock getProductStockState(String pId, String location) throws BasicException {
+    public final ProductStock getProductStockState(String pId, String location, String lot) throws BasicException {
 
         PreparedSentence preparedSentence = new PreparedSentence(s,
                 "SELECT "
@@ -995,11 +995,12 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                 + "ON locations.id = stockcurrent.location "
                 + "WHERE products.id = ? "
                 + "AND locations.id = ? "
+                + "AND stockcurrent.lot = ? "
                 + "limit 1",
                 SerializerWriteString.INSTANCE,
                 ProductStock.getSerializerRead());
 
-        ProductStock productStock = (ProductStock) preparedSentence.find(pId, location);
+        ProductStock productStock = (ProductStock) preparedSentence.find(pId, location, lot);
 
         if (productStock.getUnits() == null) {
             return null;

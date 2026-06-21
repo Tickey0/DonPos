@@ -65,6 +65,7 @@ public class StockQtyImport extends JPanel implements JPanelView {
 
     // Location
     private String Location = "0";
+    private String lot;
     private String m_sInventoryLocation;
 
     // Product properties
@@ -72,7 +73,6 @@ public class StockQtyImport extends JPanel implements JPanelView {
     private Double productQty;
     private double oldQty = 0;
     private double newQty = 0;
-    private String lot;
     private String recordType = null;
 
     // the csv filename
@@ -135,6 +135,7 @@ public class StockQtyImport extends JPanel implements JPanelView {
 // last used folder stored in unicentaopos.properties
         last_folder = props.getProperty("CSV.last_folder");
         config_file = props.getConfigFile();
+        lot = m_dlSystem.getResourceAsText("Default.Lot");
 
         jFileName.getDocument().addDocumentListener(documentListener);
         documentListener = new DocumentListener() {
@@ -350,12 +351,11 @@ public class StockQtyImport extends JPanel implements JPanelView {
             prodInfo = m_dlSales.getProductInfoByCode(sCode);
 
             if (prodInfo != null) {
-                prodStock = m_dlSales.getProductStockState(prodInfo.getID(), m_sInventoryLocation);
+                prodStock = m_dlSales.getProductStockState(prodInfo.getID(), m_sInventoryLocation, lot);
                 productBarcode = products.get(0);
                 oldQty = prodStock.getUnits();
                 newQty = Double.valueOf(products.get(1));
                 productQty = oldQty + newQty;
-                lot = prodStock.getLot();
                 updateStockCurrent(m_sInventoryLocation, prodInfo.getID(), productQty, lot);
                 CSVStockUpdate(Location, productBarcode, newQty);
                 qtyUpdates++;
@@ -380,7 +380,7 @@ public class StockQtyImport extends JPanel implements JPanelView {
             prodInfo = m_dlSales.getProductInfoByCode(sCode);
 
             if (prodInfo != null) {
-                prodStock = m_dlSales.getProductStockState(prodInfo.getID(), m_sInventoryLocation);
+                prodStock = m_dlSales.getProductStockState(prodInfo.getID(), m_sInventoryLocation, lot);
                 productQty = 0.;
 
                 deleteStockCurrent(m_sInventoryLocation, prodInfo.getID(), productQty);
