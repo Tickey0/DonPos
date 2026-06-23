@@ -30,6 +30,7 @@ import com.unicenta.beans.JNumberPop;
 import com.unicenta.data.gui.ComboBoxValModel;
 import com.unicenta.data.gui.ListKeyed;
 import com.unicenta.data.gui.MessageInf;
+import com.unicenta.data.loader.LocalRes;
 import com.unicenta.data.loader.SentenceList;
 import com.unicenta.editor.JEditorString;
 import com.unicenta.pos.catalog.JCatalog;
@@ -1155,7 +1156,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
             for (ProductsBundleInfo component : bundle) {
                 int countLot = (int) dlSales.countProdutLots().find(component.getProductBundleId());
                 if (countLot != 1) {
-                    return new ErrorMessage(AppLocal.getIntString("message.product.bundle.lot"));
+                    return new ErrorMessage(LocalRes.getIntString("message.product.bundle.lot"));
                 }
             }
         } catch (BasicException ex) {

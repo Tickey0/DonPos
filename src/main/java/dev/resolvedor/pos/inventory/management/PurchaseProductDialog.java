@@ -362,6 +362,16 @@ public class PurchaseProductDialog extends javax.swing.JDialog {
             }
         }
 
+        try {
+            if (dlSales.isProductBundle(selectedProduct.getID())) {
+                JOptionPane.showMessageDialog(this, LocalRes.getIntString("message.product.bundle.purchase"), AppLocal.getIntString("label.stockproduct"), JOptionPane.ERROR_MESSAGE);
+                return false;
+            }
+        } catch (BasicException ex) {
+            log.error(PurchaseProductDialog.class.getName() + " isProductBundle " + ex);
+            return false;
+        }
+
         return true;
     }
 

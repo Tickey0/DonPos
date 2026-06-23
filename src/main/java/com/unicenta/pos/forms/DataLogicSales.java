@@ -970,6 +970,19 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                 ProductsBundleInfo.getSerializerRead()).list(productId);
     }
 
+    public final boolean isProductBundle(String productId) throws BasicException {
+        var result = (int) new PreparedSentence(s,
+                "SELECT count(*) from products_bundle "
+                + "WHERE PRODUCT = ?",
+                SerializerWriteString.INSTANCE,
+                SerializerReadInteger.INSTANCE).find(productId);
+
+        if (result == 0) {
+            return false;
+        }
+        return true;
+    }
+
     /**
      * JG Oct 2016 Called from JPanelTicket
      *
