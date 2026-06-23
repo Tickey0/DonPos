@@ -19,7 +19,6 @@
 
 package com.unicenta.pos.forms;
 
-//import com.unicenta.plugins.Application;
 import lombok.extern.slf4j.Slf4j;
 
 import java.awt.*;

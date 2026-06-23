@@ -19,8 +19,6 @@
 
 package com.unicenta.pos.payment;
 
-//import com.unicenta.plugins.Application;
-//import com.unicenta.plugins.common.AppContext;
 import com.unicenta.pos.util.RoundUtils;
 import lombok.extern.slf4j.Slf4j;
 

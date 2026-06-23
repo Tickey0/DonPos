@@ -6,8 +6,7 @@ group = menu.addGroup("Menu.Main");
         group.addPanel("/com/unicenta/images/calculator.png", "Menu.CloseTPV", "com.unicenta.pos.panels.JPanelCloseMoney");
         group.addPanel("/com/unicenta/images/calculator.png", "Menu.CloseTPV", "com.unicenta.pos.panels.CloseCash");
 
-group = menu.addGroup("Menu.Backoffice");
-    submenu = group.addSubmenu("/com/unicenta/images/plugin.png", "Menu.Plugins", "plugins.configure");
+group = menu.addGroup("Menu.Backoffice");    
 
     submenu = group.addSubmenu("/com/unicenta/images/customer.png", "Menu.Customers", "com.unicenta.pos.forms.MenuCustomers");
     submenu.addTitle("Menu.Panel.Customers.Forms");
@@ -139,7 +138,6 @@ group = menu.addGroup("Menu.Backoffice");
         submenu.addPanel("/com/unicenta/images/import.png", "Menu.CSVStockQty", "com.unicenta.pos.imports.StockQtyImport");
         submenu.addPanel("/com/unicenta/images/import.png", "Menu.CustomerCSVImport", "com.unicenta.pos.imports.CustomerCSVImport");
         submenu.addPanel("/com/unicenta/images/database.png", "Menu.CSVReset", "com.unicenta.pos.imports.JPanelCSVCleardb");
-        submenu.addPanel("/com/unicenta/images/database.png", "Menu.Transfer", "com.unicenta.pos.transfer.Transfer");
     submenu.addTitle("Menu.Import.Reports");
         submenu.addPanel("/com/unicenta/images/reports.png", "Menu.Tools.NewProducts", "/com/unicenta/reports/tools_newproducts.bs");
         submenu.addPanel("/com/unicenta/images/reports.png", "Menu.Tools.UpdatedPrices", "/com/unicenta/reports/tools_updatedprices.bs");

@@ -30,7 +30,6 @@
 
 
 <permissions>
-    <class name="plugins.configure"/>
     <class name="com.unicenta.pos.panels.JPanelCloseMoney"/>
     <class name="com.unicenta.pos.panels.JPanelCloseMoneyReprint"/>
     <class name="com.unicenta.pos.panels.JPanelPayments"/>
@@ -183,7 +182,6 @@
     <class name="com.unicenta.pos.imports.JPanelCSVCleardb"/>
     <class name="com.unicenta.pos.imports.JPanelCSVImport"/>
     <class name="com.unicenta.pos.imports.StockQtyImport"/>
-    <class name="com.unicenta.pos.transfer.Transfer"/>
         <class name="/com/unicenta/reports/tools_invalidcategory.bs"/>
         <class name="/com/unicenta/reports/tools_invaliddata.bs"/>
         <class name="/com/unicenta/reports/tools_inventoryqtyupdate.bs"/>

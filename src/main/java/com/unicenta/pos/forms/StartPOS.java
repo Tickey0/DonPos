@@ -29,8 +29,6 @@ import javax.swing.UIManager;
 import javax.swing.plaf.metal.MetalLookAndFeel;
 
 import com.unicenta.format.Formats;
-//import com.unicenta.plugins.Application;
-//import com.unicenta.plugins.metrics.Metrics;
 import com.unicenta.pos.instance.InstanceQuery;
 import com.unicenta.pos.ticket.TicketInfo;
 

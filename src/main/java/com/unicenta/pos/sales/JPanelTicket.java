@@ -32,7 +32,6 @@ import com.unicenta.data.gui.ListKeyed;
 import com.unicenta.data.gui.MessageInf;
 import com.unicenta.data.loader.SentenceList;
 import com.unicenta.editor.JEditorString;
-//import com.unicenta.plugins.Application;
 import com.unicenta.pos.catalog.JCatalog;
 import com.unicenta.pos.customers.*;
 import com.unicenta.pos.forms.*;
