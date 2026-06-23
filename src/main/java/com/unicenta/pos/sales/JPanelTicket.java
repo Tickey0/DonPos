@@ -37,6 +37,7 @@ import com.unicenta.pos.catalog.JCatalog;
 import com.unicenta.pos.customers.*;
 import com.unicenta.pos.forms.*;
 import com.unicenta.pos.inventory.ProductStock;
+import com.unicenta.pos.inventory.ProductsBundleInfo;
 import com.unicenta.pos.inventory.TaxCategoryInfo;
 import com.unicenta.pos.panels.JProductFinder;
 import com.unicenta.pos.payment.JPaymentSelect;
@@ -54,6 +55,7 @@ import com.unicenta.pos.util.AltEncrypter;
 import com.unicenta.pos.util.InactivityListener;
 import com.unicenta.pos.util.JRPrinterAWT300;
 import com.unicenta.pos.util.ReportUtils;
+import dev.joguenco.error.ErrorMessage;
 import dev.joguenco.http.client.authorization.ExecuteAuthorization;
 import dev.joguenco.pos.establishment.DataLogicEstablishment;
 import dev.joguenco.pos.establishment.EstablishmentInfo;
@@ -1104,6 +1106,12 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
                 return null;
             }
 
+            var validateProductBundle = findProductsBundleLot(product.getID());
+            if (validateProductBundle.getIsError()) {
+                JOptionPane.showMessageDialog(this, validateProductBundle.getMessage(), "", JOptionPane.ERROR_MESSAGE);
+                return null;
+            }
+
             if (countProductLots == 1) {
                 product.setLot(dlSales.getLotOfProduct().find(product.getID()).toString());
             }
@@ -1140,6 +1148,22 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
         }
 
         return product;
+    }
+
+    private ErrorMessage findProductsBundleLot(String productId) {
+        try {
+            var bundle = dlSales.getProductsBundle(productId);
+            for (ProductsBundleInfo component : bundle) {
+                int countLot = (int) dlSales.countProdutLots().find(component.getProductBundleId());
+                if (countLot != 1) {
+                    return new ErrorMessage(AppLocal.getIntString("message.product.bundle.lot"));
+                }
+            }
+        } catch (BasicException ex) {
+            log.error(JPanelTicket.class.getName() + " findProductsBundleLot " + ex);
+        }
+
+        return new ErrorMessage();
     }
 
     private VolumeDiscountInfo findDiscount(String productId, double quantity) {
@@ -3666,7 +3690,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
               try {
                   TicketLineInfo line = m_oTicket.getLine(i);
                   String pId = line.getProductID();
-                  String lot = line .getLot();
+                  String lot = line.getLot();
                   String location = m_App.getInventoryLocation();
                   ProductStock checkProduct;
                   checkProduct = dlSales.getProductStockState(pId, location, lot);

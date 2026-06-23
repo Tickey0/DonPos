@@ -16,7 +16,6 @@
 //
 //    You should have received a copy of the GNU General Public License
 //    along with uniCenta oPOS.  If not, see <http://www.gnu.org/licenses/>.
-
 package com.unicenta.pos.inventory;
 
 import com.unicenta.data.loader.DataRead;
@@ -27,27 +26,29 @@ import com.unicenta.data.loader.SerializerRead;
  * @author Jack G
  */
 public class ProductsBundleInfo {
+
     private static final long serialVersionUID = 7587646873036L;
-    
+
     protected String id;
     protected String productId;
     protected String productBundleId;
     protected Double quantity;
+    protected String lot;
 
     /**
-     * 
+     *
      * @param id
      * @param productId
      * @param productBundleId
-     * @param quantity 
+     * @param quantity
      */
-    public ProductsBundleInfo(String id, String productId, String productBundleId, Double quantity) {
+    public ProductsBundleInfo(String id, String productId, String productBundleId, Double quantity, String lot) {
         this.id = id;
         this.productId = productId;
         this.productBundleId = productBundleId;
         this.quantity = quantity;
+        this.lot = lot;
     }
-    
 
     public void setM_ID(String id) {
         this.id = id;
@@ -80,13 +81,22 @@ public class ProductsBundleInfo {
     public Double getQuantity() {
         return quantity;
     }
-    
-    
-    public static SerializerRead getSerializerRead() {
-        return (DataRead dr) -> new ProductsBundleInfo(dr.getString(1)
-                , dr.getString(2)
-                , dr.getString(3)
-                , dr.getDouble(4));
+
+    public String getLot() {
+        return lot;
     }
-    
+
+    public void setLot(String lot) {
+        this.lot = lot;
+    }
+
+    public static SerializerRead getSerializerRead() {
+        return (DataRead dr) -> new ProductsBundleInfo(
+                dr.getString(1),
+                dr.getString(2),
+                dr.getString(3),
+                dr.getDouble(4),
+                dr.getString(5)
+        );
+    }
 }

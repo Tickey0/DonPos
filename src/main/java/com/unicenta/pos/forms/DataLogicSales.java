@@ -957,11 +957,15 @@ public class DataLogicSales extends BeanFactoryDataSingle {
     public final List<ProductsBundleInfo> getProductsBundle(String productId) throws BasicException {
         return new PreparedSentence(s,
                 "SELECT "
-                + "ID, "
-                + "PRODUCT, "
-                + "PRODUCT_BUNDLE, "
-                + "QUANTITY "
-                + "FROM products_bundle WHERE PRODUCT = ?",
+                + "b.ID, "
+                + "b.PRODUCT, "
+                + "b.PRODUCT_BUNDLE, "
+                + "b.QUANTITY, "
+                + "l.lot "
+                + "FROM products_bundle b "
+                + "inner join products p on b.product_bundle = p.id "
+                + "inner join products_lots l on b.product_bundle = l.product "
+                + "WHERE b.PRODUCT = ?",
                 SerializerWriteString.INSTANCE,
                 ProductsBundleInfo.getSerializerRead()).list(productId);
     }
@@ -2403,11 +2407,12 @@ public class DataLogicSales extends BeanFactoryDataSingle {
         if (bundle.size() > 0) {
 
             for (ProductsBundleInfo component : bundle) {
-                Object[] adjustParams = new Object[4];
+                Object[] adjustParams = new Object[5];
                 adjustParams[0] = component.getProductBundleId();
                 adjustParams[1] = ((Object[]) params)[1];
                 adjustParams[2] = ((Object[]) params)[2];
                 adjustParams[3] = ((Double) ((Object[]) params)[3]) * component.getQuantity();
+                adjustParams[4] = component.getLot();
                 adjustStock(adjustParams);
             }
         } else {
