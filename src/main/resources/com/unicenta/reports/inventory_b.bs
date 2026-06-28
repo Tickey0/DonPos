@@ -40,7 +40,7 @@ report.setSentence("SELECT " +
     "INNER JOIN products products ON stockcurrent.PRODUCT = products.ID " +
     "INNER JOIN stockdiary stockdiary ON stockdiary.product = products.id " +
     "INNER JOIN categories categories ON products.CATEGORY = categories.ID " +
-    "RIGHT OUTER JOIN suppliers suppliers ON suppliers.id = stockdiary.SUPPLIER " +
+    "LEFT OUTER JOIN suppliers suppliers ON suppliers.id = stockdiary.SUPPLIER " +
     "INNER JOIN uom uom ON uom.id = products.UOM " +
     "LEFT OUTER JOIN stocklevel stocklevel ON stockcurrent.LOCATION = stocklevel.LOCATION " +
     "AND stockcurrent.PRODUCT = stocklevel.PRODUCT " +

@@ -25,6 +25,7 @@ import com.unicenta.data.loader.PreparedSentence;
 import com.unicenta.data.loader.SerializerWriteBasicExt;
 import com.unicenta.data.loader.Session;
 import com.unicenta.pos.forms.*;
+import com.unicenta.pos.inventory.MovementReason;
 import com.unicenta.pos.inventory.ProductStock;
 import com.unicenta.pos.ticket.ProductInfoExt;
 import lombok.extern.slf4j.Slf4j;
@@ -38,6 +39,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
@@ -50,6 +52,7 @@ import java.util.UUID;
 public class StockQtyImport extends JPanel implements JPanelView {
     // the workspace
 
+    private AppView app;
     private AppProperties m_props;
     private Properties m_propsdb = null;
     private CsvReader products;
@@ -65,15 +68,11 @@ public class StockQtyImport extends JPanel implements JPanelView {
 
     // Location
     private String Location = "0";
-    private String lot;
     private String m_sInventoryLocation;
 
     // Product properties
     private String productBarcode;
-    private Double productQty;
-    private double oldQty = 0;
     private double newQty = 0;
-    private String recordType = null;
 
     // the csv filename
     private String last_folder;
@@ -93,6 +92,7 @@ public class StockQtyImport extends JPanel implements JPanelView {
      */
     public StockQtyImport(AppView oApp) {
         this(oApp.getProperties());
+        app = oApp;
     }
 
     /**
@@ -135,7 +135,6 @@ public class StockQtyImport extends JPanel implements JPanelView {
 // last used folder stored in unicentaopos.properties
         last_folder = props.getProperty("CSV.last_folder");
         config_file = props.getConfigFile();
-        lot = m_dlSystem.getResourceAsText("Default.Lot");
 
         jFileName.getDocument().addDocumentListener(documentListener);
         documentListener = new DocumentListener() {
@@ -298,8 +297,7 @@ public class StockQtyImport extends JPanel implements JPanelView {
 
 // Prime: read the csv record and update to zero matching stockcurrent values
             while (products.readRecord()) {
-                recordType = "delete";
-                deleteRecord(recordType);
+                deleteRecord();
             }
             products.close();
 
@@ -311,8 +309,7 @@ public class StockQtyImport extends JPanel implements JPanelView {
             while (products.readRecord()) {
                 currentRecord++;
                 progress = currentRecord;
-                recordType = "update";
-                updateRecord(recordType);
+                updateRecord();
             }
             products.close();
 
@@ -341,7 +338,7 @@ public class StockQtyImport extends JPanel implements JPanelView {
      *
      * @param pId Unique product id of the record to be updated
      */
-    private void updateRecord(String pId) throws IOException {
+    private void updateRecord() throws IOException {
         prodInfo = new ProductInfoExt();
         prodStock = new ProductStock();
         try {
@@ -351,12 +348,12 @@ public class StockQtyImport extends JPanel implements JPanelView {
             prodInfo = m_dlSales.getProductInfoByCode(sCode);
 
             if (prodInfo != null) {
-                prodStock = m_dlSales.getProductStockState(prodInfo.getID(), m_sInventoryLocation, lot);
+                prodInfo.setLot((String) m_dlSales.getLotOfProduct().find(prodInfo.getID()));
+
                 productBarcode = products.get(0);
-                oldQty = prodStock.getUnits();
                 newQty = Double.valueOf(products.get(1));
-                productQty = oldQty + newQty;
-                updateStockCurrent(m_sInventoryLocation, prodInfo.getID(), productQty, lot);
+                
+                updateStockCurrent(m_sInventoryLocation, prodInfo, newQty);
                 CSVStockUpdate(Location, productBarcode, newQty);
                 qtyUpdates++;
             }
@@ -370,7 +367,7 @@ public class StockQtyImport extends JPanel implements JPanelView {
      *
      * @param pId Unique product id of the record to be updated
      */
-    private void deleteRecord(String pId) throws IOException {
+    private void deleteRecord() throws IOException {
         prodInfo = new ProductInfoExt();
         prodStock = new ProductStock();
         try {
@@ -380,10 +377,11 @@ public class StockQtyImport extends JPanel implements JPanelView {
             prodInfo = m_dlSales.getProductInfoByCode(sCode);
 
             if (prodInfo != null) {
-                prodStock = m_dlSales.getProductStockState(prodInfo.getID(), m_sInventoryLocation, lot);
-                productQty = 0.;
+                prodInfo.setLot((String) m_dlSales.getLotOfProduct().find(prodInfo.getID()));
 
-                deleteStockCurrent(m_sInventoryLocation, prodInfo.getID(), productQty);
+                prodStock = m_dlSales.getProductStockState(prodInfo.getID(), m_sInventoryLocation, prodInfo.getLot());
+
+                deleteStockCurrent(m_sInventoryLocation, prodInfo, prodStock);
             }
         } catch (BasicException ex) {
             log.error(ex.getMessage());
@@ -423,20 +421,53 @@ public class StockQtyImport extends JPanel implements JPanelView {
      * Update existing Product Current Quantity
      *
      * @param LocationID
-     * @param ProductID
+     * @param product
      * @param Units
-     * @param Lot
      * @throws com.unicenta.basic.BasicException
      */
-    public void updateStockCurrent(String LocationID, String ProductID, Double Units, String Lot) throws BasicException {
+    public void updateStockCurrent(String LocationID, ProductInfoExt product, Double Units) throws BasicException {
+
+        if (Units != 0) {
+            MovementReason reason = null;
+
+            if (Units > 0) {
+                reason = MovementReason.IN_MOVEMENT;
+            } else {
+                reason = MovementReason.OUT_MOVEMENT;
+            }
+
+            Datas[] stockdiaryDatas = new Datas[]{
+                Datas.STRING, Datas.TIMESTAMP, Datas.INT, Datas.STRING,
+                Datas.STRING, Datas.DOUBLE, Datas.DOUBLE,
+                Datas.STRING, Datas.STRING};
+
+            Object params = new Object[]{
+                UUID.randomUUID().toString(),
+                new Date(),
+                (Integer) reason.getKey(),
+                LocationID,
+                product.getID(),
+                reason.samesignum(Units),
+                product.getPriceBuy(),
+                app.getAppUserView().getUser().getName(),
+                product.getLot()
+            };
+
+            new PreparedSentence(s,
+                    "INSERT INTO stockdiary (ID, DATENEW, REASON, LOCATION, PRODUCT, "
+                    + "UNITS, PRICE, AppUser, LOT) "
+                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    new SerializerWriteBasicExt(stockdiaryDatas,
+                            new int[]{0, 1, 2, 3, 4, 5, 6, 7, 8})).exec(params);
+        }
 
         Object[] newValues = new Object[4];
         newValues[0] = (double) Units;
         newValues[1] = LocationID;
-        newValues[2] = ProductID;
-        newValues[3] = Lot;
+        newValues[2] = product.getID();
+        newValues[3] = product.getLot();
 
-        PreparedSentence sentence = new PreparedSentence(s,
+        new PreparedSentence(s,
                 "UPDATE stockcurrent SET "
                 + "UNITS = ? "
                 + "WHERE LOCATION = ? "
@@ -447,44 +478,71 @@ public class StockQtyImport extends JPanel implements JPanelView {
             Datas.STRING,
             Datas.STRING,
             Datas.STRING
-        }),
-                        new int[]{
-                            0, 1, 2, 3}
-                ));
-
-        sentence.exec(newValues);
+        }), new int[]{0, 1, 2, 3})).exec(newValues);
     }
 
     /**
      * Reset existing Product Current Quantity to Zero
      *
      * @param LocationID
-     * @param ProductID
-     * @param Units
+     * @param product
+     * @param stock
      * @throws com.unicenta.basic.BasicException
      */
-    public void deleteStockCurrent(String LocationID, String ProductID, Double Units) throws BasicException {
+    public void deleteStockCurrent(String LocationID, ProductInfoExt product, ProductStock stock) throws BasicException {
 
-        Object[] oldValues = new Object[3];
-        oldValues[0] = (double) Units;
+        if (stock.getUnits() != 0) {
+            MovementReason reason = null;
+
+            if (stock.getUnits() < 0) {
+                reason = MovementReason.IN_MOVEMENT;
+            } else {
+                reason = MovementReason.OUT_MOVEMENT;
+            }
+
+            Datas[] stockdiaryDatas = new Datas[]{
+                Datas.STRING, Datas.TIMESTAMP, Datas.INT, Datas.STRING,
+                Datas.STRING, Datas.DOUBLE, Datas.DOUBLE,
+                Datas.STRING, Datas.STRING};
+
+            Object params = new Object[]{
+                UUID.randomUUID().toString(),
+                new Date(),
+                (Integer) reason.getKey(),
+                LocationID,
+                product.getID(),
+                reason.samesignum(stock.getUnits()),
+                stock.getPriceBuy(),
+                app.getAppUserView().getUser().getName(),
+                product.getLot()
+            };
+
+            new PreparedSentence(s,
+                    "INSERT INTO stockdiary (ID, DATENEW, REASON, LOCATION, PRODUCT, "
+                    + "UNITS, PRICE, AppUser, LOT) "
+                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    new SerializerWriteBasicExt(stockdiaryDatas,
+                            new int[]{0, 1, 2, 3, 4, 5, 6, 7, 8})).exec(params);
+        }
+
+        Object[] oldValues = new Object[4];
+        oldValues[0] = (double) 0;
         oldValues[1] = LocationID;
-        oldValues[2] = ProductID;
+        oldValues[2] = product.getID();
+        oldValues[3] = product.getLot();
 
-        PreparedSentence sentence = new PreparedSentence(s,
+        new PreparedSentence(s,
                 "UPDATE stockcurrent SET "
                 + "UNITS = ? "
                 + "WHERE LOCATION = ? "
-                + "AND PRODUCT = ?",
+                + "AND PRODUCT = ? "
+                + "AND LOT = ?",
                 new SerializerWriteBasicExt((new Datas[]{
             Datas.DOUBLE,
             Datas.STRING,
+            Datas.STRING,
             Datas.STRING
-        }),
-                        new int[]{
-                            0, 1, 2}
-                ));
-
-        sentence.exec(oldValues);
+        }), new int[]{0, 1, 2, 3})).exec(oldValues);
     }
 
     /**

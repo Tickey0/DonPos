@@ -36,7 +36,7 @@ inner join stockdiary stockdiary on
 	stockdiary.product = products.id
 CROSS JOIN categories categories ON
 	products.CATEGORY = categories.ID
-RIGHT OUTER JOIN suppliers suppliers ON
+LEFT OUTER JOIN suppliers suppliers ON
 	suppliers.id = stockdiary.SUPPLIER
 INNER JOIN uom uom ON
 	uom.id = products.UOM
