@@ -16,7 +16,6 @@
 //
 //    You should have received a copy of the GNU General Public License
 //    along with uniCenta oPOS.  If not, see <http://www.gnu.org/licenses/>.
-
 package com.unicenta.pos.sales.shared;
 
 import com.unicenta.basic.BasicException;
@@ -37,6 +36,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import javax.swing.*;
 
 /**
@@ -45,21 +46,23 @@ import javax.swing.*;
  */
 @Slf4j
 public class JTicketsBagShared extends JTicketsBag {
-    
+
     private String m_sCurrentTicket = null;
     private DataLogicReceipts dlReceipts = null;
-    private DataLogicSales dlSales = null;  
-    private final DataLogicSystem dlSystem;    
+    private DataLogicSales dlSales = null;
+    private final DataLogicSystem dlSystem;
     private Boolean showList;
-   
-    
-    /** Creates new form JTicketsBagShared
+
+    /**
+     * Creates new form JTicketsBagShared
+     *
      * @param app
-     * @param panelticket */
+     * @param panelticket
+     */
     public JTicketsBagShared(AppView app, TicketsEditor panelticket) {
-        
+
         super(app, panelticket);
-        
+
         dlReceipts = (DataLogicReceipts) app.getBean("com.unicenta.pos.sales.DataLogicReceipts");
         dlSales = (DataLogicSales) app.getBean("com.unicenta.pos.forms.DataLogicSales");
         dlSystem = (DataLogicSystem) m_App.getBean("com.unicenta.pos.forms.DataLogicSystem");
@@ -67,16 +70,18 @@ public class JTicketsBagShared extends JTicketsBag {
         initComponents();
 
         m_jReprintTickets.setVisible(false);
-        
+
     }
-    
+
     /**
      *
      */
     @Override
     public void activate() {
 
-        log.debug("Loading Sales screen! "+this.getClass());
+        log.debug("Loading Sales screen! " + this.getClass());
+
+        ExecutorService customExecutor = Executors.newCachedThreadPool();
 
         SwingWorker<String, String> reloadLayaway = new SwingWorker<>() {
             @Override
@@ -91,55 +96,55 @@ public class JTicketsBagShared extends JTicketsBag {
             }
         };
 
-        reloadLayaway.execute();
+        // reloadLayaway.execute();
+        customExecutor.submit(reloadLayaway);
 
-        
         m_sCurrentTicket = null;
-        selectValidTicket();     
-        
+        selectValidTicket();
+
         m_jDelTicket.setEnabled(m_App.getAppUserView().getUser().hasPermission(
                 "com.unicenta.pos.sales.JPanelTicketEdits"));
-        m_jDelTicket.setEnabled(m_App.getAppUserView().getUser().hasPermission("sales.DeleteTicket"));       
+        m_jDelTicket.setEnabled(m_App.getAppUserView().getUser().hasPermission("sales.DeleteTicket"));
     }
-    
+
     /**
      *
      * @return
      */
     @Override
     public boolean deactivate() {
-        
+
         saveCurrentTicket();
-        
-        m_sCurrentTicket = null;
-        m_panelticket.setActiveTicket(null, null);       
-        
-        return true;
-    }
-        
-    /**
-     *
-    */
-    @Override
-    public void deleteTicket() {   
-        
-        dlSystem.execTicketRemoved(
-            new Object[] {
-                m_App.getAppUserView().getUser().getName(),
-                "Void",   
-                "Ticket Deleted",
-                0.0
-            });
 
         m_sCurrentTicket = null;
-        selectValidTicket();      
+        m_panelticket.setActiveTicket(null, null);
+
+        return true;
+    }
+
+    /**
+     *
+     */
+    @Override
+    public void deleteTicket() {
+
+        dlSystem.execTicketRemoved(
+                new Object[]{
+                    m_App.getAppUserView().getUser().getName(),
+                    "Void",
+                    "Ticket Deleted",
+                    0.0
+                });
+
+        m_sCurrentTicket = null;
+        selectValidTicket();
     }
 
     public void updateCount() {
         try {
             List<SharedTicketInfo> l = dlReceipts.getSharedTicketList();
             int count = l.size();
-            
+
             if (count > 0) {
                 m_jListTickets.setText(Integer.toString(count));
             } else {
@@ -150,8 +155,7 @@ public class JTicketsBagShared extends JTicketsBag {
             m_jListTickets.setText("");
         }
     }
-   
-    
+
     /**
      *
      * @return
@@ -160,7 +164,7 @@ public class JTicketsBagShared extends JTicketsBag {
     protected JComponent getBagComponent() {
         return this;
     }
-    
+
     /**
      *
      * @return
@@ -169,31 +173,31 @@ public class JTicketsBagShared extends JTicketsBag {
     protected JComponent getNullComponent() {
         return new JPanel();
     }
-   
+
     private void saveCurrentTicket() {
 
         if (m_sCurrentTicket != null) {
             try {
-                dlReceipts.insertSharedTicket(m_sCurrentTicket, 
-                    m_panelticket.getActiveTicket(),
-                    m_panelticket.getActiveTicket().getPickupId());
-                    m_jListTickets.setText("*");
+                dlReceipts.insertSharedTicket(m_sCurrentTicket,
+                        m_panelticket.getActiveTicket(),
+                        m_panelticket.getActiveTicket().getPickupId());
+                m_jListTickets.setText("*");
                 TicketInfo l = dlReceipts.getSharedTicket(m_sCurrentTicket);
-                    if(l.getLinesCount() == 0) {
-                        dlReceipts.deleteSharedTicket(m_sCurrentTicket);
-                    }             
+                if (l.getLinesCount() == 0) {
+                    dlReceipts.deleteSharedTicket(m_sCurrentTicket);
+                }
             } catch (BasicException e) {
                 new MessageInf(e).show(this);
-            }  
-        }    
+            }
+        }
 
         updateCount();
     }
-    
-    private void setActiveTicket(String id) throws BasicException{
-          
+
+    private void setActiveTicket(String id) throws BasicException {
+
         TicketInfo ticket = dlReceipts.getSharedTicket(id);
-        if (ticket == null)  {
+        if (ticket == null) {
             m_jListTickets.setText("");
             throw new BasicException(AppLocal.getIntString("message.noticket"));
         } else {
@@ -202,57 +206,56 @@ public class JTicketsBagShared extends JTicketsBag {
             dlReceipts.deleteSharedTicket(id);
             m_sCurrentTicket = id;
             m_panelticket.setActiveTicket(ticket, null);
-            ticket.setPickupId(pickUp);         
-        } 
+            ticket.setPickupId(pickUp);
+        }
 
-        updateCount();        
+        updateCount();
     }
-    
-    private void setActiveReprintTicket(String id) throws BasicException{
-          
+
+    private void setActiveReprintTicket(String id) throws BasicException {
 
         TicketInfo ticket = dlSales.getReprintTicket(id);
-            m_sCurrentTicket = id;
+        m_sCurrentTicket = id;
     }
-    
+
     private void selectValidTicket() {
 
         newTicket();
         updateCount();
-        
+
         try {
             List<SharedTicketInfo> l = dlReceipts.getSharedTicketList();
             if (l.isEmpty()) {
-                m_jListTickets.setText("");                
+                m_jListTickets.setText("");
                 newTicket();
             } else {
                 showList = m_App.getAppUserView().getUser().hasPermission("sales.ShowList");
                 if (showList) {
-                    m_jListTickets.doClick();                   
+                    m_jListTickets.doClick();
                 }
             }
         } catch (BasicException e) {
             new MessageInf(e).show(this);
             newTicket();
-        }    
-    }    
-    
-    private void newTicket() {      
-        
+        }
+    }
+
+    private void newTicket() {
+
         saveCurrentTicket();
 
-        TicketInfo ticket = new TicketInfo();    
+        TicketInfo ticket = new TicketInfo();
         m_sCurrentTicket = UUID.randomUUID().toString();
-        m_panelticket.setActiveTicket(ticket, null);      
+        m_panelticket.setActiveTicket(ticket, null);
 
-        updateCount();        
- 
+        updateCount();
+
     }
-    
-    /** This method is called from within the constructor to
-     * initialize the form.
-     * WARNING: Do NOT modify this code. The content of this method is
-     * always regenerated by the Form Editor.
+
+    /**
+     * This method is called from within the constructor to initialize the form.
+     * WARNING: Do NOT modify this code. The content of this method is always
+     * regenerated by the Form Editor.
      */
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
@@ -368,59 +371,58 @@ public class JTicketsBagShared extends JTicketsBag {
 
         SwingUtilities.invokeLater(() -> {
             try {
-                if (!m_App.getAppUserView().getUser().hasPermission("sales.ViewSharedTicket")){
+                if (!m_App.getAppUserView().getUser().hasPermission("sales.ViewSharedTicket")) {
                     JOptionPane.showMessageDialog(null,
                             AppLocal.getIntString("message.sharedticket"),
                             AppLocal.getIntString("message.sharedtickettitle"),
-                            JOptionPane.INFORMATION_MESSAGE);                
-                }else{
+                            JOptionPane.INFORMATION_MESSAGE);
+                } else {
 
-                    if("0".equals(m_App.getAppUserView().getUser().getRole())
+                    if ("0".equals(m_App.getAppUserView().getUser().getRole())
                             || "1".equals(m_App.getAppUserView().getUser().getRole())
                             || m_App.getAppUserView().getUser().hasPermission("sales.ViewSharedTicket")
-                            || m_App.getAppUserView().getUser().hasPermission("sales.Override"))
-                    {
+                            || m_App.getAppUserView().getUser().hasPermission("sales.Override")) {
                         List<SharedTicketInfo> sharedTicketList = dlReceipts.getSharedTicketList();
                         JTicketsBagSharedList listDialog = JTicketsBagSharedList.newJDialog(JTicketsBagShared.this);
                         String id = listDialog.showTicketsList(sharedTicketList, dlReceipts);
 
                         if (id != null) {
                             saveCurrentTicket();
-                            setActiveTicket(id); 
+                            setActiveTicket(id);
                         }
-                    }else{
+                    } else {
 
                         String appuser = m_App.getAppUserView().getUser().getId();
                         List<SharedTicketInfo> l = dlReceipts.getUserSharedTicketList(
                                 appuser);
-                        
+
                         JTicketsBagSharedList listDialog = JTicketsBagSharedList.newJDialog(JTicketsBagShared.this);
-                        
+
                         String id = listDialog.showTicketsList(l, dlReceipts);
-                        
+
                         if (id != null) {
                             saveCurrentTicket();
-                            setActiveTicket(id); 
+                            setActiveTicket(id);
                         }
                     }
                 }
-            }catch (BasicException e) {
+            } catch (BasicException e) {
                 new MessageInf(e).show(JTicketsBagShared.this);
-                newTicket();                    
+                newTicket();
             }
         });
-        
+
     }//GEN-LAST:event_m_jListTicketsActionPerformed
 
     private void m_jNewTicketActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_m_jNewTicketActionPerformed
 
         newTicket();
-        
+
     }//GEN-LAST:event_m_jNewTicketActionPerformed
 
     private void m_jHoldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_m_jHoldActionPerformed
         deactivate();
-        ((JRootApp)m_App).closeAppView();
+        ((JRootApp) m_App).closeAppView();
     }//GEN-LAST:event_m_jHoldActionPerformed
 
     private void m_jReprintTicketsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_m_jReprintTicketsActionPerformed
@@ -429,23 +431,22 @@ public class JTicketsBagShared extends JTicketsBag {
             public void run() {
 
                 try {
-                    if (!m_App.getAppUserView().getUser().hasPermission("sales.ReprintTicket")){
+                    if (!m_App.getAppUserView().getUser().hasPermission("sales.ReprintTicket")) {
                         JOptionPane.showMessageDialog(null,
-                            AppLocal.getIntString("message.reprintticket"),
-                            AppLocal.getIntString("message.reprinttickettitle"),
-                            JOptionPane.INFORMATION_MESSAGE);
-                    }else{
+                                AppLocal.getIntString("message.reprintticket"),
+                                AppLocal.getIntString("message.reprinttickettitle"),
+                                JOptionPane.INFORMATION_MESSAGE);
+                    } else {
 
-                        if("0".equals(m_App.getAppUserView().getUser().getRole())
-                            || "1".equals(m_App.getAppUserView().getUser().getRole())
-                            || m_App.getAppUserView().getUser().hasPermission("sales.ViewSharedTicket")
-                            || m_App.getAppUserView().getUser().hasPermission("sales.Override"))
-                        {
+                        if ("0".equals(m_App.getAppUserView().getUser().getRole())
+                                || "1".equals(m_App.getAppUserView().getUser().getRole())
+                                || m_App.getAppUserView().getUser().hasPermission("sales.ViewSharedTicket")
+                                || m_App.getAppUserView().getUser().hasPermission("sales.Override")) {
                             List<ReprintTicketInfo> l = dlSales.getReprintTicketList();
                             JTicketsReprintList listDialog = JTicketsReprintList.newJDialog(JTicketsBagShared.this);
                             String id = listDialog.showTicketsList(l, dlSales);
 
-                        }else{
+                        } else {
 
                             String appuser = m_App.getAppUserView().getUser().getId();
                             List<ReprintTicketInfo> l = dlSales.getReprintTicketList();
@@ -460,7 +461,7 @@ public class JTicketsBagShared extends JTicketsBag {
                             }
                         }
                     }
-                }catch (BasicException e) {
+                } catch (BasicException e) {
                     new MessageInf(e).show(JTicketsBagShared.this);
                     newTicket();
                 }
@@ -471,45 +472,45 @@ public class JTicketsBagShared extends JTicketsBag {
     private void m_jDelTicketActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_m_jDelTicketActionPerformed
 // Only called in simple & standard NOT RESTAURANT
 // For Restaurant-mode see JTicketsBagRestaurant
-        
+
         boolean pinOK = false;
 
         if (m_sCurrentTicket != null) {
 
             if (m_App.getProperties().getProperty("override.check").equals("true")) {
                 Integer secret = Integer.parseInt(m_App.getProperties().getProperty("override.pin"));
-                Integer iValue = JNumberPop.showEditNumber(this, AppLocal.getIntString("title.override.enterpin")); 
+                Integer iValue = JNumberPop.showEditNumber(this, AppLocal.getIntString("title.override.enterpin"));
 
                 if (iValue == null ? secret == null : iValue.equals(secret)) {
                     pinOK = true;
-                    int res = JOptionPane.showConfirmDialog(this
-                        , AppLocal.getIntString("message.wannadelete")
-                        , AppLocal.getIntString("title.editor")
-                        , JOptionPane.YES_NO_OPTION
-                        , JOptionPane.QUESTION_MESSAGE);
-        
+                    int res = JOptionPane.showConfirmDialog(this,
+                            AppLocal.getIntString("message.wannadelete"),
+                            AppLocal.getIntString("title.editor"),
+                            JOptionPane.YES_NO_OPTION,
+                            JOptionPane.QUESTION_MESSAGE);
+
                     if (res == JOptionPane.YES_OPTION) {
                         deleteTicket();
-                    }                    
+                    }
                 } else {
                     pinOK = false;
-                    JOptionPane.showMessageDialog(this, AppLocal.getIntString("message.override.badpin"));                                        
+                    JOptionPane.showMessageDialog(this, AppLocal.getIntString("message.override.badpin"));
                 }
             } else {
-                int res = JOptionPane.showConfirmDialog(this
-                    , AppLocal.getIntString("message.wannadelete")
-                    , AppLocal.getIntString("title.editor")
-                    , JOptionPane.YES_NO_OPTION
-                    , JOptionPane.QUESTION_MESSAGE);
-        
+                int res = JOptionPane.showConfirmDialog(this,
+                        AppLocal.getIntString("message.wannadelete"),
+                        AppLocal.getIntString("title.editor"),
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.QUESTION_MESSAGE);
+
                 if (res == JOptionPane.YES_OPTION) {
                     deleteTicket();
                 }
             }
         }
     }//GEN-LAST:event_m_jDelTicketActionPerformed
-    
-    
+
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel jPanel1;
     private javax.swing.JButton m_jDelTicket;
@@ -518,5 +519,5 @@ public class JTicketsBagShared extends JTicketsBag {
     private javax.swing.JButton m_jNewTicket;
     private javax.swing.JButton m_jReprintTickets;
     // End of variables declaration//GEN-END:variables
-    
+
 }

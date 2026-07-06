@@ -42,6 +42,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Graphical User Interface and code for importing data from a CSV file allowing
@@ -289,6 +291,7 @@ public class JPanelCSVImport extends JPanel implements JPanelView {
      * the UI responsiveness.
      */
     private void setWorker() {
+        ExecutorService customExecutor = Executors.newCachedThreadPool();
         progress = 0;
         webPBar.setStringPainted(true);
 
@@ -317,7 +320,8 @@ public class JPanelCSVImport extends JPanel implements JPanelView {
                 }
             }
         };
-        pbWorker.execute();
+        // pbWorker.execute();
+        customExecutor.submit(pbWorker);
     }
 
     /**
@@ -936,7 +940,7 @@ public class JPanelCSVImport extends JPanel implements JPanelView {
         PreparedSentence sentence = new PreparedSentence(s,
                 "INSERT INTO stockcurrent ( "
                 + "LOCATION, PRODUCT, UNITS, LOT) VALUES (?, ?, ?, '0')",
-                 new SerializerWriteBasicExt((new Datas[]{
+                new SerializerWriteBasicExt((new Datas[]{
             Datas.STRING, Datas.STRING, Datas.DOUBLE}),
                         new int[]{0, 1, 2}));
 

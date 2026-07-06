@@ -4,7 +4,7 @@
 
     <groupId>dev.joguenco</groupId>
     <artifactId>donpos</artifactId>
-    <version>5.3.1</version>
+    <version>5.3.2</version>
     <packaging>jar</packaging>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -76,7 +76,12 @@
         <dependency>
             <groupId>org.apache.poi</groupId>
             <artifactId>poi</artifactId>
-            <version>3.10.1</version>
+            <version>3.17</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <version>3.17</version>
         </dependency>
         <dependency>
             <groupId>net.sf.barcode4j</groupId>
@@ -194,7 +199,7 @@
             <artifactId>jpos</artifactId>
             <version>1.13</version>
         </dependency>
-<!--        <dependency>
+        <!--        <dependency>
             <groupId>xml-apis</groupId>
             <artifactId>xml-apis</artifactId>
             <version>1.2.01</version>

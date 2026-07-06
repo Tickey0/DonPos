@@ -1980,6 +1980,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
     }
 
     private boolean closeTicket(TicketInfo ticket, Object ticketext) {
+        log.debug("Closing Ticket");
         if (listener != null) {
             listener.stop();
         }
@@ -2008,6 +2009,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
                     return false;
                 }
 
+                log.debug("Calculating taxes");
                 taxeslogic.calculateTaxes(ticket);
                 if (ticket.getTotal() >= 0.0) {
                     ticket.resetPayments();
@@ -2018,8 +2020,10 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
                         listener.stop();
                     }
 
+                    log.debug("Printing ticket");
                     printTicket("Printer.TicketTotal", ticket, ticketext);
 
+                    log.debug("Show Payment Dialog");
                     JPaymentSelect paymentdialog = ticket.getTicketType() == TicketInfo.RECEIPT_NORMAL
                             ? paymentdialogreceipt
                             : paymentdialogrefund;
@@ -2342,6 +2346,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
     }
 
     private boolean warrantyCheck(TicketInfo ticket) {
+        log.debug("Warranty Check");
         warrantyPrint = false;
         int lines = 0;
         while (lines < ticket.getLinesCount()) {

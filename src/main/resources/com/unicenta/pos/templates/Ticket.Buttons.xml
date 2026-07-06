@@ -100,6 +100,7 @@
     <!-- ADDITIONAL FEATURES ************************************************* -->
     <!-- SET Show Change in Cash Sale (Default=ENABLED -->
         <event key="ticket.close" code="Ticket.Close"/>
+        <event key="ticket.total" code="Ticket.Total"/>
 	<event key="cash.close" code="Cash.Close"/>
 
 <!-- Execute your own scripts by EVENTS triggered by Sales Screen -->

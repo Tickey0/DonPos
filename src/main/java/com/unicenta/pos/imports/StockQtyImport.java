@@ -43,6 +43,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * User Interface and code for CSV type data import to update Products Current
@@ -573,6 +575,7 @@ public class StockQtyImport extends JPanel implements JPanelView {
      * the UI responsiveness.
      */
     private void setWorker() {
+        ExecutorService customExecutor = Executors.newCachedThreadPool();
         progress = 0;
         webPBar.setStringPainted(true);
 
@@ -601,7 +604,8 @@ public class StockQtyImport extends JPanel implements JPanelView {
                 }
             }
         };
-        pbWorker.execute();
+        // pbWorker.execute();
+        customExecutor.submit(pbWorker);
     }
 
     /**

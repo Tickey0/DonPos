@@ -52,6 +52,8 @@ import javax.swing.KeyStroke;
 import javax.swing.SwingWorker;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.WordUtils;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  *
@@ -1144,27 +1146,35 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
             return;
         }
 
-        SwingWorker worker = new SwingWorker() {
-            @Override
-            protected Object doInBackground() throws Exception {
-                m_jButtonOK.setEnabled(false);
-                setReturnPayment(((JPaymentInterface) m_jTabPayment.getSelectedComponent()).executePayment());
-                return null;
-            }
+        ExecutorService customExecutor = Executors.newCachedThreadPool();
 
-            @Override
-            public void done() {
-                m_jButtonOK.setEnabled(true);
-                m_jButtonCancel.setEnabled(true);
-                if (returnPayment != null) {
-                    m_aPaymentInfo.add(returnPayment);
-                    accepted = true;
-                    dispose();
+        try {
+            SwingWorker worker = new SwingWorker() {
+
+                @Override
+                protected Object doInBackground() {
+                    m_jButtonOK.setEnabled(false);
+                    setReturnPayment(((JPaymentInterface) m_jTabPayment.getSelectedComponent()).executePayment());
+                    return null;
                 }
-            }
-        };
 
-        worker.execute();
+                @Override
+                public void done() {
+                    m_jButtonOK.setEnabled(true);
+                    m_jButtonCancel.setEnabled(true);
+                    if (returnPayment != null) {
+                        m_aPaymentInfo.add(returnPayment);
+                        accepted = true;
+                        dispose();
+                    }
+                }
+            };
+
+            // worker.execute();
+            customExecutor.submit(worker);
+        } catch (Exception ex) {
+            System.out.println(ex.getMessage());
+        }
     }
     private void m_jButtonCancelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_m_jButtonCancelActionPerformed
 

@@ -16,8 +16,6 @@
 //
 //    You should have received a copy of the GNU General Public License
 //    along with uniCenta oPOS.  If not, see <http://www.gnu.org/licenses/>.
-
-
 package com.unicenta.pos.imports;
 
 import com.csvreader.CsvReader;
@@ -41,7 +39,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Graphical User Interface and code for importing data from a CSV file allowing
@@ -50,628 +49,628 @@ import java.util.UUID;
 @Slf4j
 public class CustomerCSVImport extends JPanel implements JPanelView {
 
-  private ArrayList<String> Headers = new ArrayList<>();
-  private Session s;
-  private Connection con;
-  private String csvFileName;
+    private ArrayList<String> Headers = new ArrayList<>();
+    private Session s;
+    private Connection con;
+    private String csvFileName;
 
-  private String csvMessage = "";
-  private CsvReader customers;
-  private int currentRecord;
-  private int rowCount = 0;
-  private String last_folder;
-  private File config_file;
+    private String csvMessage = "";
+    private CsvReader customers;
+    private int currentRecord;
+    private int rowCount = 0;
+    private String last_folder;
+    private File config_file;
 
-  private DataLogicSales m_dlSales;
-  private DataLogicSystem m_dlSystem;
-  private DataLogicCustomers m_dlCustomer;
+    private DataLogicSales m_dlSales;
+    private DataLogicSystem m_dlSystem;
+    private DataLogicCustomers m_dlCustomer;
 
-  protected SaveProvider spr;
+    protected SaveProvider spr;
 
-  private String customerSearchKey;
-  private String customerAccount;
-  private String customerName;
-  private String customerAddress1;
-  private String customerAddress2;
-  private String customerPostal;
-  private String customerCity;
-  private String customerRegion;
-  private String customerFirstName;
-  private String customerLastName;
-  private String customerEmail;
-  private String customerPhone;
-  private String customerPhone2;
+    private String customerSearchKey;
+    private String customerAccount;
+    private String customerName;
+    private String customerAddress1;
+    private String customerAddress2;
+    private String customerPostal;
+    private String customerCity;
+    private String customerRegion;
+    private String customerFirstName;
+    private String customerLastName;
+    private String customerEmail;
+    private String customerPhone;
+    private String customerPhone2;
 
-  private DocumentListener documentListener;
-  private CustomerInfoExt custInfo;
-  private String recordType = null;
+    private DocumentListener documentListener;
+    private CustomerInfoExt custInfo;
+    private String recordType = null;
 
-  private int newRecords = 0;
-  private int invalid = 0;
-  private int updated = 0;
-  private int missing = 0;
-  private int noChange = 0;
-  private int bad = 0;
+    private int newRecords = 0;
+    private int invalid = 0;
+    private int updated = 0;
+    private int missing = 0;
+    private int noChange = 0;
+    private int bad = 0;
 
-  private Integer progress = 0;
+    private Integer progress = 0;
 
-  private String iso = "ISO-8859-1";
+    private String iso = "ISO-8859-1";
 
-  /**
-   * Constructs a new CustomerCSVImport object
-   *
-   * @param oApp AppView
-   */
-  public CustomerCSVImport(AppView oApp) {
-    this(oApp.getProperties());
-  }
-
-  /**
-   * Constructs a new JPanelCSVImport object
-   *
-   * @param props AppProperties
-   */
-  @SuppressWarnings("empty-statement")
-  public CustomerCSVImport(AppProperties props) {
-    initComponents();
-
-    try {
-      s = AppViewConnection.createSession(props);
-      con = s.getConnection();
-    } catch (BasicException | SQLException e) {
-      ;
+    /**
+     * Constructs a new CustomerCSVImport object
+     *
+     * @param oApp AppView
+     */
+    public CustomerCSVImport(AppView oApp) {
+        this(oApp.getProperties());
     }
 
-    m_dlSales = new DataLogicSales();
-    m_dlSales.init(s);
+    /**
+     * Constructs a new JPanelCSVImport object
+     *
+     * @param props AppProperties
+     */
+    @SuppressWarnings("empty-statement")
+    public CustomerCSVImport(AppProperties props) {
+        initComponents();
 
-    m_dlSystem = new DataLogicSystem();
-    m_dlSystem.init(s);
-
-
-    spr = new SaveProvider(
-            m_dlSales.getCustomerUpdate(),
-            m_dlSales.getCustomerInsert(),
-            m_dlSales.getCustomerDelete());
-
-    last_folder = props.getProperty("CSV.last_folder");
-    config_file = props.getConfigFile();
-
-    jFileName.getDocument().addDocumentListener(documentListener);
-
-    documentListener = new DocumentListener() {
-      @Override
-      public void changedUpdate(DocumentEvent documentEvent) {
-        jbtnRead.setEnabled(true);
-      }
-
-      @Override
-      public void insertUpdate(DocumentEvent documentEvent) {
-        if (!"".equals(jFileName.getText().trim())) {
-          jbtnRead.setEnabled(true);
+        try {
+            s = AppViewConnection.createSession(props);
+            con = s.getConnection();
+        } catch (BasicException | SQLException e) {
+            ;
         }
-      }
 
-      @Override
-      public void removeUpdate(DocumentEvent documentEvent) {
-        if (jFileName.getText().trim().equals("")) {
-          jbtnRead.setEnabled(false);
-        }
-      }
-    };
-    jFileName.getDocument().addDocumentListener(documentListener);
+        m_dlSales = new DataLogicSales();
+        m_dlSales.init(s);
 
-  }
+        m_dlSystem = new DataLogicSystem();
+        m_dlSystem.init(s);
 
-  /**
-   * Reads the headers from the CSV file and initializes subsequent form
-   * fields. This function first reads the headers from the CSVFileName file,
-   * then puts them into the header combo boxes and enables the other form
-   * inputs.
-   *
-   * @param CSVFileName Name of the file (including the path) to open and read
-   *                    CSV data from
-   * @throws IOException If there is an issue reading the CSV file
-   */
-  private void GetheadersFromFile(String CSVFileName) throws IOException {
+        spr = new SaveProvider(
+                m_dlSales.getCustomerUpdate(),
+                m_dlSales.getCustomerInsert(),
+                m_dlSales.getCustomerDelete());
 
-    File f = new File(CSVFileName);
-    if (f.exists()) {
+        last_folder = props.getProperty("CSV.last_folder");
+        config_file = props.getConfigFile();
+
+        jFileName.getDocument().addDocumentListener(documentListener);
+
+        documentListener = new DocumentListener() {
+            @Override
+            public void changedUpdate(DocumentEvent documentEvent) {
+                jbtnRead.setEnabled(true);
+            }
+
+            @Override
+            public void insertUpdate(DocumentEvent documentEvent) {
+                if (!"".equals(jFileName.getText().trim())) {
+                    jbtnRead.setEnabled(true);
+                }
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent documentEvent) {
+                if (jFileName.getText().trim().equals("")) {
+                    jbtnRead.setEnabled(false);
+                }
+            }
+        };
+        jFileName.getDocument().addDocumentListener(documentListener);
+
+    }
+
+    /**
+     * Reads the headers from the CSV file and initializes subsequent form
+     * fields. This function first reads the headers from the CSVFileName file,
+     * then puts them into the header combo boxes and enables the other form
+     * inputs.
+     *
+     * @param CSVFileName Name of the file (including the path) to open and read
+     * CSV data from
+     * @throws IOException If there is an issue reading the CSV file
+     */
+    private void GetheadersFromFile(String CSVFileName) throws IOException {
+
+        File f = new File(CSVFileName);
+        if (f.exists()) {
 //            customers = new CsvReader(CSVFileName, ',' ,Charset.forName("UTF-8"));
-      customers = new CsvReader(CSVFileName, ',', Charset.forName(jCBiso.getSelectedItem().toString()));
-      customers.setDelimiter(((String) jComboSeparator.getSelectedItem()).charAt(0));
-      customers.readHeaders();
+            customers = new CsvReader(CSVFileName, ',', Charset.forName(jCBiso.getSelectedItem().toString()));
+            customers.setDelimiter(((String) jComboSeparator.getSelectedItem()).charAt(0));
+            customers.readHeaders();
 
-      if (customers.getHeaderCount() < 5) {
-        JOptionPane.showMessageDialog(null,
-                "Incorrect header in your source file",
-                "Header Error",
-                JOptionPane.WARNING_MESSAGE);
-        customers.close();
-        return;
-      }
-      rowCount = 0;
-      int i = 0;
-      Headers.clear();
-      Headers.add("");
-      jComboName.addItem("");
-      jComboAccountID.addItem("");
-      jComboSearchKey.addItem("");
-      jComboAddress1.addItem("");
-      jComboAddress2.addItem("");
-      jComboPostal.addItem("");
-      jComboCity.addItem("");
-      jComboRegion.addItem("");
-      jComboFirstName.addItem("");
-      jComboLastName.addItem("");
-      jComboEmail.addItem("");
-      jComboPhone.addItem("");
-      jComboPhone2.addItem("");
+            if (customers.getHeaderCount() < 5) {
+                JOptionPane.showMessageDialog(null,
+                        "Incorrect header in your source file",
+                        "Header Error",
+                        JOptionPane.WARNING_MESSAGE);
+                customers.close();
+                return;
+            }
+            rowCount = 0;
+            int i = 0;
+            Headers.clear();
+            Headers.add("");
+            jComboName.addItem("");
+            jComboAccountID.addItem("");
+            jComboSearchKey.addItem("");
+            jComboAddress1.addItem("");
+            jComboAddress2.addItem("");
+            jComboPostal.addItem("");
+            jComboCity.addItem("");
+            jComboRegion.addItem("");
+            jComboFirstName.addItem("");
+            jComboLastName.addItem("");
+            jComboEmail.addItem("");
+            jComboPhone.addItem("");
+            jComboPhone2.addItem("");
 
-      while (i < customers.getHeaderCount()) {
-        jComboName.addItem(customers.getHeader(i));
-        jComboAccountID.addItem(customers.getHeader(i));
-        jComboSearchKey.addItem(customers.getHeader(i));
-        jComboAddress1.addItem(customers.getHeader(i));
-        jComboAddress2.addItem(customers.getHeader(i));
-        jComboPostal.addItem(customers.getHeader(i));
-        jComboCity.addItem(customers.getHeader(i));
-        jComboRegion.addItem(customers.getHeader(i));
-        jComboFirstName.addItem(customers.getHeader(i));
-        jComboLastName.addItem(customers.getHeader(i));
-        jComboEmail.addItem(customers.getHeader(i));
-        jComboPhone.addItem(customers.getHeader(i));
-        jComboPhone2.addItem(customers.getHeader(i));
+            while (i < customers.getHeaderCount()) {
+                jComboName.addItem(customers.getHeader(i));
+                jComboAccountID.addItem(customers.getHeader(i));
+                jComboSearchKey.addItem(customers.getHeader(i));
+                jComboAddress1.addItem(customers.getHeader(i));
+                jComboAddress2.addItem(customers.getHeader(i));
+                jComboPostal.addItem(customers.getHeader(i));
+                jComboCity.addItem(customers.getHeader(i));
+                jComboRegion.addItem(customers.getHeader(i));
+                jComboFirstName.addItem(customers.getHeader(i));
+                jComboLastName.addItem(customers.getHeader(i));
+                jComboEmail.addItem(customers.getHeader(i));
+                jComboPhone.addItem(customers.getHeader(i));
+                jComboPhone2.addItem(customers.getHeader(i));
 
-        Headers.add(customers.getHeader(i));
-        ++i;
-      }
+                Headers.add(customers.getHeader(i));
+                ++i;
+            }
 
-      enableCheckBoxes();
+            enableCheckBoxes();
 
-      while (customers.readRecord()) {
-        ++rowCount;
-      }
+            while (customers.readRecord()) {
+                ++rowCount;
+            }
 
-      jtxtRecords.setText(Long.toString(rowCount));
+            jtxtRecords.setText(Long.toString(rowCount));
 
-      customers.close();
+            customers.close();
 
-    } else {
-      JOptionPane.showMessageDialog(null, "Unable to locate "
-                      + CSVFileName,
-              "File not found",
-              JOptionPane.WARNING_MESSAGE);
-    }
-  }
-
-  /**
-   * Enables all the selection options on the for to allow the user to
-   * interact with the routine.
-   */
-  private void enableCheckBoxes() {
-    jbtnRead.setEnabled(false);
-    jbtnImport.setEnabled(false);
-    jbtnReset.setEnabled(true);
-    jComboAccountID.setEnabled(true);
-    jComboName.setEnabled(true);
-    jComboSearchKey.setEnabled(true);
-    jComboAddress1.setEnabled(true);
-    jComboAddress2.setEnabled(true);
-    jComboPostal.setEnabled(true);
-    jComboCity.setEnabled(true);
-    jComboRegion.setEnabled(true);
-    jComboFirstName.setEnabled(true);
-    jComboLastName.setEnabled(true);
-    jComboEmail.setEnabled(true);
-    jComboPhone.setEnabled(true);
-    jComboPhone2.setEnabled(true);
-
-    jCheckVisible.setEnabled(true);
-
-  }
-
-  /**
-   * Pushes the Import process into a new thread so it doesn't interfere with
-   * the UI responsiveness.
-   */
-  private void setWorker() {
-    progress = 0;
-    webPBar.setStringPainted(true);
-
-    final SwingWorker<Integer, Integer> pbWorker;
-    pbWorker = new SwingWorker<Integer, Integer>() {
-
-      @Override
-      protected final Integer doInBackground() throws Exception {
-        while ((progress >= 0) && (progress < 100)) {
-          Thread.sleep(50);
-          this.publish(progress);
-        }
-        this.publish(100);
-        this.done();
-        return 100;
-      }
-
-      @Override
-      protected final void process(final List<Integer> chunks) {
-        webPBar.setValue(chunks.get(0));
-        if (progress > 100) {
-          progress = 100;
-          webPBar.setString("Imported 100%");
         } else {
-          webPBar.setString("Imported " + progress + "%");
+            JOptionPane.showMessageDialog(null, "Unable to locate "
+                    + CSVFileName,
+                    "File not found",
+                    JOptionPane.WARNING_MESSAGE);
         }
-      }
-    };
-    pbWorker.execute();
-  }
-
-  /**
-   * Runs the setWorker.
-   */
-  private class workProcess implements Runnable {
-
-    @Override
-    public void run() {
-      try {
-        ImportCsvFile(jFileName.getText());
-      } catch (IOException | BasicException ex) {
-        log.error(ex.getMessage());
-      }
     }
-  }
 
-  /**
-   * Imports the CSV File using specifications from the form.
-   *
-   * @param CSVFileName Name of the file (including path) to import.
-   * @throws IOException If there are file reading issues.
-   */
-  private void ImportCsvFile(String CSVFileName) throws IOException, BasicException {
+    /**
+     * Enables all the selection options on the for to allow the user to
+     * interact with the routine.
+     */
+    private void enableCheckBoxes() {
+        jbtnRead.setEnabled(false);
+        jbtnImport.setEnabled(false);
+        jbtnReset.setEnabled(true);
+        jComboAccountID.setEnabled(true);
+        jComboName.setEnabled(true);
+        jComboSearchKey.setEnabled(true);
+        jComboAddress1.setEnabled(true);
+        jComboAddress2.setEnabled(true);
+        jComboPostal.setEnabled(true);
+        jComboCity.setEnabled(true);
+        jComboRegion.setEnabled(true);
+        jComboFirstName.setEnabled(true);
+        jComboLastName.setEnabled(true);
+        jComboEmail.setEnabled(true);
+        jComboPhone.setEnabled(true);
+        jComboPhone2.setEnabled(true);
 
-    File f = new File(CSVFileName);
-    if (f.exists()) {
-      webPBar.setString("Starting...");
-      webPBar.setVisible(true);
-      jbtnImport.setEnabled(false);
+        jCheckVisible.setEnabled(true);
+
+    }
+
+    /**
+     * Pushes the Import process into a new thread so it doesn't interfere with
+     * the UI responsiveness.
+     */
+    private void setWorker() {
+        ExecutorService customExecutor = Executors.newCachedThreadPool();
+        progress = 0;
+        webPBar.setStringPainted(true);
+
+        final SwingWorker<Integer, Integer> pbWorker;
+        pbWorker = new SwingWorker<Integer, Integer>() {
+
+            @Override
+            protected final Integer doInBackground() throws Exception {
+                while ((progress >= 0) && (progress < 100)) {
+                    Thread.sleep(50);
+                    this.publish(progress);
+                }
+                this.publish(100);
+                this.done();
+                return 100;
+            }
+
+            @Override
+            protected final void process(final List<Integer> chunks) {
+                webPBar.setValue(chunks.get(0));
+                if (progress > 100) {
+                    progress = 100;
+                    webPBar.setString("Imported 100%");
+                } else {
+                    webPBar.setString("Imported " + progress + "%");
+                }
+            }
+        };
+        //pbWorker.execute();
+        customExecutor.submit(pbWorker);
+    }
+
+    /**
+     * Runs the setWorker.
+     */
+    private class workProcess implements Runnable {
+
+        @Override
+        public void run() {
+            try {
+                ImportCsvFile(jFileName.getText());
+            } catch (IOException | BasicException ex) {
+                log.error(ex.getMessage());
+            }
+        }
+    }
+
+    /**
+     * Imports the CSV File using specifications from the form.
+     *
+     * @param CSVFileName Name of the file (including path) to import.
+     * @throws IOException If there are file reading issues.
+     */
+    private void ImportCsvFile(String CSVFileName) throws IOException, BasicException {
+
+        File f = new File(CSVFileName);
+        if (f.exists()) {
+            webPBar.setString("Starting...");
+            webPBar.setVisible(true);
+            jbtnImport.setEnabled(false);
 
 // Read file
 //            customers = new CsvReader(CSVFileName, ',' ,Charset.forName("UTF-8"));
-      customers = new CsvReader(CSVFileName, ',', Charset.forName(jCBiso.getSelectedItem().toString()));
-      customers.setDelimiter(((String) jComboSeparator.getSelectedItem()).charAt(0));
-      customers.readHeaders();
+            customers = new CsvReader(CSVFileName, ',', Charset.forName(jCBiso.getSelectedItem().toString()));
+            customers.setDelimiter(((String) jComboSeparator.getSelectedItem()).charAt(0));
+            customers.readHeaders();
 
-      currentRecord = 0;
+            currentRecord = 0;
 
-      while (customers.readRecord()) {
-        customerSearchKey = customers.get((String) jComboSearchKey.getSelectedItem());
-        customerAccount = customers.get((String) jComboAccountID.getSelectedItem());
-        customerName = customers.get((String) jComboName.getSelectedItem());
-        customerAddress1 = customers.get((String) jComboAddress1.getSelectedItem());
-        customerAddress2 = customers.get((String) jComboAddress2.getSelectedItem());
-        customerPostal = customers.get((String) jComboPostal.getSelectedItem());
-        customerCity = customers.get((String) jComboCity.getSelectedItem());
-        customerRegion = customers.get((String) jComboRegion.getSelectedItem());
-        customerFirstName = customers.get((String) jComboFirstName.getSelectedItem());
-        customerLastName = customers.get((String) jComboLastName.getSelectedItem());
-        customerEmail = customers.get((String) jComboEmail.getSelectedItem());
-        customerPhone = customers.get((String) jComboPhone.getSelectedItem());
-        customerPhone2 = customers.get((String) jComboPhone2.getSelectedItem());
+            while (customers.readRecord()) {
+                customerSearchKey = customers.get((String) jComboSearchKey.getSelectedItem());
+                customerAccount = customers.get((String) jComboAccountID.getSelectedItem());
+                customerName = customers.get((String) jComboName.getSelectedItem());
+                customerAddress1 = customers.get((String) jComboAddress1.getSelectedItem());
+                customerAddress2 = customers.get((String) jComboAddress2.getSelectedItem());
+                customerPostal = customers.get((String) jComboPostal.getSelectedItem());
+                customerCity = customers.get((String) jComboCity.getSelectedItem());
+                customerRegion = customers.get((String) jComboRegion.getSelectedItem());
+                customerFirstName = customers.get((String) jComboFirstName.getSelectedItem());
+                customerLastName = customers.get((String) jComboLastName.getSelectedItem());
+                customerEmail = customers.get((String) jComboEmail.getSelectedItem());
+                customerPhone = customers.get((String) jComboPhone.getSelectedItem());
+                customerPhone2 = customers.get((String) jComboPhone2.getSelectedItem());
 
-        currentRecord++;
-        progress = currentRecord;
+                currentRecord++;
+                progress = currentRecord;
 
-        if ("".equals(customerSearchKey)
-                | "".equals(customerName)) {
+                if ("".equals(customerSearchKey)
+                        | "".equals(customerName)) {
 
-          createCustomerCSVEntry(csvMessage, null, null);
+                    createCustomerCSVEntry(csvMessage, null, null);
+                } else {
+
+                    recordType = getRecord();
+                    switch (recordType) {
+                        case "new":
+                            createCustomer("new");
+                            newRecords++;
+                            createCustomerCSVEntry("New Customer", null, null);
+                            break;
+                        case "name error":
+                        case "searchkey error":
+                        case "Duplicate searchkey found.":
+                        case "Duplicate name found.":
+                        case "Exception":
+                            invalid++;
+                            createCustomerCSVEntry(recordType, null, null);
+                            break;
+                        default:
+                            updateRecord(recordType);
+                            break;
+                    }
+                }
+            }
+
         } else {
-
-          recordType = getRecord();
-          switch (recordType) {
-            case "new":
-              createCustomer("new");
-              newRecords++;
-              createCustomerCSVEntry("New Customer", null, null);
-              break;
-            case "name error":
-            case "searchkey error":
-            case "Duplicate searchkey found.":
-            case "Duplicate name found.":
-            case "Exception":
-              invalid++;
-              createCustomerCSVEntry(recordType, null, null);
-              break;
-            default:
-              updateRecord(recordType);
-              break;
-          }
+            JOptionPane.showMessageDialog(null,
+                    "Unable to locate "
+                    + CSVFileName, "File not found",
+                    JOptionPane.WARNING_MESSAGE);
         }
-      }
 
-    } else {
-      JOptionPane.showMessageDialog(null,
-              "Unable to locate "
-                      + CSVFileName, "File not found",
-              JOptionPane.WARNING_MESSAGE);
-    }
+        jtxtNew.setText(Integer.toString(newRecords));
+        jtxtUpdate.setText(Integer.toString(updated));
+        jtxtInvalid.setText(Integer.toString(invalid));
+        jtxtMissing.setText(Integer.toString(missing));
+        jtxtNoChange.setText(Integer.toString(noChange));
+        jtxtBad.setText(Integer.toString(bad));
 
-    jtxtNew.setText(Integer.toString(newRecords));
-    jtxtUpdate.setText(Integer.toString(updated));
-    jtxtInvalid.setText(Integer.toString(invalid));
-    jtxtMissing.setText(Integer.toString(missing));
-    jtxtNoChange.setText(Integer.toString(noChange));
-    jtxtBad.setText(Integer.toString(bad));
-
-    JOptionPane.showMessageDialog(null,
-            "Import Complete",
-            "Imported",
-            JOptionPane.WARNING_MESSAGE);
+        JOptionPane.showMessageDialog(null,
+                "Import Complete",
+                "Imported",
+                JOptionPane.WARNING_MESSAGE);
 
 //            webPBar.setString("Imported " + progress);                
-    progress = 100;
-    webPBar.setValue(progress);
-    webPBar.setString("Imported" + progress);
+        progress = 100;
+        webPBar.setValue(progress);
+        webPBar.setString("Imported" + progress);
 //        }
-  }
-
-
-  /**
-   * testString for validity as a number
-   *
-   * @param testString the string to be checked
-   * @return True if a real number False if not
-   */
-  private Boolean validateNumber(String testString) {
-    try {
-      Double res = Double.parseDouble(testString);
-      return (true);
-    } catch (NumberFormatException e) {
-      return (false);
     }
-  }
 
-  /**
-   * Updated the record in the database with the new prices and category if
-   * needed.
-   *
-   * @param cID Unique Customer id of the record to be updated It then creates
-   *            an updated record for the Customer, subject to the ???? be different
-   */
-  private void updateRecord(String cID) throws BasicException {
+    /**
+     * testString for validity as a number
+     *
+     * @param testString the string to be checked
+     * @return True if a real number False if not
+     */
+    private Boolean validateNumber(String testString) {
+        try {
+            Double res = Double.parseDouble(testString);
+            return (true);
+        } catch (NumberFormatException e) {
+            return (false);
+        }
+    }
+
+    /**
+     * Updated the record in the database with the new prices and category if
+     * needed.
+     *
+     * @param cID Unique Customer id of the record to be updated It then creates
+     * an updated record for the Customer, subject to the ???? be different
+     */
+    private void updateRecord(String cID) throws BasicException {
 //        custInfo = new CustomerInfoExt();
-    custInfo = m_dlSales.getCustomerInfo(cID);
-    createCustomer("update");
-    noChange++;
-  }
+        custInfo = m_dlSales.getCustomerInfo(cID);
+        createCustomer("update");
+        noChange++;
+    }
 
-  /**
-   * Gets the title of the current panel
-   *
-   * @return The name of the panel
-   */
-  @Override
-  public String getTitle() {
-    return AppLocal.getIntString("Menu.CustomerCSVImport");
-  }
+    /**
+     * Gets the title of the current panel
+     *
+     * @return The name of the panel
+     */
+    @Override
+    public String getTitle() {
+        return AppLocal.getIntString("Menu.CustomerCSVImport");
+    }
 
-  /**
-   * Returns this object
-   *
-   * @return
-   */
-  @Override
-  public JComponent getComponent() {
-    return this;
-  }
+    /**
+     * Returns this object
+     *
+     * @return
+     */
+    @Override
+    public JComponent getComponent() {
+        return this;
+    }
 
-  /**
-   * Set CSV field and line separator
-   *
-   * @throws com.unicenta.basic.BasicException
-   */
-  @Override
-  public void activate() throws BasicException {
+    /**
+     * Set CSV field and line separator
+     *
+     * @throws com.unicenta.basic.BasicException
+     */
+    @Override
+    public void activate() throws BasicException {
 
-    jComboSeparator.removeAllItems();
-    jComboSeparator.addItem(",");
-    jComboSeparator.addItem(";");
-    jComboSeparator.addItem("~");
-    jComboSeparator.addItem("^");
+        jComboSeparator.removeAllItems();
+        jComboSeparator.addItem(",");
+        jComboSeparator.addItem(";");
+        jComboSeparator.addItem("~");
+        jComboSeparator.addItem("^");
 
-  }
+    }
 
-  /**
-   * Resets all the form fields
-   */
-  public void resetFields() {
+    /**
+     * Resets all the form fields
+     */
+    public void resetFields() {
 
-    jComboAccountID.removeAllItems();
-    jComboAccountID.setEnabled(false);
+        jComboAccountID.removeAllItems();
+        jComboAccountID.setEnabled(false);
 
-    jComboName.removeAllItems();
-    jComboName.setEnabled(false);
+        jComboName.removeAllItems();
+        jComboName.setEnabled(false);
 
-    jComboSearchKey.removeAllItems();
-    jComboSearchKey.setEnabled(false);
+        jComboSearchKey.removeAllItems();
+        jComboSearchKey.setEnabled(false);
 
-    jComboAddress1.removeAllItems();
-    jComboAddress1.setEnabled(false);
+        jComboAddress1.removeAllItems();
+        jComboAddress1.setEnabled(false);
 
-    jComboAddress2.removeAllItems();
-    jComboAddress2.setEnabled(false);
+        jComboAddress2.removeAllItems();
+        jComboAddress2.setEnabled(false);
 
-    jComboCity.removeAllItems();
-    jComboCity.setEnabled(false);
+        jComboCity.removeAllItems();
+        jComboCity.setEnabled(false);
 
-    jComboRegion.removeAllItems();
-    jComboRegion.setEnabled(false);
+        jComboRegion.removeAllItems();
+        jComboRegion.setEnabled(false);
 
-    jComboPostal.removeAllItems();
-    jComboPostal.setEnabled(false);
+        jComboPostal.removeAllItems();
+        jComboPostal.setEnabled(false);
 
-    jComboFirstName.removeAllItems();
-    jComboFirstName.setEnabled(false);
+        jComboFirstName.removeAllItems();
+        jComboFirstName.setEnabled(false);
 
-    jComboLastName.removeAllItems();
-    jComboLastName.setEnabled(false);
+        jComboLastName.removeAllItems();
+        jComboLastName.setEnabled(false);
 
-    jComboEmail.removeAllItems();
-    jComboEmail.setEnabled(false);
+        jComboEmail.removeAllItems();
+        jComboEmail.setEnabled(false);
 
-    jComboPhone.removeAllItems();
-    jComboPhone.setEnabled(false);
+        jComboPhone.removeAllItems();
+        jComboPhone.setEnabled(false);
 
-    jComboPhone2.removeAllItems();
-    jComboPhone2.setEnabled(false);
+        jComboPhone2.removeAllItems();
+        jComboPhone2.setEnabled(false);
 
-    jCheckVisible.setSelected(false);
-    jCheckVisible.setEnabled(true);
+        jCheckVisible.setSelected(false);
+        jCheckVisible.setEnabled(true);
 
-    jbtnImport.setEnabled(false);
-    jbtnReset.setEnabled(true);
-    jbtnRead.setEnabled(false);
+        jbtnImport.setEnabled(false);
+        jbtnReset.setEnabled(true);
+        jbtnRead.setEnabled(false);
 
-    jFileName.setText(null);
-    csvFileName = "";
+        jFileName.setText(null);
+        csvFileName = "";
 
 // clear Status area fields        
-    jtxtNew.setText("");
-    jtxtUpdate.setText("");
-    jtxtInvalid.setText("");
-    jtxtMissing.setText("");
-    jtxtNoChange.setText("");
-    jtxtRecords.setText("");
-    jtxtBad.setText("");
+        jtxtNew.setText("");
+        jtxtUpdate.setText("");
+        jtxtInvalid.setText("");
+        jtxtMissing.setText("");
+        jtxtNoChange.setText("");
+        jtxtRecords.setText("");
+        jtxtBad.setText("");
 
-    progress = 0;
+        progress = 0;
 
-    Headers.clear();
-  }
-
-  /**
-   * Checks the field mappings to ensure all compulsory fields have been
-   * completed to allow import to proceed
-   */
-  public void checkFieldMapping() {
-    if (jComboSearchKey.getSelectedItem() != ""
-            & jComboName.getSelectedItem() != "") {
-      jbtnImport.setEnabled(true);
-      jbtnReset.setEnabled(true);
-    } else {
-      jbtnImport.setEnabled(false);
-      jbtnReset.setEnabled(false);
+        Headers.clear();
     }
-  }
 
-  /**
-   * Deactivates and resets all form fields.
-   *
-   * @return
-   */
-  @Override
-  public boolean deactivate() {
-    resetFields();
-    return (true);
-  }
-
-  /**
-   * @param cType
-   */
-  public void createCustomer(String cType) {
-
-    Object[] mycust = new Object[27];
-    if ("new".equals(cType)) {
-      mycust[0] = UUID.randomUUID().toString();
-    } else {
-      mycust[0] = custInfo.getId();
-    }                                                                       // id string
-    mycust[1] = customerSearchKey;                                          // searchkey String
-    mycust[2] = customerAccount;                                            // taxid string
-    mycust[3] = customerName;                                               // name string
-    mycust[4] = null;                                                       // taxCategory string
-    mycust[5] = null;                                                       // card string
-    mycust[6] = 0.0;                                                        // maxdebt Double
-    mycust[7] = customerAddress1;                                           // address1 string
-    mycust[8] = customerAddress2;                                           // address2 string
-    mycust[9] = customerPostal;                                             // postal string
-    mycust[10] = customerCity;                                              // city string
-    mycust[11] = customerRegion;                                            // region string
-    mycust[12] = null;                                                      // country string
-    mycust[13] = customerFirstName;                                         // firstname string
-    mycust[14] = customerLastName;                                          // lastname string
-    mycust[15] = customerEmail;                                             // email string
-    mycust[16] = customerPhone;                                             // phone string
-    mycust[17] = customerPhone2;                                            // phone2 string
-    mycust[18] = null;                                                      // fax string
-    mycust[19] = null;                                                      // notes string
-    mycust[20] = jCheckVisible.isSelected();                                // visible flag
-    mycust[21] = null;                                                      // curdate string
-    mycust[22] = 0.0;                                                       // curdate double
-    mycust[23] = null;                                                      // image
-    mycust[24] = false;                                                     // isvip
-    mycust[25] = 0.0;                                                       // discount
-    mycust[26] = null;                                                      // memodate date
-
-    try {
-      if ("new".equals(cType)) {
-        spr.insertData(mycust);
-        webPBar.setString("Adding record " + progress);
-      } else {
-        spr.updateData(mycust);
-        webPBar.setString("Updating record " + progress);
-      }
-    } catch (BasicException ex) {
-      log.error(ex.getMessage());
+    /**
+     * Checks the field mappings to ensure all compulsory fields have been
+     * completed to allow import to proceed
+     */
+    public void checkFieldMapping() {
+        if (jComboSearchKey.getSelectedItem() != ""
+                & jComboName.getSelectedItem() != "") {
+            jbtnImport.setEnabled(true);
+            jbtnReset.setEnabled(true);
+        } else {
+            jbtnImport.setEnabled(false);
+            jbtnReset.setEnabled(false);
+        }
     }
-  }
 
-  /**
-   * Insert file row read and adds to import table log
-   *
-   * @param csvError
-   * @param searchKey
-   * @param Name
-   */
-  public void createCustomerCSVEntry(String csvError, String searchKey, String Name) {
-
-    Object[] mycust = new Object[5];
-    mycust[0] = UUID.randomUUID().toString();                               // ID string
-    mycust[1] = Integer.toString(currentRecord);                            // Record number
-    mycust[2] = csvError;                                                   // Error description
-    mycust[3] = customerSearchKey;                                          // SearchKey String
-    mycust[4] = customerName;                                               // Name string
-
-    try {
-      m_dlSystem.execCustomerAddCSVEntry(mycust);
-    } catch (BasicException ex) {
-      log.error(ex.getMessage());
+    /**
+     * Deactivates and resets all form fields.
+     *
+     * @return
+     */
+    @Override
+    public boolean deactivate() {
+        resetFields();
+        return (true);
     }
-  }
 
-  /**
-   * @return
-   */
-  public String getRecord() {
-    // Get record type using using DataLogicSystem
-    Object[] mycust = new Object[2];
-    mycust[0] = customerSearchKey;
-    mycust[1] = customerName;
+    /**
+     * @param cType
+     */
+    public void createCustomer(String cType) {
 
-    try {
-      return (m_dlSystem.getCustomerRecordType(mycust));
-    } catch (BasicException ex) {
-      log.error(ex.getMessage());
+        Object[] mycust = new Object[27];
+        if ("new".equals(cType)) {
+            mycust[0] = UUID.randomUUID().toString();
+        } else {
+            mycust[0] = custInfo.getId();
+        }                                                                       // id string
+        mycust[1] = customerSearchKey;                                          // searchkey String
+        mycust[2] = customerAccount;                                            // taxid string
+        mycust[3] = customerName;                                               // name string
+        mycust[4] = null;                                                       // taxCategory string
+        mycust[5] = null;                                                       // card string
+        mycust[6] = 0.0;                                                        // maxdebt Double
+        mycust[7] = customerAddress1;                                           // address1 string
+        mycust[8] = customerAddress2;                                           // address2 string
+        mycust[9] = customerPostal;                                             // postal string
+        mycust[10] = customerCity;                                              // city string
+        mycust[11] = customerRegion;                                            // region string
+        mycust[12] = null;                                                      // country string
+        mycust[13] = customerFirstName;                                         // firstname string
+        mycust[14] = customerLastName;                                          // lastname string
+        mycust[15] = customerEmail;                                             // email string
+        mycust[16] = customerPhone;                                             // phone string
+        mycust[17] = customerPhone2;                                            // phone2 string
+        mycust[18] = null;                                                      // fax string
+        mycust[19] = null;                                                      // notes string
+        mycust[20] = jCheckVisible.isSelected();                                // visible flag
+        mycust[21] = null;                                                      // curdate string
+        mycust[22] = 0.0;                                                       // curdate double
+        mycust[23] = null;                                                      // image
+        mycust[24] = false;                                                     // isvip
+        mycust[25] = 0.0;                                                       // discount
+        mycust[26] = null;                                                      // memodate date
+
+        try {
+            if ("new".equals(cType)) {
+                spr.insertData(mycust);
+                webPBar.setString("Adding record " + progress);
+            } else {
+                spr.updateData(mycust);
+                webPBar.setString("Updating record " + progress);
+            }
+        } catch (BasicException ex) {
+            log.error(ex.getMessage());
+        }
     }
-    return "Exception";
-  }
 
-  /**
-   * This method is called from within the constructor to initialize the form.
-   * WARNING: Do NOT modify this code. The content of this method is always
-   * regenerated by the Form Editor.
-   */
+    /**
+     * Insert file row read and adds to import table log
+     *
+     * @param csvError
+     * @param searchKey
+     * @param Name
+     */
+    public void createCustomerCSVEntry(String csvError, String searchKey, String Name) {
+
+        Object[] mycust = new Object[5];
+        mycust[0] = UUID.randomUUID().toString();                               // ID string
+        mycust[1] = Integer.toString(currentRecord);                            // Record number
+        mycust[2] = csvError;                                                   // Error description
+        mycust[3] = customerSearchKey;                                          // SearchKey String
+        mycust[4] = customerName;                                               // Name string
+
+        try {
+            m_dlSystem.execCustomerAddCSVEntry(mycust);
+        } catch (BasicException ex) {
+            log.error(ex.getMessage());
+        }
+    }
+
+    /**
+     * @return
+     */
+    public String getRecord() {
+        // Get record type using using DataLogicSystem
+        Object[] mycust = new Object[2];
+        mycust[0] = customerSearchKey;
+        mycust[1] = customerName;
+
+        try {
+            return (m_dlSystem.getCustomerRecordType(mycust));
+        } catch (BasicException ex) {
+            log.error(ex.getMessage());
+        }
+        return "Exception";
+    }
+
+    /**
+     * This method is called from within the constructor to initialize the form.
+     * WARNING: Do NOT modify this code. The content of this method is always
+     * regenerated by the Form Editor.
+     */
   // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
   private void initComponents() {
 
@@ -1436,512 +1435,499 @@ public class CustomerCSVImport extends JPanel implements JPanelView {
   }// </editor-fold>//GEN-END:initComponents
 
   private void jbtnReadActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbtnReadActionPerformed
-    try {
-      GetheadersFromFile(jFileName.getText());
-      webPBar.setString("Source file Header OK");
-    } catch (IOException ex) {
-      log.error(ex.getMessage());
-      webPBar.setString("Source file Header error!");
-    }
+      try {
+          GetheadersFromFile(jFileName.getText());
+          webPBar.setString("Source file Header OK");
+      } catch (IOException ex) {
+          log.error(ex.getMessage());
+          webPBar.setString("Source file Header error!");
+      }
   }//GEN-LAST:event_jbtnReadActionPerformed
 
   private void jFileNameActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jFileNameActionPerformed
-    jbtnImport.setEnabled(false);
-    jbtnRead.setEnabled(true);
+      jbtnImport.setEnabled(false);
+      jbtnRead.setEnabled(true);
   }//GEN-LAST:event_jFileNameActionPerformed
 
   private void jbtnFileChooseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbtnFileChooseActionPerformed
-    resetFields();
-    setWorker();
+      resetFields();
+      setWorker();
 
-    JFileChooser chooser = new JFileChooser(last_folder == null ? "C:\\" : last_folder);
-    FileNameExtensionFilter filter = new FileNameExtensionFilter("csv files", "csv");
-    chooser.setFileFilter(filter);
-    chooser.showOpenDialog(null);
-    File csvFile = chooser.getSelectedFile();
+      JFileChooser chooser = new JFileChooser(last_folder == null ? "C:\\" : last_folder);
+      FileNameExtensionFilter filter = new FileNameExtensionFilter("csv files", "csv");
+      chooser.setFileFilter(filter);
+      chooser.showOpenDialog(null);
+      File csvFile = chooser.getSelectedFile();
 
-    if (csvFile == null) {
-      return;
-    }
-
-    File current_folder = chooser.getCurrentDirectory();
-
-    if (last_folder == null
-            || !last_folder.equals(current_folder.getAbsolutePath())) {
-      AppConfig CSVConfig = new AppConfig(config_file);
-      CSVConfig.load();
-      CSVConfig.setProperty("CSV.last_folder"
-              , current_folder.getAbsolutePath());
-      last_folder = current_folder.getAbsolutePath();
-      try {
-        CSVConfig.save();
-      } catch (IOException ex) {
-        log.error(ex.getMessage());
+      if (csvFile == null) {
+          return;
       }
-    }
 
-    String csv = csvFile.getName();
-    if (!(csv.trim().equals(""))) {
-      csvFileName = csvFile.getAbsolutePath();
-      jFileName.setText(csvFileName);
-    }
+      File current_folder = chooser.getCurrentDirectory();
+
+      if (last_folder == null
+              || !last_folder.equals(current_folder.getAbsolutePath())) {
+          AppConfig CSVConfig = new AppConfig(config_file);
+          CSVConfig.load();
+          CSVConfig.setProperty("CSV.last_folder",
+                  current_folder.getAbsolutePath());
+          last_folder = current_folder.getAbsolutePath();
+          try {
+              CSVConfig.save();
+          } catch (IOException ex) {
+              log.error(ex.getMessage());
+          }
+      }
+
+      String csv = csvFile.getName();
+      if (!(csv.trim().equals(""))) {
+          csvFileName = csvFile.getAbsolutePath();
+          jFileName.setText(csvFileName);
+      }
   }//GEN-LAST:event_jbtnFileChooseActionPerformed
 
   private void jComboPostalFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jComboPostalFocusGained
-    jComboPostal.removeAllItems();
-    int i = 1;
-    jComboPostal.addItem("");
+      jComboPostal.removeAllItems();
+      int i = 1;
+      jComboPostal.addItem("");
 
-    while (i < Headers.size()) {
-      if ((Headers.get(i)
-              != jComboSearchKey.getSelectedItem())
-              & (Headers.get(i) != jComboAccountID.getSelectedItem())
-              & (Headers.get(i) != jComboName.getSelectedItem())
-              & (Headers.get(i) != jComboAddress1.getSelectedItem())
-              & (Headers.get(i) != jComboAddress2.getSelectedItem())
-//                & (Headers.get(i) != jComboPostal.getSelectedItem())                    
-              & (Headers.get(i) != jComboCity.getSelectedItem())
-              & (Headers.get(i) != jComboRegion.getSelectedItem())
-              & (Headers.get(i) != jComboFirstName.getSelectedItem())
-              & (Headers.get(i) != jComboLastName.getSelectedItem())
-              & (Headers.get(i) != jComboEmail.getSelectedItem())
-              & (Headers.get(i) != jComboPhone.getSelectedItem())
-              & (Headers.get(i) != jComboPhone2.getSelectedItem())
-      ) {
+      while (i < Headers.size()) {
+          if ((Headers.get(i)
+                  != jComboSearchKey.getSelectedItem())
+                  & (Headers.get(i) != jComboAccountID.getSelectedItem())
+                  & (Headers.get(i) != jComboName.getSelectedItem())
+                  & (Headers.get(i) != jComboAddress1.getSelectedItem())
+                  & (Headers.get(i) != jComboAddress2.getSelectedItem())
+                  //                & (Headers.get(i) != jComboPostal.getSelectedItem())                    
+                  & (Headers.get(i) != jComboCity.getSelectedItem())
+                  & (Headers.get(i) != jComboRegion.getSelectedItem())
+                  & (Headers.get(i) != jComboFirstName.getSelectedItem())
+                  & (Headers.get(i) != jComboLastName.getSelectedItem())
+                  & (Headers.get(i) != jComboEmail.getSelectedItem())
+                  & (Headers.get(i) != jComboPhone.getSelectedItem())
+                  & (Headers.get(i) != jComboPhone2.getSelectedItem())) {
 
-        jComboPostal.addItem(Headers.get(i));
+              jComboPostal.addItem(Headers.get(i));
+          }
+          ++i;
       }
-      ++i;
-    }
   }//GEN-LAST:event_jComboPostalFocusGained
 
   private void jComboPostalItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_jComboPostalItemStateChanged
 
-    checkFieldMapping();
+      checkFieldMapping();
 
   }//GEN-LAST:event_jComboPostalItemStateChanged
 
   private void jComboLastNameItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_jComboLastNameItemStateChanged
 
-    checkFieldMapping();
+      checkFieldMapping();
 
   }//GEN-LAST:event_jComboLastNameItemStateChanged
 
   private void jComboFirstNameItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_jComboFirstNameItemStateChanged
 
-    checkFieldMapping();
+      checkFieldMapping();
 
   }//GEN-LAST:event_jComboFirstNameItemStateChanged
 
   private void jComboPhone2ItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_jComboPhone2ItemStateChanged
 
-    checkFieldMapping();
+      checkFieldMapping();
 
   }//GEN-LAST:event_jComboPhone2ItemStateChanged
 
   private void jComboPhoneItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_jComboPhoneItemStateChanged
 
-    checkFieldMapping();
+      checkFieldMapping();
 
   }//GEN-LAST:event_jComboPhoneItemStateChanged
 
   private void jComboEmailFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jComboEmailFocusGained
-    jComboEmail.removeAllItems();
-    int i = 1;
-    jComboEmail.addItem("");
+      jComboEmail.removeAllItems();
+      int i = 1;
+      jComboEmail.addItem("");
 
-    while (i < Headers.size()) {
-      if ((Headers.get(i)
-              != jComboSearchKey.getSelectedItem())
-              & (Headers.get(i) != jComboAccountID.getSelectedItem())
-              & (Headers.get(i) != jComboName.getSelectedItem())
-              & (Headers.get(i) != jComboAddress1.getSelectedItem())
-              & (Headers.get(i) != jComboAddress2.getSelectedItem())
-              & (Headers.get(i) != jComboPostal.getSelectedItem())
-              & (Headers.get(i) != jComboCity.getSelectedItem())
-              & (Headers.get(i) != jComboRegion.getSelectedItem())
-              & (Headers.get(i) != jComboFirstName.getSelectedItem())
-              & (Headers.get(i) != jComboLastName.getSelectedItem())
-//                & (Headers.get(i) != jComboEmail.getSelectedItem())
-              & (Headers.get(i) != jComboPhone.getSelectedItem())
-              & (Headers.get(i) != jComboPhone2.getSelectedItem())
-      ) {
+      while (i < Headers.size()) {
+          if ((Headers.get(i)
+                  != jComboSearchKey.getSelectedItem())
+                  & (Headers.get(i) != jComboAccountID.getSelectedItem())
+                  & (Headers.get(i) != jComboName.getSelectedItem())
+                  & (Headers.get(i) != jComboAddress1.getSelectedItem())
+                  & (Headers.get(i) != jComboAddress2.getSelectedItem())
+                  & (Headers.get(i) != jComboPostal.getSelectedItem())
+                  & (Headers.get(i) != jComboCity.getSelectedItem())
+                  & (Headers.get(i) != jComboRegion.getSelectedItem())
+                  & (Headers.get(i) != jComboFirstName.getSelectedItem())
+                  & (Headers.get(i) != jComboLastName.getSelectedItem())
+                  //                & (Headers.get(i) != jComboEmail.getSelectedItem())
+                  & (Headers.get(i) != jComboPhone.getSelectedItem())
+                  & (Headers.get(i) != jComboPhone2.getSelectedItem())) {
 
-        jComboEmail.addItem(Headers.get(i));
+              jComboEmail.addItem(Headers.get(i));
+          }
+          ++i;
       }
-      ++i;
-    }
   }//GEN-LAST:event_jComboEmailFocusGained
 
   private void jComboEmailItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_jComboEmailItemStateChanged
 
-    checkFieldMapping();
+      checkFieldMapping();
 
   }//GEN-LAST:event_jComboEmailItemStateChanged
 
   private void jbtnResetActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbtnResetActionPerformed
-    resetFields();
-    progress = -1;
-    webPBar.setString("Waiting...");
+      resetFields();
+      progress = -1;
+      webPBar.setString("Waiting...");
   }//GEN-LAST:event_jbtnResetActionPerformed
 
   private void jbtnImportActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbtnImportActionPerformed
 
-    jbtnImport.setEnabled(false);
+      jbtnImport.setEnabled(false);
 
-    workProcess work = new workProcess();
-    Thread thread2 = new Thread(work);
-    thread2.start();
+      workProcess work = new workProcess();
+      Thread thread2 = new Thread(work);
+      thread2.start();
   }//GEN-LAST:event_jbtnImportActionPerformed
 
   private void jComboRegionFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jComboRegionFocusGained
-    jComboRegion.removeAllItems();
-    int i = 1;
-    jComboRegion.addItem("");
+      jComboRegion.removeAllItems();
+      int i = 1;
+      jComboRegion.addItem("");
 
-    while (i < Headers.size()) {
-      if ((Headers.get(i)
-              != jComboSearchKey.getSelectedItem())
-              & (Headers.get(i) != jComboAccountID.getSelectedItem())
-              & (Headers.get(i) != jComboName.getSelectedItem())
-              & (Headers.get(i) != jComboAddress1.getSelectedItem())
-              & (Headers.get(i) != jComboAddress2.getSelectedItem())
-              & (Headers.get(i) != jComboPostal.getSelectedItem())
-              & (Headers.get(i) != jComboCity.getSelectedItem())
-//                & (Headers.get(i) != jComboRegion.getSelectedItem())
-              & (Headers.get(i) != jComboFirstName.getSelectedItem())
-              & (Headers.get(i) != jComboLastName.getSelectedItem())
-              & (Headers.get(i) != jComboEmail.getSelectedItem())
-              & (Headers.get(i) != jComboPhone.getSelectedItem())
-              & (Headers.get(i) != jComboPhone2.getSelectedItem())
-      ) {
+      while (i < Headers.size()) {
+          if ((Headers.get(i)
+                  != jComboSearchKey.getSelectedItem())
+                  & (Headers.get(i) != jComboAccountID.getSelectedItem())
+                  & (Headers.get(i) != jComboName.getSelectedItem())
+                  & (Headers.get(i) != jComboAddress1.getSelectedItem())
+                  & (Headers.get(i) != jComboAddress2.getSelectedItem())
+                  & (Headers.get(i) != jComboPostal.getSelectedItem())
+                  & (Headers.get(i) != jComboCity.getSelectedItem())
+                  //                & (Headers.get(i) != jComboRegion.getSelectedItem())
+                  & (Headers.get(i) != jComboFirstName.getSelectedItem())
+                  & (Headers.get(i) != jComboLastName.getSelectedItem())
+                  & (Headers.get(i) != jComboEmail.getSelectedItem())
+                  & (Headers.get(i) != jComboPhone.getSelectedItem())
+                  & (Headers.get(i) != jComboPhone2.getSelectedItem())) {
 
-        jComboRegion.addItem(Headers.get(i));
+              jComboRegion.addItem(Headers.get(i));
+          }
+          ++i;
       }
-      ++i;
-    }
   }//GEN-LAST:event_jComboRegionFocusGained
 
   private void jComboRegionItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_jComboRegionItemStateChanged
 
-    checkFieldMapping();
+      checkFieldMapping();
 
   }//GEN-LAST:event_jComboRegionItemStateChanged
 
   private void jComboCityFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jComboCityFocusGained
-    jComboCity.removeAllItems();
-    int i = 1;
-    jComboCity.addItem("");
+      jComboCity.removeAllItems();
+      int i = 1;
+      jComboCity.addItem("");
 
-    while (i < Headers.size()) {
-      if ((Headers.get(i)
-              != jComboSearchKey.getSelectedItem())
-              & (Headers.get(i) != jComboAccountID.getSelectedItem())
-              & (Headers.get(i) != jComboName.getSelectedItem())
-              & (Headers.get(i) != jComboAddress1.getSelectedItem())
-              & (Headers.get(i) != jComboAddress2.getSelectedItem())
-              & (Headers.get(i) != jComboPostal.getSelectedItem())
-//                & (Headers.get(i) != jComboCity.getSelectedItem())
-              & (Headers.get(i) != jComboRegion.getSelectedItem())
-              & (Headers.get(i) != jComboFirstName.getSelectedItem())
-              & (Headers.get(i) != jComboLastName.getSelectedItem())
-              & (Headers.get(i) != jComboEmail.getSelectedItem())
-              & (Headers.get(i) != jComboPhone.getSelectedItem())
-              & (Headers.get(i) != jComboPhone2.getSelectedItem())
-      ) {
+      while (i < Headers.size()) {
+          if ((Headers.get(i)
+                  != jComboSearchKey.getSelectedItem())
+                  & (Headers.get(i) != jComboAccountID.getSelectedItem())
+                  & (Headers.get(i) != jComboName.getSelectedItem())
+                  & (Headers.get(i) != jComboAddress1.getSelectedItem())
+                  & (Headers.get(i) != jComboAddress2.getSelectedItem())
+                  & (Headers.get(i) != jComboPostal.getSelectedItem())
+                  //                & (Headers.get(i) != jComboCity.getSelectedItem())
+                  & (Headers.get(i) != jComboRegion.getSelectedItem())
+                  & (Headers.get(i) != jComboFirstName.getSelectedItem())
+                  & (Headers.get(i) != jComboLastName.getSelectedItem())
+                  & (Headers.get(i) != jComboEmail.getSelectedItem())
+                  & (Headers.get(i) != jComboPhone.getSelectedItem())
+                  & (Headers.get(i) != jComboPhone2.getSelectedItem())) {
 
-        jComboCity.addItem(Headers.get(i));
+              jComboCity.addItem(Headers.get(i));
+          }
+          ++i;
       }
-      ++i;
-    }
   }//GEN-LAST:event_jComboCityFocusGained
 
   private void jComboCityItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_jComboCityItemStateChanged
 
-    checkFieldMapping();
+      checkFieldMapping();
 
   }//GEN-LAST:event_jComboCityItemStateChanged
 
   private void jComboAddress2FocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jComboAddress2FocusGained
-    jComboAddress2.removeAllItems();
-    int i = 1;
-    jComboAddress2.addItem("");
+      jComboAddress2.removeAllItems();
+      int i = 1;
+      jComboAddress2.addItem("");
 
-    while (i < Headers.size()) {
-      if ((Headers.get(i)
-              != jComboSearchKey.getSelectedItem())
-              & (Headers.get(i) != jComboAccountID.getSelectedItem())
-              & (Headers.get(i) != jComboName.getSelectedItem())
-              & (Headers.get(i) != jComboAddress1.getSelectedItem())
-//                & (Headers.get(i) != jComboAddress2.getSelectedItem())
-              & (Headers.get(i) != jComboPostal.getSelectedItem())
-              & (Headers.get(i) != jComboCity.getSelectedItem())
-              & (Headers.get(i) != jComboRegion.getSelectedItem())
-              & (Headers.get(i) != jComboFirstName.getSelectedItem())
-              & (Headers.get(i) != jComboLastName.getSelectedItem())
-              & (Headers.get(i) != jComboEmail.getSelectedItem())
-              & (Headers.get(i) != jComboPhone.getSelectedItem())
-              & (Headers.get(i) != jComboPhone2.getSelectedItem())
-      ) {
+      while (i < Headers.size()) {
+          if ((Headers.get(i)
+                  != jComboSearchKey.getSelectedItem())
+                  & (Headers.get(i) != jComboAccountID.getSelectedItem())
+                  & (Headers.get(i) != jComboName.getSelectedItem())
+                  & (Headers.get(i) != jComboAddress1.getSelectedItem())
+                  //                & (Headers.get(i) != jComboAddress2.getSelectedItem())
+                  & (Headers.get(i) != jComboPostal.getSelectedItem())
+                  & (Headers.get(i) != jComboCity.getSelectedItem())
+                  & (Headers.get(i) != jComboRegion.getSelectedItem())
+                  & (Headers.get(i) != jComboFirstName.getSelectedItem())
+                  & (Headers.get(i) != jComboLastName.getSelectedItem())
+                  & (Headers.get(i) != jComboEmail.getSelectedItem())
+                  & (Headers.get(i) != jComboPhone.getSelectedItem())
+                  & (Headers.get(i) != jComboPhone2.getSelectedItem())) {
 
-        jComboAddress2.addItem(Headers.get(i));
+              jComboAddress2.addItem(Headers.get(i));
+          }
+          ++i;
       }
-      ++i;
-    }
   }//GEN-LAST:event_jComboAddress2FocusGained
 
   private void jComboAddress2ItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_jComboAddress2ItemStateChanged
 
-    checkFieldMapping();
+      checkFieldMapping();
 
   }//GEN-LAST:event_jComboAddress2ItemStateChanged
 
   private void jComboAddress1FocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jComboAddress1FocusGained
-    jComboAddress1.removeAllItems();
-    int i = 1;
-    jComboAddress1.addItem("");
+      jComboAddress1.removeAllItems();
+      int i = 1;
+      jComboAddress1.addItem("");
 
-    while (i < Headers.size()) {
-      if ((Headers.get(i)
-              != jComboSearchKey.getSelectedItem())
-              & (Headers.get(i) != jComboAccountID.getSelectedItem())
-              & (Headers.get(i) != jComboName.getSelectedItem())
-//                & (Headers.get(i) != jComboAddress1.getSelectedItem())
-              & (Headers.get(i) != jComboAddress2.getSelectedItem())
-              & (Headers.get(i) != jComboPostal.getSelectedItem())
-              & (Headers.get(i) != jComboCity.getSelectedItem())
-              & (Headers.get(i) != jComboRegion.getSelectedItem())
-              & (Headers.get(i) != jComboFirstName.getSelectedItem())
-              & (Headers.get(i) != jComboLastName.getSelectedItem())
-              & (Headers.get(i) != jComboEmail.getSelectedItem())
-              & (Headers.get(i) != jComboPhone.getSelectedItem())
-              & (Headers.get(i) != jComboPhone2.getSelectedItem())
-      ) {
+      while (i < Headers.size()) {
+          if ((Headers.get(i)
+                  != jComboSearchKey.getSelectedItem())
+                  & (Headers.get(i) != jComboAccountID.getSelectedItem())
+                  & (Headers.get(i) != jComboName.getSelectedItem())
+                  //                & (Headers.get(i) != jComboAddress1.getSelectedItem())
+                  & (Headers.get(i) != jComboAddress2.getSelectedItem())
+                  & (Headers.get(i) != jComboPostal.getSelectedItem())
+                  & (Headers.get(i) != jComboCity.getSelectedItem())
+                  & (Headers.get(i) != jComboRegion.getSelectedItem())
+                  & (Headers.get(i) != jComboFirstName.getSelectedItem())
+                  & (Headers.get(i) != jComboLastName.getSelectedItem())
+                  & (Headers.get(i) != jComboEmail.getSelectedItem())
+                  & (Headers.get(i) != jComboPhone.getSelectedItem())
+                  & (Headers.get(i) != jComboPhone2.getSelectedItem())) {
 
-        jComboAddress1.addItem(Headers.get(i));
+              jComboAddress1.addItem(Headers.get(i));
+          }
+          ++i;
       }
-      ++i;
-    }
   }//GEN-LAST:event_jComboAddress1FocusGained
 
   private void jComboAddress1ItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_jComboAddress1ItemStateChanged
 
-    checkFieldMapping();
+      checkFieldMapping();
 
   }//GEN-LAST:event_jComboAddress1ItemStateChanged
 
   private void jComboNameFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jComboNameFocusGained
-    jComboName.removeAllItems();
-    int i = 1;
-    jComboName.addItem("");
+      jComboName.removeAllItems();
+      int i = 1;
+      jComboName.addItem("");
 
-    while (i < Headers.size()) {
-      if ((Headers.get(i)
-              != jComboSearchKey.getSelectedItem())
-              & (Headers.get(i) != jComboAccountID.getSelectedItem())
-//                & (Headers.get(i) != jComboName.getSelectedItem())
-              & (Headers.get(i) != jComboAddress1.getSelectedItem())
-              & (Headers.get(i) != jComboAddress2.getSelectedItem())
-              & (Headers.get(i) != jComboPostal.getSelectedItem())
-              & (Headers.get(i) != jComboCity.getSelectedItem())
-              & (Headers.get(i) != jComboRegion.getSelectedItem())
-              & (Headers.get(i) != jComboFirstName.getSelectedItem())
-              & (Headers.get(i) != jComboLastName.getSelectedItem())
-              & (Headers.get(i) != jComboEmail.getSelectedItem())
-              & (Headers.get(i) != jComboPhone.getSelectedItem())
-              & (Headers.get(i) != jComboPhone2.getSelectedItem())
-      ) {
+      while (i < Headers.size()) {
+          if ((Headers.get(i)
+                  != jComboSearchKey.getSelectedItem())
+                  & (Headers.get(i) != jComboAccountID.getSelectedItem())
+                  //                & (Headers.get(i) != jComboName.getSelectedItem())
+                  & (Headers.get(i) != jComboAddress1.getSelectedItem())
+                  & (Headers.get(i) != jComboAddress2.getSelectedItem())
+                  & (Headers.get(i) != jComboPostal.getSelectedItem())
+                  & (Headers.get(i) != jComboCity.getSelectedItem())
+                  & (Headers.get(i) != jComboRegion.getSelectedItem())
+                  & (Headers.get(i) != jComboFirstName.getSelectedItem())
+                  & (Headers.get(i) != jComboLastName.getSelectedItem())
+                  & (Headers.get(i) != jComboEmail.getSelectedItem())
+                  & (Headers.get(i) != jComboPhone.getSelectedItem())
+                  & (Headers.get(i) != jComboPhone2.getSelectedItem())) {
 
-        jComboName.addItem(Headers.get(i));
+              jComboName.addItem(Headers.get(i));
+          }
+          ++i;
       }
-      ++i;
-    }
   }//GEN-LAST:event_jComboNameFocusGained
 
   private void jComboNameItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_jComboNameItemStateChanged
 
-    checkFieldMapping();
+      checkFieldMapping();
 
   }//GEN-LAST:event_jComboNameItemStateChanged
 
   private void jComboSearchKeyFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jComboSearchKeyFocusGained
-    jComboName.removeAllItems();
-    int i = 1;
-    jComboName.addItem("");
+      jComboName.removeAllItems();
+      int i = 1;
+      jComboName.addItem("");
 
-    while (i < Headers.size()) {
-      if ((Headers.get(i)
-//                != jComboSearchKey.getSelectedItem())
-              != jComboAccountID.getSelectedItem())
-              & (Headers.get(i) != jComboName.getSelectedItem())
-              & (Headers.get(i) != jComboAddress1.getSelectedItem())
-              & (Headers.get(i) != jComboAddress2.getSelectedItem())
-              & (Headers.get(i) != jComboPostal.getSelectedItem())
-              & (Headers.get(i) != jComboCity.getSelectedItem())
-              & (Headers.get(i) != jComboRegion.getSelectedItem())
-              & (Headers.get(i) != jComboFirstName.getSelectedItem())
-              & (Headers.get(i) != jComboLastName.getSelectedItem())
-              & (Headers.get(i) != jComboEmail.getSelectedItem())
-              & (Headers.get(i) != jComboPhone.getSelectedItem())
-              & (Headers.get(i) != jComboPhone2.getSelectedItem())
-      ) {
+      while (i < Headers.size()) {
+          if ((Headers.get(i)
+                  //                != jComboSearchKey.getSelectedItem())
+                  != jComboAccountID.getSelectedItem())
+                  & (Headers.get(i) != jComboName.getSelectedItem())
+                  & (Headers.get(i) != jComboAddress1.getSelectedItem())
+                  & (Headers.get(i) != jComboAddress2.getSelectedItem())
+                  & (Headers.get(i) != jComboPostal.getSelectedItem())
+                  & (Headers.get(i) != jComboCity.getSelectedItem())
+                  & (Headers.get(i) != jComboRegion.getSelectedItem())
+                  & (Headers.get(i) != jComboFirstName.getSelectedItem())
+                  & (Headers.get(i) != jComboLastName.getSelectedItem())
+                  & (Headers.get(i) != jComboEmail.getSelectedItem())
+                  & (Headers.get(i) != jComboPhone.getSelectedItem())
+                  & (Headers.get(i) != jComboPhone2.getSelectedItem())) {
 
-        jComboSearchKey.addItem(Headers.get(i));
+              jComboSearchKey.addItem(Headers.get(i));
+          }
+          ++i;
       }
-      ++i;
-    }
   }//GEN-LAST:event_jComboSearchKeyFocusGained
 
   private void jComboSearchKeyItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_jComboSearchKeyItemStateChanged
 
-    checkFieldMapping();
+      checkFieldMapping();
 
   }//GEN-LAST:event_jComboSearchKeyItemStateChanged
 
   private void jComboAccountIDFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jComboAccountIDFocusGained
-    jComboAccountID.removeAllItems();
-    int i = 1;
-    jComboAccountID.addItem("");
+      jComboAccountID.removeAllItems();
+      int i = 1;
+      jComboAccountID.addItem("");
 
-    while (i < Headers.size()) {
-      if ((Headers.get(i)
-              != jComboSearchKey.getSelectedItem())
-//                & (Headers.get(i) != jComboAccountID.getSelectedItem())
-              & (Headers.get(i) != jComboName.getSelectedItem())
-              & (Headers.get(i) != jComboAddress1.getSelectedItem())
-              & (Headers.get(i) != jComboAddress2.getSelectedItem())
-              & (Headers.get(i) != jComboPostal.getSelectedItem())
-              & (Headers.get(i) != jComboCity.getSelectedItem())
-              & (Headers.get(i) != jComboRegion.getSelectedItem())
-              & (Headers.get(i) != jComboFirstName.getSelectedItem())
-              & (Headers.get(i) != jComboLastName.getSelectedItem())
-              & (Headers.get(i) != jComboEmail.getSelectedItem())
-              & (Headers.get(i) != jComboPhone.getSelectedItem())
-              & (Headers.get(i) != jComboPhone2.getSelectedItem())
-      ) {
+      while (i < Headers.size()) {
+          if ((Headers.get(i)
+                  != jComboSearchKey.getSelectedItem())
+                  //                & (Headers.get(i) != jComboAccountID.getSelectedItem())
+                  & (Headers.get(i) != jComboName.getSelectedItem())
+                  & (Headers.get(i) != jComboAddress1.getSelectedItem())
+                  & (Headers.get(i) != jComboAddress2.getSelectedItem())
+                  & (Headers.get(i) != jComboPostal.getSelectedItem())
+                  & (Headers.get(i) != jComboCity.getSelectedItem())
+                  & (Headers.get(i) != jComboRegion.getSelectedItem())
+                  & (Headers.get(i) != jComboFirstName.getSelectedItem())
+                  & (Headers.get(i) != jComboLastName.getSelectedItem())
+                  & (Headers.get(i) != jComboEmail.getSelectedItem())
+                  & (Headers.get(i) != jComboPhone.getSelectedItem())
+                  & (Headers.get(i) != jComboPhone2.getSelectedItem())) {
 
-        jComboAccountID.addItem(Headers.get(i));
+              jComboAccountID.addItem(Headers.get(i));
+          }
+          ++i;
       }
-      ++i;
-    }
   }//GEN-LAST:event_jComboAccountIDFocusGained
 
   private void jComboAccountIDItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_jComboAccountIDItemStateChanged
 
-    checkFieldMapping();
+      checkFieldMapping();
 
   }//GEN-LAST:event_jComboAccountIDItemStateChanged
 
   private void jComboFirstNameFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jComboFirstNameFocusGained
-    jComboFirstName.removeAllItems();
-    int i = 1;
-    jComboFirstName.addItem("");
+      jComboFirstName.removeAllItems();
+      int i = 1;
+      jComboFirstName.addItem("");
 
-    while (i < Headers.size()) {
-      if ((Headers.get(i)
-              != jComboSearchKey.getSelectedItem())
-              & (Headers.get(i) != jComboAccountID.getSelectedItem())
-              & (Headers.get(i) != jComboName.getSelectedItem())
-              & (Headers.get(i) != jComboAddress1.getSelectedItem())
-              & (Headers.get(i) != jComboAddress2.getSelectedItem())
-              & (Headers.get(i) != jComboPostal.getSelectedItem())
-              & (Headers.get(i) != jComboCity.getSelectedItem())
-              & (Headers.get(i) != jComboRegion.getSelectedItem())
-//                & (Headers.get(i) != jComboFirstName.getSelectedItem())
-              & (Headers.get(i) != jComboLastName.getSelectedItem())
-              & (Headers.get(i) != jComboEmail.getSelectedItem())
-              & (Headers.get(i) != jComboPhone.getSelectedItem())
-              & (Headers.get(i) != jComboPhone2.getSelectedItem())
-      ) {
+      while (i < Headers.size()) {
+          if ((Headers.get(i)
+                  != jComboSearchKey.getSelectedItem())
+                  & (Headers.get(i) != jComboAccountID.getSelectedItem())
+                  & (Headers.get(i) != jComboName.getSelectedItem())
+                  & (Headers.get(i) != jComboAddress1.getSelectedItem())
+                  & (Headers.get(i) != jComboAddress2.getSelectedItem())
+                  & (Headers.get(i) != jComboPostal.getSelectedItem())
+                  & (Headers.get(i) != jComboCity.getSelectedItem())
+                  & (Headers.get(i) != jComboRegion.getSelectedItem())
+                  //                & (Headers.get(i) != jComboFirstName.getSelectedItem())
+                  & (Headers.get(i) != jComboLastName.getSelectedItem())
+                  & (Headers.get(i) != jComboEmail.getSelectedItem())
+                  & (Headers.get(i) != jComboPhone.getSelectedItem())
+                  & (Headers.get(i) != jComboPhone2.getSelectedItem())) {
 
-        jComboFirstName.addItem(Headers.get(i));
+              jComboFirstName.addItem(Headers.get(i));
+          }
+          ++i;
       }
-      ++i;
-    }
   }//GEN-LAST:event_jComboFirstNameFocusGained
 
   private void jComboLastNameFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jComboLastNameFocusGained
-    jComboLastName.removeAllItems();
-    int i = 1;
-    jComboLastName.addItem("");
+      jComboLastName.removeAllItems();
+      int i = 1;
+      jComboLastName.addItem("");
 
-    while (i < Headers.size()) {
-      if ((Headers.get(i)
-              != jComboSearchKey.getSelectedItem())
-              & (Headers.get(i) != jComboAccountID.getSelectedItem())
-              & (Headers.get(i) != jComboName.getSelectedItem())
-              & (Headers.get(i) != jComboAddress1.getSelectedItem())
-              & (Headers.get(i) != jComboAddress2.getSelectedItem())
-              & (Headers.get(i) != jComboPostal.getSelectedItem())
-              & (Headers.get(i) != jComboCity.getSelectedItem())
-              & (Headers.get(i) != jComboRegion.getSelectedItem())
-              & (Headers.get(i) != jComboFirstName.getSelectedItem())
-//                & (Headers.get(i) != jComboLastName.getSelectedItem())
-              & (Headers.get(i) != jComboEmail.getSelectedItem())
-              & (Headers.get(i) != jComboPhone.getSelectedItem())
-              & (Headers.get(i) != jComboPhone2.getSelectedItem())
-      ) {
+      while (i < Headers.size()) {
+          if ((Headers.get(i)
+                  != jComboSearchKey.getSelectedItem())
+                  & (Headers.get(i) != jComboAccountID.getSelectedItem())
+                  & (Headers.get(i) != jComboName.getSelectedItem())
+                  & (Headers.get(i) != jComboAddress1.getSelectedItem())
+                  & (Headers.get(i) != jComboAddress2.getSelectedItem())
+                  & (Headers.get(i) != jComboPostal.getSelectedItem())
+                  & (Headers.get(i) != jComboCity.getSelectedItem())
+                  & (Headers.get(i) != jComboRegion.getSelectedItem())
+                  & (Headers.get(i) != jComboFirstName.getSelectedItem())
+                  //                & (Headers.get(i) != jComboLastName.getSelectedItem())
+                  & (Headers.get(i) != jComboEmail.getSelectedItem())
+                  & (Headers.get(i) != jComboPhone.getSelectedItem())
+                  & (Headers.get(i) != jComboPhone2.getSelectedItem())) {
 
-        jComboLastName.addItem(Headers.get(i));
+              jComboLastName.addItem(Headers.get(i));
+          }
+          ++i;
       }
-      ++i;
-    }
   }//GEN-LAST:event_jComboLastNameFocusGained
 
   private void jComboPhoneFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jComboPhoneFocusGained
-    jComboPhone.removeAllItems();
-    int i = 1;
-    jComboPhone.addItem("");
+      jComboPhone.removeAllItems();
+      int i = 1;
+      jComboPhone.addItem("");
 
-    while (i < Headers.size()) {
-      if ((Headers.get(i)
-              != jComboSearchKey.getSelectedItem())
-              & (Headers.get(i) != jComboAccountID.getSelectedItem())
-              & (Headers.get(i) != jComboName.getSelectedItem())
-              & (Headers.get(i) != jComboAddress1.getSelectedItem())
-              & (Headers.get(i) != jComboAddress2.getSelectedItem())
-              & (Headers.get(i) != jComboPostal.getSelectedItem())
-              & (Headers.get(i) != jComboCity.getSelectedItem())
-              & (Headers.get(i) != jComboRegion.getSelectedItem())
-              & (Headers.get(i) != jComboFirstName.getSelectedItem())
-              & (Headers.get(i) != jComboLastName.getSelectedItem())
-              & (Headers.get(i) != jComboEmail.getSelectedItem())
-//                & (Headers.get(i) != jComboPhone.getSelectedItem())
-              & (Headers.get(i) != jComboPhone2.getSelectedItem())
-      ) {
+      while (i < Headers.size()) {
+          if ((Headers.get(i)
+                  != jComboSearchKey.getSelectedItem())
+                  & (Headers.get(i) != jComboAccountID.getSelectedItem())
+                  & (Headers.get(i) != jComboName.getSelectedItem())
+                  & (Headers.get(i) != jComboAddress1.getSelectedItem())
+                  & (Headers.get(i) != jComboAddress2.getSelectedItem())
+                  & (Headers.get(i) != jComboPostal.getSelectedItem())
+                  & (Headers.get(i) != jComboCity.getSelectedItem())
+                  & (Headers.get(i) != jComboRegion.getSelectedItem())
+                  & (Headers.get(i) != jComboFirstName.getSelectedItem())
+                  & (Headers.get(i) != jComboLastName.getSelectedItem())
+                  & (Headers.get(i) != jComboEmail.getSelectedItem())
+                  //                & (Headers.get(i) != jComboPhone.getSelectedItem())
+                  & (Headers.get(i) != jComboPhone2.getSelectedItem())) {
 
-        jComboPhone.addItem(Headers.get(i));
+              jComboPhone.addItem(Headers.get(i));
+          }
+          ++i;
       }
-      ++i;
-    }
   }//GEN-LAST:event_jComboPhoneFocusGained
 
   private void jComboPhone2FocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jComboPhone2FocusGained
-    jComboPhone2.removeAllItems();
-    int i = 1;
-    jComboPhone2.addItem("");
+      jComboPhone2.removeAllItems();
+      int i = 1;
+      jComboPhone2.addItem("");
 
-    while (i < Headers.size()) {
-      if ((Headers.get(i)
-              != jComboSearchKey.getSelectedItem())
-              & (Headers.get(i) != jComboAccountID.getSelectedItem())
-              & (Headers.get(i) != jComboName.getSelectedItem())
-              & (Headers.get(i) != jComboAddress1.getSelectedItem())
-              & (Headers.get(i) != jComboAddress2.getSelectedItem())
-              & (Headers.get(i) != jComboPostal.getSelectedItem())
-              & (Headers.get(i) != jComboCity.getSelectedItem())
-              & (Headers.get(i) != jComboRegion.getSelectedItem())
-              & (Headers.get(i) != jComboFirstName.getSelectedItem())
-              & (Headers.get(i) != jComboLastName.getSelectedItem())
-              & (Headers.get(i) != jComboEmail.getSelectedItem())
-              & (Headers.get(i) != jComboPhone.getSelectedItem())
-//                & (Headers.get(i) != jComboPhone2.getSelectedItem())                    
-      ) {
+      while (i < Headers.size()) {
+          if ((Headers.get(i)
+                  != jComboSearchKey.getSelectedItem())
+                  & (Headers.get(i) != jComboAccountID.getSelectedItem())
+                  & (Headers.get(i) != jComboName.getSelectedItem())
+                  & (Headers.get(i) != jComboAddress1.getSelectedItem())
+                  & (Headers.get(i) != jComboAddress2.getSelectedItem())
+                  & (Headers.get(i) != jComboPostal.getSelectedItem())
+                  & (Headers.get(i) != jComboCity.getSelectedItem())
+                  & (Headers.get(i) != jComboRegion.getSelectedItem())
+                  & (Headers.get(i) != jComboFirstName.getSelectedItem())
+                  & (Headers.get(i) != jComboLastName.getSelectedItem())
+                  & (Headers.get(i) != jComboEmail.getSelectedItem())
+                  & (Headers.get(i) != jComboPhone.getSelectedItem()) //                & (Headers.get(i) != jComboPhone2.getSelectedItem())                    
+                  ) {
 
-        jComboPhone2.addItem(Headers.get(i));
+              jComboPhone2.addItem(Headers.get(i));
+          }
+          ++i;
       }
-      ++i;
-    }
   }//GEN-LAST:event_jComboPhone2FocusGained
 
   // Variables declaration - do not modify//GEN-BEGIN:variables
