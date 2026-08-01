@@ -517,22 +517,10 @@
             <layout>default</layout>
         </repository>
         <repository>
-            <id>flatlaf</id>
-            <name>flatlaf</name>
-            <url>https://dev.webswing.org/public/nexus/repository/webswing-3rd-parties//</url>
-        </repository>
-        <repository>
-            <id>unicenta-repo</id>
-            <url>https://repo.unicenta.org/maven2/</url>
-            <layout>default</layout>
+            <id>project.local</id>
+            <name>project</name>
+            <url>file:${project.basedir}/repo</url>
         </repository>
     </repositories>
-    <distributionManagement>
-        <repository>
-            <id>unicenta-repo</id>
-            <url>ftp://repo.unicenta.org/</url>
-            <uniqueVersion>false</uniqueVersion>
-        </repository>
-    </distributionManagement>
     <name>donpos</name>
 </project>

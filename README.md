@@ -44,7 +44,40 @@ ALTER USER 'donpos'@'%' IDENTIFIED BY 'd';
 ```
 REVOKE ALL ON donpos.* FROM 'donpos'@'%';
 ```
-
+## Load libraries on local maven repository
+### GNU/Linux or MacOS
+```
+mvn install:install-file -Dfile=./lib/AbsoluteLayout-RELEASE82.jar -DgroupId=org.netbeans.external -DartifactId=AbsoluteLayout -Dversion=RELEASE82 -Dpackaging=jar
+```
+```
+mvn install:install-file -Dfile=./lib/jpos-1.13.jar -DgroupId=com.javapos -DartifactId=jpos -Dversion=1.13 -Dpackaging=jar
+```
+```
+mvn install:install-file -Dfile=./lib/weblaf-1.2.9.jar -DgroupId=de.sciss -DartifactId=weblaf -Dversion=1.2.9 -Dpackaging=jar
+```
+```
+mvn install:install-file -Dfile=./lib/trident-1.4.jar -DgroupId=org.pushingpixels -DartifactId=trident -Dversion=1.4 -Dpackaging=jar
+```
+```
+mvn install:install-file -Dfile=./lib/substance-7.1.00.jar -DgroupId=org.pushingpixels -DartifactId=substance -Dversion=7.1.00 -Dpackaging=jar
+```
+### Windows
+In CMD terminal, not in PowerShell
+```
+mvn install:install-file -Dfile=.\lib\AbsoluteLayout-RELEASE82.jar -DgroupId=org.netbeans.external -DartifactId=AbsoluteLayout -Dversion=RELEASE82 -Dpackaging=jar
+```
+```
+mvn install:install-file -Dfile=.\lib\jpos-1.13.jar -DgroupId=com.javapos -DartifactId=jpos -Dversion=1.13 -Dpackaging=jar
+```
+```
+mvn install:install-file -Dfile=.\lib\weblaf-1.2.9.jar -DgroupId=de.sciss -DartifactId=weblaf -Dversion=1.2.9 -Dpackaging=jar
+```
+```
+mvn install:install-file -Dfile=.\lib\trident-1.4.jar -DgroupId=org.pushingpixels -DartifactId=trident -Dversion=1.4 -Dpackaging=jar
+```
+```
+mvn install:install-file -Dfile=.\lib\substance-7.1.00.jar -DgroupId=org.pushingpixels -DartifactId=substance -Dversion=7.1.00 -Dpackaging=jar
+```
 ## Compile (Windows)
 * Get into donpos directory.
 * First delete target directory if exist.
@@ -53,6 +86,9 @@ REVOKE ALL ON donpos.* FROM 'donpos'@'%';
 mvn clean package
 ```
 ## Compile (GNU/Linux)
+* Get into donpos directory.
+* First delete target directory if exist.
+* Compile
 ```
 mvn clean package
 ```
@@ -62,7 +98,7 @@ java -jar .\target\donpos.jar
 ```
 ## Run (GNU/Linux)
 ```
-java -jar target\donpos.jar
+java -jar target/donpos.jar
 ```
 ## Run with Netbeans
 In menu Tools -> Options
