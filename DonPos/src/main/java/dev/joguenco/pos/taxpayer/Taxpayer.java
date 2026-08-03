@@ -353,13 +353,13 @@ public class Taxpayer extends JPanel implements JPanelView, BeanFactoryApp {
 
         if ("EC".equals(this.country)) {
             if (txtIdentification.getText().length() != 13) {
-                return new ErrorMessage("La identificación debe tener 13 dígitos");
+                return new ErrorMessage(AppLocal.getIntString("message.identification.validate"));
             }
         }
         
         if ("EC".equals(this.country)) {
             if (!"SI".equals(txtText1.getText()) && !"NO".equals(txtText1.getText())) {
-                return new ErrorMessage("Obligado Contabilidad debe ser: SI o NO");
+                return new ErrorMessage(AppLocal.getIntString("message.account.force"));
             }
         }
 
