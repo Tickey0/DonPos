@@ -359,7 +359,7 @@ public class Taxpayer extends JPanel implements JPanelView, BeanFactoryApp {
         
         if ("EC".equals(this.country)) {
             if (!"SI".equals(txtText1.getText()) && !"NO".equals(txtText1.getText())) {
-                return new ErrorMessage(AppLocal.getIntString("message.account.force"));
+                return new ErrorMessage(AppLocal.getIntString("message.account.forced"));
             }
         }
 
