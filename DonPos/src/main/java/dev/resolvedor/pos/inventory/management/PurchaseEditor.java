@@ -6,6 +6,7 @@ import com.unicenta.data.gui.ComboBoxValModel;
 import com.unicenta.data.loader.LocalRes;
 import com.unicenta.data.loader.SentenceList;
 import com.unicenta.format.Formats;
+import com.unicenta.pos.forms.AppConfig;
 import com.unicenta.pos.forms.AppLocal;
 import com.unicenta.pos.forms.AppView;
 import com.unicenta.pos.forms.BeanFactoryApp;
@@ -22,10 +23,22 @@ import com.unicenta.pos.ticket.ProductInfoExt;
 import com.unicenta.pos.ticket.TaxInfo;
 import java.awt.BorderLayout;
 import java.awt.Toolkit;
+import java.io.File;
 import java.util.Date;
+/**   pattern  */
+import java.util.regex.Pattern;
+
 import javax.swing.JComponent;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+
+// Clases para filtrar lo que se escribe en un campo de texto
+import javax.swing.text.AbstractDocument;
+import javax.swing.text.AttributeSet;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.Document;
+import javax.swing.text.DocumentFilter;
+
 import lombok.extern.slf4j.Slf4j;
 import org.jdesktop.swingx.autocomplete.AutoCompleteDecorator;
 
@@ -55,15 +68,43 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
 
     private PurchaseInfo purchase;
     private final JPurchaseLines purchaseLines;
+    private String country;
+    
+    /**  plantilla para como debe verse el texto */
+    private static final Pattern SERIE_PATTERN
+            = Pattern.compile("^\\d{3}-\\d{3}-\\d{9}$");
 
+    private static final Pattern AUTHORIZATION_PATTERN
+            = Pattern.compile("^(\\d{10}|\\d{49})$");
+    
+    
+    
+   
     public PurchaseEditor() {
         initComponents();
+        
+        /**  COUTRY*/
+        
+        final var config = new AppConfig(new File((System.getProperty("user.home")), AppLocal.APP_ID + ".properties"));
+        config.load();
+        country = config.getProperty("user.country");
 
         purchase = new PurchaseInfo();
         purchaseLines = new JPurchaseLines();
         panelLines.add(purchaseLines, BorderLayout.CENTER);
 
         AutoCompleteDecorator.decorate(cboSupplier);
+        
+         /** En Ecuador el numero de factura lleva guiones (001-001-000000001)
+         y la autorizacion es solo digitos */
+        if (isEcuador()) {
+            ((AbstractDocument) txtSerie.getDocument())
+                    .setDocumentFilter(new SerieFilter());
+
+            ((AbstractDocument) txtAuthorization.getDocument())
+                    .setDocumentFilter(new DigitsFilter(49));
+        }
+        
         enableForm(true);
     }
 
@@ -637,11 +678,35 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
             txtSerie.requestFocus();
             return false;
         }
-
+        
+        
+        if (isEcuador() && !SERIE_PATTERN.matcher(txtSerie.getText().trim()).matches()) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    LocalRes.getIntString("exception.invalidDocumentNumber"),
+                    AppLocal.getIntString("label.Number"),
+                    JOptionPane.OK_OPTION
+            );
+            txtSerie.requestFocus();
+            return false;
+        }
+        
+        
         if (txtAuthorization.getText() == null || txtAuthorization.getText().isEmpty()) {
             JOptionPane.showMessageDialog(
                     this,
                     LocalRes.getIntString("exception.noAuthorization"),
+                    AppLocal.getIntString("label.authorization"),
+                    JOptionPane.OK_OPTION
+            );
+            txtAuthorization.requestFocus();
+            return false;
+        }
+
+        if (isEcuador() && !AUTHORIZATION_PATTERN.matcher(txtAuthorization.getText().trim()).matches()) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    LocalRes.getIntString("exception.invalidAuthorization"),
                     AppLocal.getIntString("label.authorization"),
                     JOptionPane.OK_OPTION
             );
@@ -661,7 +726,13 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
 
         return true;
     }
-
+    
+    /** Comprueba si el sistema esta configurado para Ecuador */
+    private boolean isEcuador() {
+        return "EC".equals(this.country);
+    }
+    
+    
     private void cmdInsertActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmdInsertActionPerformed
         enableForm(true);
         stateToInsert();
@@ -977,6 +1048,91 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
             cmdDelete.setEnabled(false);
         } else {
             cmdDelete.setEnabled(true);
+        }
+    }
+
+    /**
+     * Da formato al numero de factura mientras se escribe: solo acepta
+     * digitos y coloca los guiones en su sitio -> 001-001-000000001
+     */
+    private static class SerieFilter extends DocumentFilter {
+
+        private static final int TOTAL_DIGITS = 15;
+
+        @Override
+        public void insertString(FilterBypass fb, int offset,
+                String text, AttributeSet attr) throws BadLocationException {
+            replace(fb, offset, 0, text, attr);
+        }
+
+        @Override
+        public void remove(FilterBypass fb, int offset, int length)
+                throws BadLocationException {
+            replace(fb, offset, length, "", null);
+        }
+
+        @Override
+        public void replace(FilterBypass fb, int offset, int length,
+                String text, AttributeSet attr) throws BadLocationException {
+
+            Document doc = fb.getDocument();
+            String current = doc.getText(0, doc.getLength());
+
+            // Como quedaria el texto si dejaramos pasar el cambio
+            String updated = current.substring(0, offset)
+                    + (text == null ? "" : text)
+                    + current.substring(offset + length);
+
+            // Nos quedamos solo con los numeros y volvemos a poner los guiones
+            String digits = updated.replaceAll("\\D", "");
+            if (digits.length() > TOTAL_DIGITS) {
+                digits = digits.substring(0, TOTAL_DIGITS);
+            }
+
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < digits.length(); i++) {
+                if (i == 3 || i == 6) {
+                    sb.append('-');
+                }
+                sb.append(digits.charAt(i));
+            }
+
+            fb.replace(0, doc.getLength(), sb.toString(), attr);
+        }
+    }
+
+    /**
+     * Solo deja escribir digitos, hasta un maximo de caracteres.
+     */
+    private static class DigitsFilter extends DocumentFilter {
+
+        private final int maximum;
+
+        DigitsFilter(int maximum) {
+            this.maximum = maximum;
+        }
+
+        @Override
+        public void insertString(FilterBypass fb, int offset,
+                String text, AttributeSet attr) throws BadLocationException {
+            replace(fb, offset, 0, text, attr);
+        }
+
+        @Override
+        public void replace(FilterBypass fb, int offset, int length,
+                String text, AttributeSet attr) throws BadLocationException {
+
+            String cleaned = (text == null) ? "" : text.replaceAll("\\D", "");
+
+            int freeSpace = maximum - (fb.getDocument().getLength() - length);
+            if (cleaned.length() > freeSpace) {
+                if (freeSpace <= 0) {
+                    return;
+                }
+                cleaned = cleaned.substring(0, freeSpace);
+            }
+
+            fb.replace(offset, length, cleaned, attr);
         }
     }
 }
