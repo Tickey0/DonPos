@@ -35,6 +35,7 @@ public class TicketsNumEditor extends JPanel implements EditorRecord {
         comboModelTypeTransaction.add(new TransctionType("FV", "Factura Venta"));
         comboModelTypeTransaction.add(new TransctionType("BV", "Boleta o Nota Venta"));
         comboModelTypeTransaction.add(new TransctionType("EV", "Entrega Venta"));
+        comboModelTypeTransaction.add(new TransctionType("ND", "Nota Débito"));
 
         cbxCode.setModel(comboModelTypeTransaction);
     }

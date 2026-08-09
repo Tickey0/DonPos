@@ -1000,16 +1000,27 @@ public final class TicketInfo implements SerializableRead, Externalizable {
     }
 
     public String buildAccessKey() {
-        var codeDocument = "";
+        String codeDocument;
         final var m11 = new Module11();
         try {
-            if (getTicketType() == 0) {
-                codeDocument = "01"; // Invoice
-            } else if (getTicketType() == 1) {
-                codeDocument = "04"; // Credit Note
-            } else {
+            if (null == getCode()) {
                 accessKey = "";
                 return accessKey;
+            } else {
+                switch (getCode()) {
+                    case "FV":
+                        codeDocument = "01"; // Invoice
+                        break;
+                    case "DV":
+                        codeDocument = "04"; // Credit Note
+                        break;
+                    case "ND":
+                        codeDocument = "05"; // Debit Note
+                        break;
+                    default:
+                        accessKey = "";
+                        return accessKey;
+                }
             }
 
             accessKey = new SimpleDateFormat("ddMMyyyy").format(getDate());
@@ -1017,7 +1028,7 @@ public final class TicketInfo implements SerializableRead, Externalizable {
             accessKey = accessKey + getTaxPayerInfo().getIdentification();
             accessKey = accessKey + getEnvironment();
             accessKey = accessKey + serieNumber;
-            accessKey = accessKey + "123456781";
+            accessKey = accessKey + "12345678" + "1";
             accessKey = accessKey + m11.module11(accessKey);
 
             return accessKey;

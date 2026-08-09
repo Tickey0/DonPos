@@ -518,3 +518,16 @@ INSERT INTO document_types (id, name, type, inventory) VALUES
 ('02', 'Nota o boleta de venta', 'RUC', 'In'),
 ('03', 'Liquidación de compra de bienes o prestación de servicios', 'CI', 'In'),
 ('04', 'Nota de crédito', 'RUC', 'Out');
+
+-- Service recharge for debit note
+INSERT INTO roles(id, name, permissions) VALUES('60', 'Recharge', $FILE{/com/unicenta/pos/templates/Role.Employee.xml} );
+INSERT INTO people(id, name, apppassword, role, visible, image) VALUES ('60', 'Recharge', NULL, '60', TRUE, NULL);
+
+INSERT INTO categories(id, name) VALUES ('002', 'Recharge');
+
+INSERT INTO products(id, reference, code, name, category, taxcat, isservice, display, printto) 
+VALUES ('6', '6', '6', 'Recargos', '002', '015', 1, '<html><center>Recargos', '1');
+
+INSERT INTO products_cat(product) VALUES ('6');
+
+INSERT INTO ticketsnum VALUES('ND', '60', '001201', 0, 'primary', 'Active');

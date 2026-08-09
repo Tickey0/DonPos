@@ -36,6 +36,7 @@ import dev.joguenco.http.client.reidi.ReIdiClient;
 import dev.joguenco.identification.Validator;
 import dev.joguenco.pos.establishment.DataLogicEstablishment;
 import dev.joguenco.pos.establishment.EstablishmentInfo;
+import dev.joguenco.pos.ticketsnum.TicketsNumInfo;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -83,17 +84,16 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
     // For identification type combobox 
     private SentenceList sentenceIdentificationType;
     private ComboBoxValModel modelIdentificationType;
-    private String ticketType = "";
     private String customerDefault;
     private String country;
-    private String serie;
+    private TicketsNumInfo serie;
 
     public CustomerInfoExt getCustomerext() {
         return customerext;
     }
 
     public String getTicketType() {
-        return ticketType;
+        return serie.getCode();
     }
 
     public static PaymentInfo getReturnPayment() {
@@ -196,7 +196,7 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
         return accepted;
     }
 
-    public boolean showDialog(double total, CustomerInfoExt customerext, String serie) {
+    public boolean showDialog(double total, CustomerInfoExt customerext, TicketsNumInfo serie) {
 
         m_aPaymentInfo = new PaymentInfoList();
         dlSales = (DataLogicSales) app.getBean("com.unicenta.pos.forms.DataLogicSales");
@@ -1088,13 +1088,7 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
     }//GEN-LAST:event_m_jTabPaymentStateChanged
 
     private void m_jButtonOKActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_m_jButtonOKActionPerformed
-        if (cmdUnderground.isSelected()) {
-            ticketType = "EV";
-            executePayment();
-        } else {
-            ticketType = "FV";
-            executePayment();
-        }
+        executePayment();
     }//GEN-LAST:event_m_jButtonOKActionPerformed
 
     private void executePayment() {
@@ -1146,6 +1140,9 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
             return;
         }
 
+        if (cmdUnderground.isSelected()) {
+            serie.setCode("EV");
+        }
         ExecutorService customExecutor = Executors.newCachedThreadPool();
 
         try {
@@ -1387,6 +1384,16 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
     }//GEN-LAST:event_txtAddressActionPerformed
 
     private void cmdUndergroundActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmdUndergroundActionPerformed
+        if (serie == null) {
+            cmdUnderground.setSelected(false);
+            return;
+        }
+
+        if ("ND".equals(serie.getCode())) {
+            cmdUnderground.setSelected(false);
+            return;
+        }
+
         if (m_jButtonPrint.isSelected()) {
             m_jButtonPrint.setSelected(false);
             jlblPrinterStatus.setText("Printer OFF");
@@ -1399,10 +1406,10 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
     private void txtAddressFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_txtAddressFocusGained
         if ("EC".equals(country)) {
             if (txtAddress.getText().isEmpty()) {
-                if (serie.length() >= 3) {
-                    setAddressWhenIsEmpty(serie.substring(0, 3));
+                if (serie.getSerie().length() >= 3) {
+                    setAddressWhenIsEmpty(serie.getSerie().substring(0, 3));
                 } else {
-                    setAddressWhenIsEmpty(serie);
+                    setAddressWhenIsEmpty(serie.getSerie());
                 }
             }
         }

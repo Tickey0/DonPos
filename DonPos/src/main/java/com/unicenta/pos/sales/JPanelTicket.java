@@ -1994,8 +1994,14 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
                 var isValidSerial = false;
                 // Get codes and series
                 if (ticket.getTicketType() == 0) {
-                    ticket.setCode("FV");
-                    isValidSerial = getCodeAndSerieSales(ticket, "primary");
+                    // For debit note user (recharge)
+                    if ("60".equals(ticket.getUser().getId())) {
+                        ticket.setCode("ND");
+                        isValidSerial = getCodeAndSerieSales(ticket, "primary");
+                    } else {
+                        ticket.setCode("FV");
+                        isValidSerial = getCodeAndSerieSales(ticket, "primary");
+                    }
                 } else if (ticket.getTicketType() == 1) {
                     isValidSerial = getCodeAndSerieRefund(ticket);
                 } else {
@@ -2031,7 +2037,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 
                     paymentdialog.setTransactionID(ticket.getTransactionID());
 
-                    if (paymentdialog.showDialog(ticket.getTotal(), ticket.getCustomer(), ticket.getSerie())) {
+                    if (paymentdialog.showDialog(ticket.getTotal(), ticket.getCustomer(), new TicketsNumInfo(ticket.getCode(), ticket.getSerie()))) {
 
                         ticket.setPayments(paymentdialog.getSelectedPayments());
 
@@ -2043,7 +2049,12 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
                                     isValidSerial = getCodeAndSerieSales(ticket, "primary");
                                 } else if ("EV".equals(paymentdialogreceipt.getTicketType())) {
                                     isValidSerial = getCodeAndSerieSales(ticket, "alternative");
+                                } else if ("ND".equals(paymentdialogreceipt.getTicketType())) {
+                                    isValidSerial = getCodeAndSerieSales(ticket, "primary");
+                                } else {
+                                    isValidSerial = false;
                                 }
+                                
                                 if (isValidSerial == false) {
                                     return false;
                                 }

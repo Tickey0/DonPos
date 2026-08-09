@@ -3,30 +3,29 @@ package dev.joguenco.pos.ticketsnum;
 import com.unicenta.basic.BasicException;
 import com.unicenta.data.loader.DataRead;
 import com.unicenta.data.loader.SerializableRead;
+import lombok.Getter;
 
 /**
  *
  * @author jorgeluis
  */
+@Getter
 public class TicketsNumInfo implements SerializableRead {
 
     private String code;
     private String serie;
     private int id;
 
-
-    public TicketsNumInfo() { }
-
-    public String getCode() {
-        return code;
+    public TicketsNumInfo() {
     }
 
-    public String getSerie() {
-        return serie;
+    public TicketsNumInfo(String code, String serie) {
+        this.code = code;
+        this.serie = serie;
     }
 
-    public int getId() {
-        return id;
+    public void setCode(String code) {
+        this.code = code;
     }
 
     @Override
