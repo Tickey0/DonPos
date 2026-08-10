@@ -770,6 +770,35 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
                 JOptionPane.showMessageDialog(this, "Service Charge Not Enabled");
             }
 
+        } else if (oProduct.getID().equals("xxx666_666xxx_x6x6x6")) {
+            UpdateTicketDialog dialog = new UpdateTicketDialog(
+                    new javax.swing.JFrame(),
+                    true
+            );
+
+            dialog.addWindowListener(new java.awt.event.WindowAdapter() {
+                @Override
+                public void windowClosing(java.awt.event.WindowEvent e) {
+                    dialog.setVisible(false);
+                }
+            });
+
+            dialog.setLocationRelativeTo(null);
+            dialog.setVisible(true);
+
+            if (dialog.getReturnStatus() == LotDialog.RET_CANCEL) {
+                return;
+            }
+
+            if (dialog.getReturnStatus() == LotDialog.RET_OK) {
+                TaxInfo tax = taxeslogic.getTaxInfo(oProduct.getTaxCategoryID(), m_oTicket.getCustomer());
+                addTicketLine(new TicketLineInfo(oProduct, dMul, dPrice, tax,
+                        (java.util.Properties) (oProduct.getProperties().clone()), oProduct.getLot())
+                );
+
+                refreshTicket();
+            }
+
         } else {
 // get the line product tax
             TaxInfo tax = taxeslogic.getTaxInfo(oProduct.getTaxCategoryID(), m_oTicket.getCustomer());
@@ -2054,7 +2083,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
                                 } else {
                                     isValidSerial = false;
                                 }
-                                
+
                                 if (isValidSerial == false) {
                                     return false;
                                 }
