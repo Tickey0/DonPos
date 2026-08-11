@@ -1154,6 +1154,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                         + "ON R.ID = PM.RECEIPT LEFT OUTER JOIN customers C "
                         + "ON C.ID = T.CUSTOMER LEFT OUTER JOIN people P ON T.PERSON = P.ID "
                         + "WHERE ?(QBF_FILTER) "
+                        + "AND T.code not in ('ND') "
                         + "GROUP BY T.ID, T.TICKETID, T.TICKETTYPE, R.DATENEW, P.NAME, C.NAME, concat(T.code, ' ', T.serie_number), T.serie_number "
                         + "ORDER BY R.DATENEW DESC, T.TICKETID",
                         new String[]{
@@ -1629,6 +1630,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
      *
      * @param tickettype
      * @param ticketid
+     * @param serieNumber
      * @return
      * @throws BasicException
      */
@@ -1655,6 +1657,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                 + "LEFT OUTER JOIN people P ON T.PERSON = P.ID "
                 + "WHERE T.TICKETTYPE = ? AND T.TICKETID = ? "
                 + "AND T.SERIE_NUMBER = ? "
+                + "AND T.code not in ('ND') "
                 + "ORDER BY R.DATENEW DESC",
                 SerializerWriteParams.INSTANCE,
                 new SerializerReadClass(TicketInfo.class))
