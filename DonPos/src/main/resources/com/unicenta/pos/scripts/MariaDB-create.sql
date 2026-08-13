@@ -533,6 +533,7 @@ CREATE TABLE `suppliers` (
 	`curdebt` double default '0',
 	`vatid` varchar(255) default NULL,
         `taxid_type` varchar(90) not null default 'CF',
+        `is_system_supplier` boolean default false,
 	PRIMARY KEY  ( `id` ),
 	KEY `suppliers_name_inx` ( `name` ),
 	UNIQUE INDEX `suppliers_skey_inx` ( `searchkey` )
