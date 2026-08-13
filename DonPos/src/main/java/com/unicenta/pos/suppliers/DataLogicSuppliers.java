@@ -78,7 +78,8 @@ public class DataLogicSuppliers extends BeanFactoryDataSingle {
                 "CURDATE", 
                 "CURDEBT",
                 "VATID",
-                "TAXID_TYPE"}
+                "TAXID_TYPE",
+                "IS_SYSTEM_SUPPLIER"}
             , new String[] { 
                 "ID", 
                 AppLocal.getIntString("label.searchkey"),
@@ -107,21 +108,22 @@ public class DataLogicSuppliers extends BeanFactoryDataSingle {
 
                 AppLocal.getIntString("label.curdebt"),
                 AppLocal.getIntString("label.suppliervatid"),
-                "TAXID_TYPE"}
+                "TAXID_TYPE",
+                "IS_SYSTEM_SUPPLIER"}
             , new Datas[] { 
                 Datas.STRING, Datas.STRING, Datas.STRING, Datas.STRING, 
                 Datas.DOUBLE, Datas.STRING, Datas.STRING, Datas.STRING, 
                 Datas.STRING, Datas.STRING, Datas.STRING, Datas.STRING,
                 Datas.STRING, Datas.STRING, Datas.STRING, Datas.STRING,
                 Datas.STRING, Datas.STRING, Datas.BOOLEAN, Datas.TIMESTAMP,                 
-                Datas.DOUBLE, Datas.STRING, Datas.STRING }
+                Datas.DOUBLE, Datas.STRING, Datas.STRING, Datas.BOOLEAN }
             , new Formats[] {
                 Formats.STRING, Formats.STRING, Formats.STRING, Formats.STRING,
                 Formats.CURRENCY, Formats.STRING, Formats.STRING, Formats.STRING,
                 Formats.STRING, Formats.STRING, Formats.STRING, Formats.STRING,                
                 Formats.STRING, Formats.STRING, Formats.STRING, Formats.STRING,
                 Formats.STRING, Formats.STRING, Formats.BOOLEAN, Formats.TIMESTAMP,
-                Formats.CURRENCY, Formats.STRING, Formats.STRING }
+                Formats.CURRENCY, Formats.STRING, Formats.STRING, Formats.BOOLEAN }
             , new int[] {0}
         );   
     }

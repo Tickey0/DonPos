@@ -381,6 +381,13 @@ CREATE VIEW `v_assets` AS select `id` AS `id`,
 from `resources`
 where `name` = 'Electronic.Environment';
 
+CREATE VIEW `v_ele_general_observations` AS select 900 AS `id`,
+    'RUC Proveedor' AS `name`,
+    `taxid` AS `value`
+from `suppliers`
+where `is_system_supplier` = 1;
+
+
 Insert into ele_parameters (ID,name,value,observation,type) 
 values (1,'Base Directory','/app/RoQui','Base directory for files','SRI');
 Insert into ele_parameters (ID,name,value,observation,type) 
