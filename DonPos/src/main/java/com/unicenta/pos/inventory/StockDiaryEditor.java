@@ -37,6 +37,7 @@ import com.unicenta.data.loader.SentenceList;
 import com.unicenta.format.Formats;
 import com.unicenta.pos.catalog.CatalogSelector;
 import com.unicenta.pos.catalog.JCatalog;
+import com.unicenta.pos.forms.AppUser;
 import com.unicenta.pos.printer.TicketParser;
 import com.unicenta.pos.sales.JProductAttEdit;
 import com.unicenta.pos.ticket.ProductInfoExt;
@@ -139,7 +140,8 @@ public final class StockDiaryEditor extends javax.swing.JPanel implements Editor
      * @throws BasicException
      */
     public void activate() throws BasicException {
-        m_cat.loadCatalog();
+        AppUser user = this.m_App.getAppUserView().getUser();
+        m_cat.loadCatalog(user);
          
         java.util.List l = m_sentlocations.list();
         m_LocationsModel = new ComboBoxValModel(m_sentlocations.list());

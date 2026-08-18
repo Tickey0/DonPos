@@ -18,6 +18,7 @@
 //    along with uniCenta oPOS.  If not, see <http://www.gnu.org/licenses/>.
 package com.unicenta.pos.sales;
 
+import dev.resolvedor.pos.sales.DebitNoteRelatedDialog;
 import bsh.EvalError;
 import bsh.Interpreter;
 import com.alee.extended.time.ClockType;
@@ -771,9 +772,17 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
             }
 
         } else if (oProduct.getID().equals("xxx666_666xxx_x6x6x6")) {
-            UpdateTicketDialog dialog = new UpdateTicketDialog(
-                    new javax.swing.JFrame(),
-                    true
+            if (m_oTicket.getCustomerId() == null
+                    || dlSystem.getResourceAsText("Customer.Default").equals(m_oTicket.getCustomerId())) {
+                JOptionPane.showMessageDialog(this,
+                        AppLocal.getIntString("label.invalidcustomers"),
+                        AppLocal.getIntString("label.debit.note"), JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            DebitNoteRelatedDialog dialog = new DebitNoteRelatedDialog(
+                    m_App,
+                    m_oTicket,
+                    new javax.swing.JFrame()
             );
 
             dialog.addWindowListener(new java.awt.event.WindowAdapter() {
@@ -796,6 +805,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
                         (java.util.Properties) (oProduct.getProperties().clone()), oProduct.getLot())
                 );
 
+                this.m_oTicket.setTicketTicketId(dialog.getSelectedTicket().getId());
                 refreshTicket();
             }
 
@@ -2024,7 +2034,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
                 // Get codes and series
                 if (ticket.getTicketType() == 0) {
                     // For debit note user (recharge)
-                    if ("60".equals(ticket.getUser().getId())) {
+                    if ("xxx666_666xxx_x6x6x6".equals(ticket.getUser().getId())) {
                         ticket.setCode("ND");
                         isValidSerial = getCodeAndSerieSales(ticket, "primary");
                     } else {

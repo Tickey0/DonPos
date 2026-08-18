@@ -362,6 +362,79 @@ from
     `v_ele_credit_notes` `j`
 order by `j`.`number` desc, `j`.`number` desc;
 
+CREATE VIEW `v_ele_debit_notes` AS select cast(`t`.`id` as uuid) AS `id`,
+    `t`.`code` AS `code`,
+    `t`.`serie_number` AS `number`,
+    cast('05' as char) AS `code_document`,
+    substr(`t`.`serie_number`, 1, 3) AS `establishment`,
+    substr(`t`.`serie_number`, 4, 3) AS `emission_point`,
+    cast(lpad(`t`.`ticketid`, 9, '0') as char) AS `sequence`,
+    cast(`r`.`datenew` as date) AS `date`,
+    cast('01' as char) AS `updated_code_document`,
+    (
+    select
+            `ut`.`serie_number`
+    from
+            `tickets` `ut`
+    where
+            `ut`.`id` = `t`.`tickets_id`) AS `updated_number_document`,
+    (
+    select
+            (cast(`ur`.`datenew` as date))
+    from
+            `receipts` `ur`
+    where
+            `ur`.`id` = `t`.`tickets_id`) AS `updated_date_document`,
+    abs(round(sum(cast(`tl`.`units` * `tl`.`price` as decimal(19,2))), 2)) AS `total_without_taxes`,
+    abs(round(sum(cast(`tl`.`units` * `tl`.`price` + if(`tx`.`rate` > 0, `tl`.`units` * `tl`.`price` * `tx`.`rate`, 0) as decimal(19,2))), 2)) AS `total`,
+    `i`.`legal_code` AS `identification_type`,
+    `c`.`taxid` AS `identification`,
+    `c`.`name` AS `legal_name`,
+    `c`.`address` AS `address`,
+    (select `e`.`address` from `establishments` `e` where `e`.`id` = substr(`t`.`serie_number`, 1, 3)) AS `establishment_address`,
+    `t`.`access_key` AS `access_key`
+from (((((`tickets` `t`
+    join `receipts` `r` on(`t`.`id` = `r`.`id`))
+    join `customers` `c` on(`c`.`id` = `t`.`customer`))
+    join `identification_type` `i` on(`i`.`code` = `c`.`taxid_type`))
+    join `ticketlines` `tl` on(`t`.`id` = `tl`.`ticket`))
+    join `taxes` `tx` on(`tx`.`category` = `tl`.`taxid`))
+where `t`.`code` = 'ND'
+group by `t`.`id`, `t`.`code`, `t`.`serie_number`, `t`.`ticketid`, `t`.`tickets_id`,
+    `t`.`access_key`, `r`.`datenew`, `i`.`legal_code`, `c`.`taxid`, `c`.`name`, `c`.`address`;
+
+CREATE VIEW `v_ele_debit_notes_detail` AS select cast(concat(substr(`tl`.`ticket`, 1, octet_length(`tl`.`ticket`) - octet_length(`tl`.`line`)), `tl`.`line`) as uuid) AS `id`,
+    `t`.`code` AS `code`,
+    `t`.`serie_number` AS `number`,
+    cast(`tl`.`line` as unsigned) AS `line`,
+    `p`.`name` AS `reason`,
+    cast(abs(`tl`.`units` * `tl`.`price`) as decimal(19,2)) AS `value`
+from ((`tickets` `t`
+    join `ticketlines` `tl` on(`t`.`id` = `tl`.`ticket`))
+    join `products` `p` on(`p`.`id` = `tl`.`product`))
+where `t`.`code` = 'ND';
+
+CREATE VIEW `v_ele_report_debit_notes` AS select `j`.`id` AS `id`,
+    `j`.`code` AS `code`,
+    `j`.`number` AS `number`,
+    `j`.`access_key` AS `access_key`,
+    `j`.`date` AS `date`,
+    `j`.`total` AS `total`,
+    `j`.`identification` AS `identification`,
+    `j`.`legal_name` AS `legal_name`,
+    (select
+        `i`.`value`
+    from
+        `v_ele_information` `i`
+    where
+        `i`.`name` = 'Email'
+        and `i`.`identification` = `j`.`identification`
+    limit 1) AS `email`,
+    ifnull((select `e`.`status` from `ele_documents` `e` where `e`.`code` = `j`.`code` and `e`.`number` = `j`.`number`), 'NO ENVIADO') AS `status`
+from
+    `v_ele_debit_notes` `j`
+order by `j`.`number` desc;
+
 CREATE VIEW `v_version` AS select 1 AS `id`,
     version() AS `version_database`;
 
@@ -527,14 +600,14 @@ INSERT INTO document_types (id, name, type, inventory) VALUES
 ('04', 'Nota de crédito', 'RUC', 'Out');
 
 -- Service recharge for debit note
-INSERT INTO roles(id, name, permissions) VALUES('60', 'Recharge', $FILE{/com/unicenta/pos/templates/Role.Employee.xml} );
-INSERT INTO people(id, name, apppassword, role, visible, image) VALUES ('60', 'Recharge', NULL, '60', TRUE, NULL);
+INSERT INTO roles(id, name, permissions) VALUES('xxx666_666xxx_x6x6x6', 'Recharge', $FILE{/com/unicenta/pos/templates/Role.Employee.xml} );
+INSERT INTO people(id, name, apppassword, role, visible, image) VALUES ('xxx666_666xxx_x6x6x6', 'Recharge', NULL, 'xxx666_666xxx_x6x6x6', TRUE, NULL);
 
-INSERT INTO categories(id, name) VALUES ('002', 'Recharge');
+INSERT INTO categories(id, name) VALUES ('xxx666_666xxx_x6x6x6', 'Recharge');
 
 INSERT INTO products(id, reference, code, name, category, taxcat, isservice, display, printto) 
-VALUES ('xxx666_666xxx_x6x6x6', 'xxx666', 'xxx666', 'Recargos', '002', '015', 1, '<html><center>Recargos', '1');
+VALUES ('xxx666_666xxx_x6x6x6', 'xxx666', 'xxx666', 'Recargos', 'xxx666_666xxx_x6x6x6', '015', 1, '<html><center>Recargos', '1');
 
 INSERT INTO products_cat(product) VALUES ('xxx666_666xxx_x6x6x6');
 
-INSERT INTO ticketsnum VALUES('ND', '60', '001201', 0, 'primary', 'Active');
+INSERT INTO ticketsnum VALUES('ND', 'xxx666_666xxx_x6x6x6', '001201', 0, 'primary', 'Active');

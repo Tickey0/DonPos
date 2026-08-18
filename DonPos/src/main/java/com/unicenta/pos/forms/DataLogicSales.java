@@ -466,6 +466,24 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                 + "CATORDER "
                 + "FROM categories "
                 + "WHERE PARENTID IS NULL AND CATSHOWNAME = " + s.DB.TRUE() + " "
+                + "AND ID != 'xxx666_666xxx_x6x6x6' "
+                + "ORDER BY CATORDER, NAME",
+                null,
+                CategoryInfo.getSerializerRead()).list();
+    }
+
+    public final List<CategoryInfo> getCategoriesForDebitNote() throws BasicException {
+        return new PreparedSentence(s,
+                "SELECT "
+                + "ID, "
+                + "NAME, "
+                + "IMAGE, "
+                + "TEXTTIP, "
+                + "CATSHOWNAME, "
+                + "CATORDER "
+                + "FROM categories "
+                + "WHERE PARENTID IS NULL AND CATSHOWNAME = " + s.DB.TRUE() + " "
+                + "AND ID = 'xxx666_666xxx_x6x6x6' "
                 + "ORDER BY CATORDER, NAME",
                 null,
                 CategoryInfo.getSerializerRead()).list();
@@ -3031,5 +3049,31 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                 + "limit 1",
                 new SerializerWriteBasic(new Datas[]{Datas.STRING, Datas.DOUBLE}),
                 new SerializerReadClass(VolumeDiscountInfo.class));
+    }
+
+    public final SentenceList getTicketByCustomer(String customerId) throws BasicException {
+        return new StaticSentence(s,
+                "SELECT "
+                + "T.ID, "
+                + "T.TICKETTYPE, "
+                + "T.TICKETID, "
+                + "R.DATENEW, "
+                + "R.MONEY, "
+                + "R.ATTRIBUTES, "
+                + "P.ID, "
+                + "P.NAME, "
+                + "T.CUSTOMER, "
+                + "T.STATUS, "
+                + "T.CODE, "
+                + "T.SERIE_NUMBER "
+                + "FROM receipts R "
+                + "JOIN tickets T ON R.ID = T.ID "
+                + "LEFT OUTER JOIN people P ON T.PERSON = P.ID "
+                + "WHERE T.TICKETTYPE = 0 "
+                + "and T.customer  = '" + customerId + "' "
+                + "AND T.code not in ('ND') "
+                + "ORDER BY R.DATENEW DESC",
+                null,
+                new SerializerReadClass(TicketInfo.class));
     }
 }

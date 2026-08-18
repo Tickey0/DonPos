@@ -187,7 +187,8 @@ public class StockManagement extends JPanel implements JPanelView {
      */
     @Override
     public void activate() throws BasicException {
-        m_cat.loadCatalog();
+        AppUser user = this.m_App.getAppUserView().getUser();
+        m_cat.loadCatalog(user);
 
         java.util.List l = m_sentlocations.list();
         m_LocationsModel = new ComboBoxValModel(l);

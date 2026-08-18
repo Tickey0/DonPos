@@ -76,7 +76,7 @@ public class JTicketCatalogLines extends javax.swing.JPanel {
      * @throws BasicException
      */
     public void loadCatalog() throws BasicException {
-        m_catalog.loadCatalog();
+        m_catalog.loadCatalog(null);
     }
     
     /**

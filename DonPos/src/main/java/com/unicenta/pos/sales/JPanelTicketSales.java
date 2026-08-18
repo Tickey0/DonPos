@@ -21,6 +21,7 @@ package com.unicenta.pos.sales;
 import com.unicenta.basic.BasicException;
 import com.unicenta.pos.catalog.CatalogSelector;
 import com.unicenta.pos.catalog.JCatalog;
+import com.unicenta.pos.forms.AppUser;
 import com.unicenta.pos.forms.AppView;
 import com.unicenta.pos.ticket.ProductInfoExt;
 import java.awt.Component;
@@ -47,8 +48,8 @@ public class JPanelTicketSales extends JPanelTicket {
      * @param app
      */
     @Override
-    public void init(AppView app) {
-        super.init(app);
+    public void init(AppView app) {        
+        super.init(app);        
         m_ticketlines.addListSelectionListener(new CatalogSelectionListener());
     }
     
@@ -107,12 +108,14 @@ public class JPanelTicketSales extends JPanelTicket {
     @Override
     public void activate() throws BasicException {      
         super.activate();
-        m_cat.loadCatalog();
+        AppUser user = this.m_App.getAppUserView().getUser();
+        m_cat.loadCatalog(user);
     }      
     
     public void reLoadCatalog() {
         try {
-            m_cat.loadCatalog();
+            AppUser user = this.m_App.getAppUserView().getUser();
+            m_cat.loadCatalog(user);
         } catch (BasicException ex) {
         }
 

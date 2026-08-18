@@ -20,6 +20,7 @@
 package com.unicenta.pos.catalog;
 
 import com.unicenta.basic.BasicException;
+import com.unicenta.pos.forms.AppUser;
 import java.awt.Component;
 import java.awt.event.ActionListener;
 
@@ -33,7 +34,7 @@ public interface CatalogSelector {
      *
      * @throws BasicException
      */
-    public void loadCatalog() throws BasicException;
+    public void loadCatalog(AppUser user) throws BasicException;
 
     /**
      *

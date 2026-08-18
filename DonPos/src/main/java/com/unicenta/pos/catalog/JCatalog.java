@@ -16,13 +16,13 @@
 //
 //    You should have received a copy of the GNU General Public License
 //    along with uniCenta oPOS.  If not, see <http://www.gnu.org/licenses/>.
-
 package com.unicenta.pos.catalog;
 
 import com.unicenta.basic.BasicException;
 import com.unicenta.data.gui.JMessageDialog;
 import com.unicenta.data.gui.MessageInf;
 import com.unicenta.pos.forms.AppLocal;
+import com.unicenta.pos.forms.AppUser;
 import com.unicenta.pos.forms.DataLogicSales;
 import com.unicenta.pos.sales.TaxesLogic;
 import com.unicenta.pos.ticket.CategoryInfo;
@@ -48,36 +48,39 @@ import javax.swing.event.ListSelectionListener;
  * @author adrianromero
  */
 public class JCatalog extends JPanel implements ListSelectionListener, CatalogSelector {
-    
+
     /**
      *
      */
     protected EventListenerList listeners = new EventListenerList();
-    private DataLogicSales m_dlSales;   
+    private DataLogicSales m_dlSales;
     private TaxesLogic taxeslogic;
-    
+
     private boolean pricevisible;
     private boolean taxesincluded;
     private boolean showServices;
-    
+
     // Set of Products panels
     private final Map<String, ProductInfoExt> m_productsset = new HashMap<>();
-    
+
     // Set of Categoriespanels
-     private final Set<String> m_categoriesset = new HashSet<>();
-        
+    private final Set<String> m_categoriesset = new HashSet<>();
+
     private ThumbNailBuilder tnbbutton;
     private ThumbNailBuilder tnbcat;
     private ThumbNailBuilder tnbsubcat;
-    
+
     private CategoryInfo showingcategory = null;
-        
-    /** Creates new form JCatalog
-     * @param dlSales */
+
+    /**
+     * Creates new form JCatalog
+     *
+     * @param dlSales
+     */
     public JCatalog(DataLogicSales dlSales) {
         this(dlSales, false, false, 90, 60, true);
     }
-    
+
     public JCatalog(DataLogicSales dlSales, boolean showServices) {
         this(dlSales, false, false, 90, 60, showServices);
     }
@@ -90,25 +93,25 @@ public class JCatalog extends JPanel implements ListSelectionListener, CatalogSe
      * @param width
      * @param height
      */
-    public JCatalog(DataLogicSales dlSales, boolean pricevisible, 
+    public JCatalog(DataLogicSales dlSales, boolean pricevisible,
             boolean taxesincluded, int width, int height, boolean showServices) {
-        
+
         m_dlSales = dlSales;
         this.pricevisible = pricevisible;
         this.taxesincluded = taxesincluded;
-        
+
         initComponents();
-        
+
         m_jListCategories.addListSelectionListener(this);
-        
+
         m_jscrollcat.getVerticalScrollBar().setPreferredSize(new Dimension(35, 35));
-        
-        tnbcat = new ThumbNailBuilder(48, 48, "com/unicenta/images/category.png");  
-        tnbsubcat = new ThumbNailBuilder(width, height, "com/unicenta/images/subcategory.png"); 
-        tnbbutton = new ThumbNailBuilder(width, height, "com/unicenta/images/null.png");        
+
+        tnbcat = new ThumbNailBuilder(48, 48, "com/unicenta/images/category.png");
+        tnbsubcat = new ThumbNailBuilder(width, height, "com/unicenta/images/subcategory.png");
+        tnbbutton = new ThumbNailBuilder(width, height, "com/unicenta/images/null.png");
         this.showServices = showServices;
     }
-    
+
     /**
      *
      * @return
@@ -117,21 +120,21 @@ public class JCatalog extends JPanel implements ListSelectionListener, CatalogSe
     public Component getComponent() {
         return this;
     }
-    
+
     /**
      *
      * @param id
      */
     @Override
     public void showCatalogPanel(String id) {
-           
+
         if (id == null) {
             showRootCategoriesPanel();
-        } else {       
+        } else {
             showProductPanel(id);
         }
     }
-    
+
     public Component getCatComponent() {
         return m_jCategories;
     }
@@ -149,30 +152,34 @@ public class JCatalog extends JPanel implements ListSelectionListener, CatalogSe
             return true;
         }
         return false;
-    }    
-    
-    
+    }
+
     /**
      *
      * @throws BasicException
      */
     @Override
-    public void loadCatalog() throws BasicException {
-        
+    public void loadCatalog(AppUser user) throws BasicException {
+
         // delete all categories panel
         m_jProducts.removeAll();
-        
-        m_productsset.clear();        
+
+        m_productsset.clear();
         m_categoriesset.clear();
-        
+
         showingcategory = null;
-                
+
         // Load the taxes logic
         taxeslogic = new TaxesLogic(m_dlSales.getTaxList().list());
 
-        // Load all categories.
-        java.util.List<CategoryInfo> categories = m_dlSales.getRootCategories(); 
-        
+        java.util.List<CategoryInfo> categories;
+        if (user != null && "xxx666_666xxx_x6x6x6".equals(user.getId())) {
+            categories = m_dlSales.getCategoriesForDebitNote();
+        } else {
+            // Load all categories.
+            categories = m_dlSales.getRootCategories();
+        }
+
         // Select the first category
         m_jListCategories.setCellRenderer(new SmallCategoryRenderer());
         m_jListCategories.setModel(new CategoriesListModel(categories)); // aCatList
@@ -185,33 +192,33 @@ public class JCatalog extends JPanel implements ListSelectionListener, CatalogSe
             jPanel2.setVisible(true);
             m_jListCategories.setSelectedIndex(0);
         }
-            
+
         showRootCategoriesPanel();
     }
-    
+
     /**
      *
      * @param value
      */
     @Override
     public void setComponentEnabled(boolean value) {
-        
+
         m_jListCategories.setEnabled(value);
         m_jscrollcat.setEnabled(value);
         m_lblIndicator.setEnabled(value);
         m_btnBack1.setEnabled(value);
-        m_jProducts.setEnabled(value); 
+        m_jProducts.setEnabled(value);
 
         synchronized (m_jProducts.getTreeLock()) {
             int compCount = m_jProducts.getComponentCount();
-            for (int i = 0 ; i < compCount ; i++) {
+            for (int i = 0; i < compCount; i++) {
                 m_jProducts.getComponent(i).setEnabled(value);
             }
         }
-     
+
         this.setEnabled(value);
     }
-    
+
     /**
      *
      * @param l
@@ -232,13 +239,13 @@ public class JCatalog extends JPanel implements ListSelectionListener, CatalogSe
 
     @Override
     public void valueChanged(ListSelectionEvent evt) {
-        
+
         if (!evt.getValueIsAdjusting()) {
             int i = m_jListCategories.getSelectedIndex();
             if (i >= 0) {
                 // Lo hago visible...
                 Rectangle oRect = m_jListCategories.getCellBounds(i, i);
-                m_jListCategories.scrollRectToVisible(oRect);       
+                m_jListCategories.scrollRectToVisible(oRect);
             }
         }
     }
@@ -254,142 +261,141 @@ public class JCatalog extends JPanel implements ListSelectionListener, CatalogSe
             if (e == null) {
                 e = new ActionEvent(prod, ActionEvent.ACTION_PERFORMED, prod.getID());
             }
-            ((ActionListener) l1).actionPerformed(e);	       
+            ((ActionListener) l1).actionPerformed(e);
         }
-    }   
-    
+    }
+
     private void selectCategoryPanel(String catid) {
         try {
             if (!m_categoriesset.contains(catid)) {
-                
-                JCatalogTab jcurrTab = new JCatalogTab();     
+
+                JCatalogTab jcurrTab = new JCatalogTab();
                 jcurrTab.applyComponentOrientation(getComponentOrientation());
                 m_jProducts.add(jcurrTab, catid);
                 m_categoriesset.add(catid);
-               
+
                 java.util.List<CategoryInfo> categories = m_dlSales.getSubcategories(catid);
                 for (CategoryInfo cat : categories) {
-                   
+
                     if (cat.getCatShowName()) {
-                        jcurrTab.addButton(new ImageIcon(tnbsubcat.getThumbNailText
-                        (cat.getImage(), cat.getName())), 
-                            new SelectedCategory(cat),cat.getTextTip());
-                    }else{
+                        jcurrTab.addButton(new ImageIcon(tnbsubcat.getThumbNailText(cat.getImage(), cat.getName())),
+                                new SelectedCategory(cat), cat.getTextTip());
+                    } else {
                         jcurrTab.addButton(new ImageIcon(
-                        tnbsubcat.getThumbNailText(cat.getImage(), "")), 
-                            new SelectedCategory(cat),cat.getTextTip());
+                                tnbsubcat.getThumbNailText(cat.getImage(), "")),
+                                new SelectedCategory(cat), cat.getTextTip());
                     }
                 }
 
                 java.util.List<ProductInfoExt> prods = m_dlSales.getProductConstant();
                 for (ProductInfoExt prod : prods) {
                     jcurrTab.addButton(
-                    new ImageIcon(tnbbutton.getThumbNailText(prod.getImage(), 
-                    getProductLabel(prod))), 
-                    new SelectedAction(prod), 
-                    prod.getTextTip());
-                }                
-                
+                            new ImageIcon(tnbbutton.getThumbNailText(prod.getImage(),
+                                    getProductLabel(prod))),
+                            new SelectedAction(prod),
+                            prod.getTextTip());
+                }
+
                 java.util.List<ProductInfoExt> products = m_dlSales.getProductCatalog(catid);
 
                 for (ProductInfoExt prod : products) {
-                    if(this.showServices) {
+                    if (this.showServices) {
                         jcurrTab.addButton(
                                 new ImageIcon(tnbbutton.getThumbNailText(prod.getImage(), getProductLabel(prod))),
-                                new SelectedAction(prod),prod.getTextTip()
+                                new SelectedAction(prod), prod.getTextTip()
                         );
                     } else {
                         if (!prod.isService()) {
                             jcurrTab.addButton(
-                                new ImageIcon(tnbbutton.getThumbNailText(prod.getImage(), getProductLabel(prod))),
-                                new SelectedAction(prod),prod.getTextTip()
+                                    new ImageIcon(tnbbutton.getThumbNailText(prod.getImage(), getProductLabel(prod))),
+                                    new SelectedAction(prod), prod.getTextTip()
                             );
                         }
                     }
                 }
             }
-            
-            CardLayout cl = (CardLayout)(m_jProducts.getLayout());
-            cl.show(m_jProducts, catid);  
+
+            CardLayout cl = (CardLayout) (m_jProducts.getLayout());
+            cl.show(m_jProducts, catid);
         } catch (BasicException e) {
-            JMessageDialog.showMessage(this, new MessageInf(MessageInf.SGN_WARNING, 
-                AppLocal.getIntString("message.notactive"), e));            
+            JMessageDialog.showMessage(this, new MessageInf(MessageInf.SGN_WARNING,
+                    AppLocal.getIntString("message.notactive"), e));
         }
     }
-    
+
     private String getProductLabel(ProductInfoExt product) {
 
         if (pricevisible) {
             if (taxesincluded) {
                 TaxInfo tax = taxeslogic.getTaxInfo(product.getTaxCategoryID());
-                if(!"".equals(product.getDisplay())){
-                    return "<html><center>" + product.getDisplay() + "<br>" + product.printPriceSellTax(tax);                
+                if (!"".equals(product.getDisplay())) {
+                    return "<html><center>" + product.getDisplay() + "<br>" + product.printPriceSellTax(tax);
                 } else {
-                    return "<html><center>" + product.getName() + "<br>" + product.printPriceSellTax(tax);                                    
+                    return "<html><center>" + product.getName() + "<br>" + product.printPriceSellTax(tax);
                 }
             } else {
-                if(!"".equals(product.getDisplay())){
-                    return "<html><center>" + product.getDisplay() + "<br>" + product.printPriceSell();                
+                if (!"".equals(product.getDisplay())) {
+                    return "<html><center>" + product.getDisplay() + "<br>" + product.printPriceSell();
                 } else {
-                    return "<html><center>" + product.getName() + "<br>" + product.printPriceSell();                
-                }                
+                    return "<html><center>" + product.getName() + "<br>" + product.printPriceSell();
+                }
             }
         } else {
 
             if (!"".equals(product.getDisplay())) {
-                return product.getDisplay();                
+                return product.getDisplay();
             } else {
                 return product.getName();
             }
         }
     }
-    
+
     private void selectIndicatorPanel(Icon icon, String label, String texttip) {
-        
+
         m_lblIndicator.setText(label);
         m_lblIndicator.setIcon(icon);
-        
+
         // Show subcategories panel
-        CardLayout cl = (CardLayout)(m_jCategories.getLayout());
+        CardLayout cl = (CardLayout) (m_jCategories.getLayout());
         cl.show(m_jCategories, "subcategories");
     }
-    
+
     private void selectIndicatorCategories() {
         // Show root categories panel
-        CardLayout cl = (CardLayout)(m_jCategories.getLayout());
+        CardLayout cl = (CardLayout) (m_jCategories.getLayout());
         cl.show(m_jCategories, "rootcategories");
     }
-    
+
     private void showRootCategoriesPanel() {
-        
+
         selectIndicatorCategories();
         // Show selected root category
         CategoryInfo cat = (CategoryInfo) m_jListCategories.getSelectedValue();
-        
+
         if (cat != null) {
             selectCategoryPanel(cat.getID());
         }
         showingcategory = null;
     }
-    
+
     private void showSubcategoryPanel(CategoryInfo category) {
 // Modified JDL 13.04.13
 // this is the new panel that displays when a sub catergory is selected mouse does not work here        
         selectIndicatorPanel(new ImageIcon(tnbsubcat.getThumbNail(
-            category.getImage())),category.getName(), category.getTextTip());
+                category.getImage())), category.getName(), category.getTextTip());
         selectCategoryPanel(category.getID());
         showingcategory = category;
     }
-   
+
     private void showProductPanel(String id) {
-        
+
         ProductInfoExt product = m_productsset.get(id);
 
         if (product == null) {
             if (m_productsset.containsKey(id)) {
                 // It is an empty panel
                 if (showingcategory == null) {
-                    showRootCategoriesPanel();                         
+                    showRootCategoriesPanel();
                 } else {
                     showSubcategoryPanel(showingcategory);
                 }
@@ -398,11 +404,11 @@ public class JCatalog extends JPanel implements ListSelectionListener, CatalogSe
                     // Create  products panel
                     java.util.List<ProductInfoExt> products = m_dlSales.getProductComments(id);
 
-                    if (products.isEmpty()) {                    
+                    if (products.isEmpty()) {
                         m_productsset.put(id, null);
 
                         if (showingcategory == null) {
-                            showRootCategoriesPanel();                         
+                            showRootCategoriesPanel();
                         } else {
                             showSubcategoryPanel(showingcategory);
                         }
@@ -411,25 +417,25 @@ public class JCatalog extends JPanel implements ListSelectionListener, CatalogSe
                         product = m_dlSales.getProductInfo(id);
                         m_productsset.put(id, product);
 
-                        JCatalogTab jcurrTab = new JCatalogTab();      
+                        JCatalogTab jcurrTab = new JCatalogTab();
                         jcurrTab.applyComponentOrientation(getComponentOrientation());
-                        m_jProducts.add(jcurrTab, "PRODUCT." + id);                        
+                        m_jProducts.add(jcurrTab, "PRODUCT." + id);
 
                         // Add products
                         for (ProductInfoExt prod : products) {
-                            jcurrTab.addButton(new ImageIcon(tnbbutton.getThumbNailText(prod.getImage(), 
-                                getProductLabel(prod))), new SelectedAction(prod),prod.getTextTip());                            
-                        }                       
+                            jcurrTab.addButton(new ImageIcon(tnbbutton.getThumbNailText(prod.getImage(),
+                                    getProductLabel(prod))), new SelectedAction(prod), prod.getTextTip());
+                        }
                         selectIndicatorPanel(new ImageIcon(tnbbutton.getThumbNail(product.getImage())),
-                            product.getDisplay(), product.getTextTip());                        
-                        
-                        CardLayout cl = (CardLayout)(m_jProducts.getLayout());
-                        cl.show(m_jProducts, "PRODUCT." + id); 
+                                product.getDisplay(), product.getTextTip());
+
+                        CardLayout cl = (CardLayout) (m_jProducts.getLayout());
+                        cl.show(m_jProducts, "PRODUCT." + id);
                     }
                 } catch (BasicException eb) {
                     m_productsset.put(id, null);
                     if (showingcategory == null) {
-                        showRootCategoriesPanel();                         
+                        showRootCategoriesPanel();
                     } else {
                         showSubcategoryPanel(showingcategory);
                     }
@@ -437,55 +443,65 @@ public class JCatalog extends JPanel implements ListSelectionListener, CatalogSe
             }
         } else {
             selectIndicatorPanel(new ImageIcon(tnbbutton.getThumbNail(
-                product.getImage())), product.getName(), product.getTextTip());            
-            
-            CardLayout cl = (CardLayout)(m_jProducts.getLayout());
-            cl.show(m_jProducts, "PRODUCT." + id); 
+                    product.getImage())), product.getName(), product.getTextTip());
+
+            CardLayout cl = (CardLayout) (m_jProducts.getLayout());
+            cl.show(m_jProducts, "PRODUCT." + id);
         }
     }
-    
+
     private class SelectedAction implements ActionListener {
+
         private final ProductInfoExt prod;
+
         public SelectedAction(ProductInfoExt prod) {
             this.prod = prod;
         }
+
         @Override
         public void actionPerformed(ActionEvent e) {
             fireSelectedProduct(prod);
         }
     }
-    
+
     private class SelectedCategory implements ActionListener {
+
         private final CategoryInfo category;
+
         public SelectedCategory(CategoryInfo category) {
             this.category = category;
         }
+
         @Override
         public void actionPerformed(ActionEvent e) {
             showSubcategoryPanel(category);
         }
     }
-    
+
     private class CategoriesListModel extends AbstractListModel {
+
         private final java.util.List m_aCategories;
+
         public CategoriesListModel(java.util.List aCategories) {
             m_aCategories = aCategories;
         }
+
         @Override
-        public int getSize() { 
-            return m_aCategories.size(); 
+        public int getSize() {
+            return m_aCategories.size();
         }
+
         @Override
         public Object getElementAt(int i) {
             return m_aCategories.get(i);
-        }    
+        }
     }
-    
+
     private class SmallCategoryRenderer extends DefaultListCellRenderer {
 
         @Override
-        public Component getListCellRendererComponent(JList list, Object value, 
-          int index, boolean isSelected, boolean cellHasFocus) {
+        public Component getListCellRendererComponent(JList list, Object value,
+                int index, boolean isSelected, boolean cellHasFocus) {
 
             super.getListCellRendererComponent(list, null, index, isSelected, cellHasFocus);
             CategoryInfo cat = (CategoryInfo) value;
@@ -493,13 +509,13 @@ public class JCatalog extends JPanel implements ListSelectionListener, CatalogSe
             setIcon(new ImageIcon(tnbcat.getThumbNail(cat.getImage())));
 
             return this;
-        }      
-    }            
-    
-    /** This method is called from within the constructor to
-     * initialize the form.
-     * WARNING: Do NOT modify this code. The content of this method is
-     * always regenerated by the Form Editor.
+        }
+    }
+
+    /**
+     * This method is called from within the constructor to initialize the form.
+     * WARNING: Do NOT modify this code. The content of this method is always
+     * regenerated by the Form Editor.
      */
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
@@ -606,7 +622,7 @@ public class JCatalog extends JPanel implements ListSelectionListener, CatalogSe
                 selectCategoryPanel(cat.getID());
             }
         }
-        
+
     }//GEN-LAST:event_m_jListCategoriesValueChanged
 
     private void m_btnBack1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_m_btnBack1ActionPerformed
@@ -615,8 +631,7 @@ public class JCatalog extends JPanel implements ListSelectionListener, CatalogSe
 
     }//GEN-LAST:event_m_btnBack1ActionPerformed
 
-    
-    
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
@@ -632,5 +647,5 @@ public class JCatalog extends JPanel implements ListSelectionListener, CatalogSe
     private javax.swing.JScrollPane m_jscrollcat;
     private javax.swing.JLabel m_lblIndicator;
     // End of variables declaration//GEN-END:variables
-    
+
 }
