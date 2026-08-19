@@ -8,6 +8,9 @@ import com.unicenta.format.Formats;
 import com.unicenta.pos.inventory.InventoryLine;
 import com.unicenta.pos.suppliers.SupplierInfo;
 import com.unicenta.pos.ticket.UserInfo;
+import dev.joguenco.pos.taxpayer.TaxpayerInfo;
+import dev.resolvedor.util.Module11;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -38,11 +41,17 @@ public class PurchaseInfo implements SerializableRead {
     private String location;
     private String observation;
     private Boolean status;
+    private String serie;
+    private String accessKey;
+    private String formatNumberDigits;
 
     private String money;
     private UserInfo user;
 
     private List<InventoryLine> invLines;
+    
+    private TaxpayerInfo taxPayerInfo;
+    private String environment; // Test -> 1; Production -> 2
 
     public PurchaseInfo() {
         id = UUID.randomUUID().toString();
@@ -130,6 +139,27 @@ public class PurchaseInfo implements SerializableRead {
                 return purchase;
             }
         };
+    }
+
+    public String buildAccessKey() {
+        final var m11 = new Module11();
+        try {
+
+            var codeDocument = "03"; // Purchase Liquidation
+
+            accessKey = new SimpleDateFormat("ddMMyyyy").format(getPurchaseDate());
+            accessKey = accessKey + codeDocument;
+            accessKey = accessKey + getTaxPayerInfo().getIdentification();
+            accessKey = accessKey + getEnvironment();
+            accessKey = accessKey + getPurchaseReference().replace("-", "");
+            accessKey = accessKey + "12345678" + "1";
+            accessKey = accessKey + m11.module11(accessKey);
+
+            return accessKey;
+        } catch (Exception e) {
+            accessKey = "";
+            return accessKey;
+        }
     }
 
     @Override

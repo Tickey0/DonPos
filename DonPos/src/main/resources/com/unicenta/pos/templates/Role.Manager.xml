@@ -155,6 +155,8 @@
             <class name="/com/unicenta/reports/sales_chart_timeseriesproduct.bs"/>
             <class name="/com/unicenta/reports/sales_chart_top10.bs"/>
 
+<class name="com.unicenta.pos.forms.TaxAuthority"/>
+
 <class name="com.unicenta.pos.forms.MenuMaintenance"/>
     <class name="com.unicenta.pos.admin.PeoplePanel"/>
     <class name="com.unicenta.pos.admin.ResourcesPanel"/>

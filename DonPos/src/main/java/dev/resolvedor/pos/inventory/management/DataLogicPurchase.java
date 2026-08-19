@@ -86,6 +86,10 @@ public class DataLogicPurchase extends BeanFactoryDataSingle {
                 });
     }
 
+    public final Integer getNextTicketIndex(String peopleId, String code) throws BasicException {
+        return (Integer) s.DB.getSequenceSentence(s, "ticketsnum_purchase", peopleId, code).find();
+    }
+
     public final Integer savePurchase(final PurchaseInfo purchase, final InventoryRecord rec) throws BasicException {
 
         Transaction t;
@@ -105,6 +109,14 @@ public class DataLogicPurchase extends BeanFactoryDataSingle {
                                 setString(4, purchase.getUser().getId());
                             }
                         });
+
+                if ("03".equals(purchase.getPurchaseDocument())) {
+                    var sequence = getNextTicketIndex(purchase.getUser().getId(), "LQ");
+                    purchase.setPurchaseReference(purchase.getSerie()
+                            .concat(String.format(purchase.getFormatNumberDigits(), sequence))
+                    );
+                    purchase.setPurchaseAuthorization(purchase.buildAccessKey());
+                }
 
                 new PreparedSentence(s,
                         "INSERT INTO purchases "
