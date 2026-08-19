@@ -12,6 +12,7 @@ import com.unicenta.pos.forms.AppView;
 import com.unicenta.pos.forms.BeanFactoryApp;
 import com.unicenta.pos.forms.BeanFactoryException;
 import com.unicenta.pos.forms.DataLogicSales;
+import com.unicenta.pos.forms.DataLogicSystem;
 import com.unicenta.pos.forms.JPanelView;
 import com.unicenta.pos.inventory.InventoryLine;
 import com.unicenta.pos.inventory.InventoryRecord;
@@ -21,11 +22,18 @@ import com.unicenta.pos.suppliers.DataLogicSuppliers;
 import com.unicenta.pos.suppliers.SupplierInfo;
 import com.unicenta.pos.ticket.ProductInfoExt;
 import com.unicenta.pos.ticket.TaxInfo;
+import com.unicenta.pos.ticket.UserInfo;
+import dev.joguenco.pos.taxpayer.DataLogicTaxpayer;
+import dev.joguenco.pos.taxpayer.TaxpayerInfo;
+import dev.joguenco.pos.ticketsnum.TicketsNumInfo;
+import dev.joguenco.pos.ticketsnumpurchase.DataLogicTicketsNumPurchase;
 import java.awt.BorderLayout;
 import java.awt.Toolkit;
 import java.io.File;
 import java.util.Date;
-/**   pattern  */
+/**
+ * pattern
+ */
 import java.util.regex.Pattern;
 
 import javax.swing.JComponent;
@@ -56,6 +64,8 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
     private DataLogicPurchase dlPurchase;
     private DataLogicSuppliers dlSupplier;
     private DataLogicSales dlSales;
+    private DataLogicTaxpayer dlTaxPayer;
+    protected DataLogicSystem dlSystem;
 
     private ComboBoxValModel modelReason;
     private ComboBoxValModel modelSupplier;
@@ -69,22 +79,22 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
     private PurchaseInfo purchase;
     private final JPurchaseLines purchaseLines;
     private String country;
-    
-    /**  plantilla para como debe verse el texto */
+
+    /**
+     * plantilla para como debe verse el texto
+     */
     private static final Pattern SERIE_PATTERN
             = Pattern.compile("^\\d{3}-\\d{3}-\\d{9}$");
 
     private static final Pattern AUTHORIZATION_PATTERN
             = Pattern.compile("^(\\d{10}|\\d{49})$");
-    
-    
-    
-   
+
     public PurchaseEditor() {
         initComponents();
-        
-        /**  COUTRY*/
-        
+
+        /**
+         * COUTRY
+         */
         final var config = new AppConfig(new File((System.getProperty("user.home")), AppLocal.APP_ID + ".properties"));
         config.load();
         country = config.getProperty("user.country");
@@ -94,9 +104,11 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
         panelLines.add(purchaseLines, BorderLayout.CENTER);
 
         AutoCompleteDecorator.decorate(cboSupplier);
-        
-         /** En Ecuador el numero de factura lleva guiones (001-001-000000001)
-         y la autorizacion es solo digitos */
+
+        /**
+         * En Ecuador el numero de factura lleva guiones (001-001-000000001) y
+         * la autorizacion es solo digitos
+         */
         if (isEcuador()) {
             ((AbstractDocument) txtSerie.getDocument())
                     .setDocumentFilter(new SerieFilter());
@@ -104,7 +116,7 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
             ((AbstractDocument) txtAuthorization.getDocument())
                     .setDocumentFilter(new DigitsFilter(49));
         }
-        
+
         enableForm(true);
     }
 
@@ -586,6 +598,15 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
 
             purchase.setObservation(txtObservation.getText());
 
+            purchase.setTaxPayerInfo((TaxpayerInfo) dlTaxPayer.getTaxPayerInfo().find("1"));
+            purchase.setEnvironment(dlSystem.getResourceAsText("Electronic.Environment"));
+
+            if ("03".equals(modelDocumentType.getSelectedKey())) {
+                var seriePurchase = getSeriePurchase(purchase.getUser());
+                purchase.setSerie(seriePurchase.getSerie());
+                purchase.setFormatNumberDigits(dlSystem.getResourceAsText("FormatTicket.NumberDigits"));
+            }
+
             var result = dlPurchase.savePurchase(purchase, new InventoryRecord(
                     new Date(),
                     reason,
@@ -669,49 +690,55 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
         }
 
         if (txtSerie.getText() == null || txtSerie.getText().isEmpty()) {
-            JOptionPane.showMessageDialog(
-                    this,
-                    LocalRes.getIntString("exception.noDocumentNumber"),
-                    AppLocal.getIntString("label.Number"),
-                    JOptionPane.OK_OPTION
-            );
-            txtSerie.requestFocus();
-            return false;
+            if (!"03".equals(modelDocumentType.getSelectedKey())) {
+                JOptionPane.showMessageDialog(
+                        this,
+                        LocalRes.getIntString("exception.noDocumentNumber"),
+                        AppLocal.getIntString("label.Number"),
+                        JOptionPane.OK_OPTION
+                );
+                txtSerie.requestFocus();
+                return false;
+            }
         }
-        
-        
+
         if (isEcuador() && !SERIE_PATTERN.matcher(txtSerie.getText().trim()).matches()) {
-            JOptionPane.showMessageDialog(
-                    this,
-                    LocalRes.getIntString("exception.invalidDocumentNumber"),
-                    AppLocal.getIntString("label.Number"),
-                    JOptionPane.OK_OPTION
-            );
-            txtSerie.requestFocus();
-            return false;
+            if (!"03".equals(modelDocumentType.getSelectedKey())) {
+                JOptionPane.showMessageDialog(
+                        this,
+                        LocalRes.getIntString("exception.invalidDocumentNumber"),
+                        AppLocal.getIntString("label.Number"),
+                        JOptionPane.OK_OPTION
+                );
+                txtSerie.requestFocus();
+                return false;
+            }
         }
-        
-        
+
         if (txtAuthorization.getText() == null || txtAuthorization.getText().isEmpty()) {
-            JOptionPane.showMessageDialog(
-                    this,
-                    LocalRes.getIntString("exception.noAuthorization"),
-                    AppLocal.getIntString("label.authorization"),
-                    JOptionPane.OK_OPTION
-            );
-            txtAuthorization.requestFocus();
-            return false;
+            if (!"03".equals(modelDocumentType.getSelectedKey())) {
+                JOptionPane.showMessageDialog(
+                        this,
+                        LocalRes.getIntString("exception.noAuthorization"),
+                        AppLocal.getIntString("label.authorization"),
+                        JOptionPane.OK_OPTION
+                );
+                txtAuthorization.requestFocus();
+                return false;
+            }
         }
 
         if (isEcuador() && !AUTHORIZATION_PATTERN.matcher(txtAuthorization.getText().trim()).matches()) {
-            JOptionPane.showMessageDialog(
-                    this,
-                    LocalRes.getIntString("exception.invalidAuthorization"),
-                    AppLocal.getIntString("label.authorization"),
-                    JOptionPane.OK_OPTION
-            );
-            txtAuthorization.requestFocus();
-            return false;
+            if (!"03".equals(modelDocumentType.getSelectedKey())) {
+                JOptionPane.showMessageDialog(
+                        this,
+                        LocalRes.getIntString("exception.invalidAuthorization"),
+                        AppLocal.getIntString("label.authorization"),
+                        JOptionPane.OK_OPTION
+                );
+                txtAuthorization.requestFocus();
+                return false;
+            }
         }
 
         if (purchaseLines.getCount() == 0) {
@@ -726,13 +753,28 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
 
         return true;
     }
-    
-    /** Comprueba si el sistema esta configurado para Ecuador */
+
+    private TicketsNumInfo getSeriePurchase(UserInfo user) throws BasicException {
+        var dataLogicTicketsNum
+                = (DataLogicTicketsNumPurchase) app
+                        .getBean("dev.joguenco.pos.ticketsnumpurchase.DataLogicTicketsNumPurchase");
+
+        // Get serie and code actives
+        var ticketNum = (TicketsNumInfo) dataLogicTicketsNum
+                .getSerial()
+                .find(user.getId(), "LQ", "primary");
+
+        return ticketNum;
+    }
+
+    /**
+     * Comprueba si el sistema esta configurado para Ecuador
+     */
     private boolean isEcuador() {
         return "EC".equals(this.country);
     }
-    
-    
+
+
     private void cmdInsertActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmdInsertActionPerformed
         enableForm(true);
         stateToInsert();
@@ -957,6 +999,8 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
         dlPurchase = (DataLogicPurchase) app.getBean("dev.resolvedor.pos.inventory.management.DataLogicPurchase");
         dlSupplier = (DataLogicSuppliers) app.getBean("com.unicenta.pos.suppliers.DataLogicSuppliers");
         dlSales = (DataLogicSales) app.getBean("com.unicenta.pos.forms.DataLogicSales");
+        dlTaxPayer = (DataLogicTaxpayer) app.getBean("dev.joguenco.pos.taxpayer.DataLogicTaxpayer");
+        dlSystem = (DataLogicSystem) app.getBean("com.unicenta.pos.forms.DataLogicSystem");
     }
 
     @Override
@@ -1052,8 +1096,8 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
     }
 
     /**
-     * Da formato al numero de factura mientras se escribe: solo acepta
-     * digitos y coloca los guiones en su sitio -> 001-001-000000001
+     * Da formato al numero de factura mientras se escribe: solo acepta digitos
+     * y coloca los guiones en su sitio -> 001-001-000000001
      */
     private static class SerieFilter extends DocumentFilter {
 

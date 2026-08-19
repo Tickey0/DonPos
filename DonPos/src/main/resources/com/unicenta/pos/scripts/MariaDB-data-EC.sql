@@ -31,6 +31,16 @@ VALUES (1, '9999999999999', 'Mi Empresa', 'SI', '12345', '1', 'CONTRIBUYENTE RÉ
 delete from resources where id = '90';
 INSERT INTO resources(id, name, restype, content) VALUES('90', 'Customer.Default', 0, $FILE{/com/unicenta/pos/templates/Customer.Default.EC.txt});
 
+CREATE TABLE `ticketsnum_purchase` (
+    `code`      varchar(10) not null,
+    `people_id` varchar(255) not null,
+    `serie`     varchar(100) not null,
+    `id`        int(11) NOT NULL,    
+    `priority`  varchar(20) not null,
+    `status`    varchar(10) not null,
+    primary key (`code`, `people_id`)
+) ENGINE = InnoDB DEFAULT CHARSET=utf8 ;
+
 CREATE TABLE `ele_parameters` (
   `id` bigint(18) NOT NULL,
   `name` varchar(300) DEFAULT NULL,
@@ -611,3 +621,6 @@ VALUES ('xxx666_666xxx_x6x6x6', 'xxx666', 'xxx666', 'Recargos', 'xxx666_666xxx_x
 INSERT INTO products_cat(product) VALUES ('xxx666_666xxx_x6x6x6');
 
 INSERT INTO ticketsnum VALUES('ND', 'xxx666_666xxx_x6x6x6', '001201', 0, 'primary', 'Active');
+
+INSERT INTO ticketsnum_purchase VALUES('LQ', '0', '001201', 0, 'primary', 'Active');
+INSERT INTO ticketsnum_purchase VALUES('LQ', '1', '001301', 0, 'primary', 'Active');
