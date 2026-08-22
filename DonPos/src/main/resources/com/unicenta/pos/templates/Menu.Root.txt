@@ -93,6 +93,10 @@ group = menu.addGroup("Menu.Backoffice");
         submenu.addPanel("/com/unicenta/images/chart.png", "Menu.TimeSeriesProduct", "/com/unicenta/reports/sales_chart_timeseriesproduct.bs");
         submenu.addPanel("/com/unicenta/images/chart.png", "Menu.Top10Sales", "/com/unicenta/reports/sales_chart_top10.bs");
 
+    submenu = group.addSubmenu("/com/unicenta/images/stockmaint.png", "Menu.Dispatches", "com.unicenta.pos.forms.Dispatches");
+    submenu.addTitle("Menu.Panel.Maintenance.Forms");        
+        submenu.addPanel("/com/unicenta/images/stockmaint.png", "Menu.Dispatcher", "dev.resolvers.pos.dispatcher.DispatcherPanel");
+
     submenu = group.addSubmenu("/com/unicenta/images/maintain.png", "Menu.Tax.Authority", "com.unicenta.pos.forms.TaxAuthority");
     submenu.addTitle("Menu.Panel.Maintenance.Forms");        
         submenu.addPanel("/com/unicenta/images/bookmark.png", "Menu.TaxCategories", "com.unicenta.pos.inventory.TaxCategoriesPanel");

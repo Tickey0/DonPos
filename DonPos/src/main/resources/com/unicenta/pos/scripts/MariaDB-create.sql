@@ -842,6 +842,48 @@ CREATE TABLE `volume_discount` (
         PRIMARY KEY (`id`)
 ) ENGINE = InnoDB DEFAULT CHARSET=utf8 ;
 
+CREATE TABLE `dispatchers` (
+	`id` varchar(90) NOT NULL,
+        `taxid_type` varchar(90) not null,
+        `taxid` varchar(90) default NULL,
+        `name` varchar(180) NOT NULL,
+        `plate` varchar(90) NOT NULL,
+        `phone` varchar(90) default NULL,
+        `observation` varchar(450) default NULL,
+        `status` BOOLEAN DEFAULT true,
+	`created_at` datetime DEFAULT NOW(),
+        PRIMARY KEY  ( `id` )
+) ENGINE = InnoDB DEFAULT CHARSET=utf8 ;
+
+CREATE TABLE `dispatches` (
+	`id` varchar(90) NOT NULL,
+        `dispatcher_id` varchar(90) NOT NULL,
+        `code` varchar(9) default NULL,
+        `serie_number` varchar(90) NOT NULL,
+        `date_dispatch` datetime NOT NULL,
+        `date_end_dispatch` datetime NOT NULL,
+        `address_start` varchar(450) default NULL,
+        `access_key` varchar(90) default NULL,
+        `observation` varchar(450) default NULL,
+        `status` BOOLEAN DEFAULT true,
+	`created_at` datetime DEFAULT NOW(),
+        PRIMARY KEY  ( `id` )
+) ENGINE = InnoDB DEFAULT CHARSET=utf8 ;
+
+CREATE TABLE `dispatches_detail` (
+        `line` int(11) NOT NULL,
+	`dispatches_id` varchar(90) NOT NULL,
+        `reference_code` varchar(9) default NULL,
+        `reference_number` varchar(90) NOT NULL,
+        PRIMARY KEY  ( `dispatches_id`, `line` )
+) ENGINE = InnoDB DEFAULT CHARSET=utf8 ;
+
+ALTER TABLE `dispatches` ADD CONSTRAINT `dispatches_dispatchers_FK`
+    FOREIGN KEY (`dispatcher_id`) REFERENCES `dispatchers` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
+
+ALTER TABLE `dispatches_detail` ADD CONSTRAINT `dispatches_detail_dispatches_FK`
+    FOREIGN KEY (`dispatches_id`) REFERENCES `dispatches` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT;
+
 ALTER TABLE `volume_discount` ADD CONSTRAINT `volume_discount_product_fk`
 	FOREIGN KEY ( `product` ) REFERENCES `products` ( `id` );
 
