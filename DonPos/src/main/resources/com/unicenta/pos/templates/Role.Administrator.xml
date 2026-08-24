@@ -157,7 +157,7 @@
             <class name="/com/unicenta/reports/sales_chart_top10.bs"/>
 
 <class name="com.unicenta.pos.forms.Dispatches"/>
-    <class name="dev.resolvers.pos.dispatcher.DispatcherPanel"/>
+    <class name="dev.resolver.pos.dispatcher.DispatcherPanel"/>
             
 <class name="com.unicenta.pos.forms.TaxAuthority"/>     
             

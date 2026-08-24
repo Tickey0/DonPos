@@ -95,7 +95,7 @@ group = menu.addGroup("Menu.Backoffice");
 
     submenu = group.addSubmenu("/com/unicenta/images/stockmaint.png", "Menu.Dispatches", "com.unicenta.pos.forms.Dispatches");
     submenu.addTitle("Menu.Panel.Maintenance.Forms");        
-        submenu.addPanel("/com/unicenta/images/stockmaint.png", "Menu.Dispatcher", "dev.resolvers.pos.dispatcher.DispatcherPanel");
+        submenu.addPanel("/com/unicenta/images/stockmaint.png", "Menu.Dispatcher", "dev.resolver.pos.dispatcher.DispatcherPanel");
 
     submenu = group.addSubmenu("/com/unicenta/images/maintain.png", "Menu.Tax.Authority", "com.unicenta.pos.forms.TaxAuthority");
     submenu.addTitle("Menu.Panel.Maintenance.Forms");        

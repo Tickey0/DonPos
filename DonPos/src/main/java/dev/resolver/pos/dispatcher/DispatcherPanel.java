@@ -25,7 +25,7 @@ public class DispatcherPanel extends JPanelTable {
 
     @Override
     protected void init() {
-        var dlDispatcher = (DataLogicDispatcher) app.getBean("dev.resolvers.pos.dispatcher.DataLogicDispatcher");
+        var dlDispatcher = (DataLogicDispatcher) app.getBean("dev.resolver.pos.dispatcher.DataLogicDispatcher");
         tdDispatcher = dlDispatcher.getTableDispatcher();
         dispatcherEditor = new DispatcherEditor(app, dirty);
     }
