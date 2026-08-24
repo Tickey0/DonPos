@@ -858,13 +858,13 @@ CREATE TABLE `dispatchers` (
 CREATE TABLE `dispatches` (
 	`id` varchar(90) NOT NULL,
         `dispatcher_id` varchar(90) NOT NULL,
-        `code` varchar(9) default NULL,
-        `serie_number` varchar(90) NOT NULL,
-        `date_dispatch` datetime NOT NULL,
-        `date_end_dispatch` datetime NOT NULL,
-        `address_start` varchar(450) default NULL,
-        `access_key` varchar(90) default NULL,
-        `observation` varchar(450) default NULL,
+        `code` varchar(9) default NULL, --GUI
+        `serie_number` varchar(90) NOT NULL, --001001000000009
+        `date_dispatch` datetime NOT NULL, --fecha de salida
+        `date_end_dispatch` datetime NOT NULL, --fecha de llagada
+        `address_start` varchar(450) default NULL, -- dirección de establecimientos o bodegas
+        `access_key` varchar(90) default NULL, -- auto genera
+        `observation` varchar(450) default NULL, 
         `status` BOOLEAN DEFAULT true,
 	`created_at` datetime DEFAULT NOW(),
         PRIMARY KEY  ( `id` )
@@ -872,9 +872,9 @@ CREATE TABLE `dispatches` (
 
 CREATE TABLE `dispatches_detail` (
         `line` int(11) NOT NULL,
-	`dispatches_id` varchar(90) NOT NULL,
-        `reference_code` varchar(9) default NULL,
-        `reference_number` varchar(90) NOT NULL,
+	`dispatches_id` varchar(90) NOT NULL, -- Solo facturas del día
+        `reference_code` varchar(9) default NULL, -- FV
+        `reference_number` varchar(90) NOT NULL, -- 001001000000008
         PRIMARY KEY  ( `dispatches_id`, `line` )
 ) ENGINE = InnoDB DEFAULT CHARSET=utf8 ;
 
