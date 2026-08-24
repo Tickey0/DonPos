@@ -1,4 +1,4 @@
-package dev.resolver.pos.dispatcher;
+package dev.joguenco.pos.dispatcher;
 
 import com.unicenta.data.loader.Datas;
 import com.unicenta.data.loader.Session;
@@ -31,7 +31,7 @@ public class DataLogicDispatcher extends BeanFactoryDataSingle {
                     Formats.STRING, Formats.STRING, Formats.STRING, Formats.BOOLEAN},
                 new int[]{0});
     }
-    
+
     public final TableDefinition getTableDispatcher() {
         return tdDispatcher;
     }

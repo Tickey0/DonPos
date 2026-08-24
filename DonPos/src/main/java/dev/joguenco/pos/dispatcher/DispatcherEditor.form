@@ -43,7 +43,7 @@
                           <Component id="txtName" min="-2" max="-2" attributes="0"/>
                           <Component id="txtPhone" alignment="0" min="-2" max="-2" attributes="0"/>
                           <Component id="txtDescription" alignment="0" min="-2" max="-2" attributes="0"/>
-                          <Component id="chechStatus" alignment="0" min="-2" max="-2" attributes="0"/>
+                          <Component id="chkStatus" alignment="0" min="-2" max="-2" attributes="0"/>
                       </Group>
                   </Group>
               </Group>
@@ -86,7 +86,7 @@
               </Group>
               <EmptySpace max="-2" attributes="0"/>
               <Group type="103" groupAlignment="0" attributes="0">
-                  <Component id="chechStatus" min="-2" max="-2" attributes="0"/>
+                  <Component id="chkStatus" min="-2" max="-2" attributes="0"/>
                   <Component id="lblStatus" min="-2" max="-2" attributes="0"/>
               </Group>
               <EmptySpace pref="228" max="32767" attributes="0"/>
@@ -179,7 +179,7 @@
         </Property>
       </Properties>
     </Component>
-    <Component class="javax.swing.JCheckBox" name="chechStatus">
+    <Component class="javax.swing.JCheckBox" name="chkStatus">
     </Component>
     <Component class="javax.swing.JLabel" name="lblPlate">
       <Properties>

@@ -1,13 +1,20 @@
-package dev.resolver.pos.dispatcher;
+package dev.joguenco.pos.dispatcher;
 
 import com.unicenta.basic.BasicException;
 import com.unicenta.data.gui.ComboBoxValModel;
 import com.unicenta.data.loader.SentenceList;
 import com.unicenta.data.user.DirtyManager;
 import com.unicenta.data.user.EditorRecord;
+import com.unicenta.format.Formats;
+import com.unicenta.pos.forms.AppLocal;
 import com.unicenta.pos.forms.AppView;
 import com.unicenta.pos.suppliers.DataLogicSuppliers;
+
+import dev.joguenco.error.ErrorMessage;
+
 import java.awt.Component;
+import java.util.UUID;
+
 import javax.swing.JPanel;
 import lombok.extern.slf4j.Slf4j;
 
@@ -41,14 +48,17 @@ public class DispatcherEditor extends JPanel implements EditorRecord {
 
             cbxIdentificationType.addActionListener(dirty);
             txtIdentification.getDocument().addDocumentListener(dirty);
-            
+            txtName.getDocument().addDocumentListener(dirty);
+            txtPlate.getDocument().addDocumentListener(dirty);
+            txtPhone.getDocument().addDocumentListener(dirty);
+            txtDescription.getDocument().addDocumentListener(dirty);
+            chkStatus.addActionListener(dirty);
+
             cbxIdentificationType.setModel(modelIdentificationType);
         } catch (BasicException ex) {
             log.error(DispatcherEditor.class.getName() + " " + ex.getMessage());
         }
     }
-    
-    
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -68,7 +78,7 @@ public class DispatcherEditor extends JPanel implements EditorRecord {
         txtPlate = new javax.swing.JTextField();
         txtPhone = new javax.swing.JTextField();
         txtDescription = new javax.swing.JTextField();
-        chechStatus = new javax.swing.JCheckBox();
+        chkStatus = new javax.swing.JCheckBox();
         lblPlate = new javax.swing.JLabel();
         lblPhone = new javax.swing.JLabel();
         lblDescription = new javax.swing.JLabel();
@@ -143,7 +153,7 @@ public class DispatcherEditor extends JPanel implements EditorRecord {
                             .addComponent(txtName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(txtPhone, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(txtDescription, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(chechStatus))))
+                            .addComponent(chkStatus))))
                 .addContainerGap(156, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
@@ -175,7 +185,7 @@ public class DispatcherEditor extends JPanel implements EditorRecord {
                     .addComponent(lblDescription, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(chechStatus)
+                    .addComponent(chkStatus)
                     .addComponent(lblStatus, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap(228, Short.MAX_VALUE))
         );
@@ -185,27 +195,100 @@ public class DispatcherEditor extends JPanel implements EditorRecord {
 
     @Override
     public void writeValueEOF() {
+        id = null;
+        modelIdentificationType.setSelectedFirst();
+        txtIdentification.setText(null);
+        txtName.setText(null);
+        txtPlate.setText(null);
+        txtPhone.setText(null);
+        txtDescription.setText(null);
+        chkStatus.setSelected(false);
 
+        cbxIdentificationType.setEnabled(false);
+        txtIdentification.setEnabled(false);
+        txtName.setEnabled(false);
+        txtPlate.setEnabled(false);
+        txtPhone.setEnabled(false);
+        txtDescription.setEnabled(false);
+        chkStatus.setEnabled(false);
     }
 
     @Override
     public void writeValueInsert() {
+        id = null;
+        modelIdentificationType.setSelectedFirst();
+        txtIdentification.setText(null);
+        txtName.setText(null);
+        txtPlate.setText(null);
+        txtPhone.setText(null);
+        txtDescription.setText(null);
+        chkStatus.setSelected(true);
 
+        cbxIdentificationType.setEnabled(true);
+        txtIdentification.setEnabled(true);
+        txtName.setEnabled(true);
+        txtPlate.setEnabled(true);
+        txtPhone.setEnabled(true);
+        txtDescription.setEnabled(true);
+        chkStatus.setEnabled(true);
+
+        cbxIdentificationType.requestFocus();
     }
 
     @Override
     public void writeValueEdit(Object value) {
+        Object[] dispatcher = (Object[]) value;
+        id = dispatcher[0];
+        modelIdentificationType.setSelectedKey(dispatcher[1]);
+        txtIdentification.setText((String) dispatcher[2]);
+        txtName.setText((String) dispatcher[3]);
+        txtPlate.setText((String) dispatcher[4]);
+        txtPhone.setText((String) dispatcher[5]);
+        txtDescription.setText((String) dispatcher[6]);
 
+        if (Boolean.valueOf(Formats.BOOLEAN.formatValue(dispatcher[7]))) {
+            chkStatus.setSelected(true);
+        } else {
+            chkStatus.setSelected(false);
+        }
+
+        cbxIdentificationType.setEnabled(true);
+        txtIdentification.setEnabled(true);
+        txtName.setEnabled(true);
+        txtPlate.setEnabled(true);
+        txtPhone.setEnabled(true);
+        txtDescription.setEnabled(true);
+        chkStatus.setEnabled(true);
     }
 
     @Override
     public void writeValueDelete(Object value) {
+        Object[] dispatcher = (Object[]) value;
+        id = dispatcher[0];
+        modelIdentificationType.setSelectedKey(dispatcher[1]);
+        txtIdentification.setText((String) dispatcher[2]);
+        txtName.setText((String) dispatcher[3]);
+        txtPlate.setText((String) dispatcher[4]);
+        txtPhone.setText((String) dispatcher[5]);
+        txtDescription.setText((String) dispatcher[6]);
 
+        if (Boolean.valueOf(Formats.BOOLEAN.formatValue(dispatcher[7]))) {
+            chkStatus.setSelected(true);
+        } else {
+            chkStatus.setSelected(false);
+        }
+
+        cbxIdentificationType.setEnabled(false);
+        txtIdentification.setEnabled(false);
+        txtName.setEnabled(false);
+        txtPlate.setEnabled(false);
+        txtPhone.setEnabled(false);
+        txtDescription.setEnabled(false);
+        chkStatus.setEnabled(false);
     }
 
     @Override
     public void refresh() {
-
     }
 
     @Override
@@ -215,13 +298,40 @@ public class DispatcherEditor extends JPanel implements EditorRecord {
 
     @Override
     public Object createValue() throws BasicException {
-        return null;
+        ErrorMessage validate = validateData();
+
+        if (validate.getIsError()) {
+            throw new BasicException(validate.getMessage());
+        }
+
+        Object[] dispatcher = new Object[8];
+        dispatcher[0] = id == null ? UUID.randomUUID().toString() : id;
+        dispatcher[1] = modelIdentificationType.getSelectedKey();
+        dispatcher[2] = txtIdentification.getText();
+        dispatcher[3] = txtName.getText();
+        dispatcher[4] = txtPlate.getText();
+        dispatcher[5] = txtPhone.getText();
+        dispatcher[6] = txtDescription.getText();
+        if (chkStatus.isSelected()) {
+            dispatcher[7] = true;
+        } else {
+            dispatcher[7] = false;
+        }
+
+        return dispatcher;
+    }
+
+    private ErrorMessage validateData() {
+        if (txtName.getText().trim().isEmpty()) {
+            return new ErrorMessage(AppLocal.getIntString("message.lot.empty"));
+        }
+        return new ErrorMessage();
     }
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JComboBox<String> cbxIdentificationType;
-    private javax.swing.JCheckBox chechStatus;
+    private javax.swing.JCheckBox chkStatus;
     private javax.swing.JLabel lblDescription;
     private javax.swing.JLabel lblIdentification;
     private javax.swing.JLabel lblIdentificationType;

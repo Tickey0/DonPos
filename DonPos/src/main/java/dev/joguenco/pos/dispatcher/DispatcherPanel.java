@@ -1,4 +1,4 @@
-package dev.resolver.pos.dispatcher;
+package dev.joguenco.pos.dispatcher;
 
 import com.unicenta.data.gui.ListCellRendererBasic;
 import com.unicenta.data.loader.ComparatorCreator;
@@ -25,7 +25,7 @@ public class DispatcherPanel extends JPanelTable {
 
     @Override
     protected void init() {
-        var dlDispatcher = (DataLogicDispatcher) app.getBean("dev.resolver.pos.dispatcher.DataLogicDispatcher");
+        var dlDispatcher = (DataLogicDispatcher) app.getBean("dev.joguenco.pos.dispatcher.DataLogicDispatcher");
         tdDispatcher = dlDispatcher.getTableDispatcher();
         dispatcherEditor = new DispatcherEditor(app, dirty);
     }
@@ -44,24 +44,24 @@ public class DispatcherPanel extends JPanelTable {
     public SaveProvider getSaveProvider() {
         return new SaveProvider(tdDispatcher);
     }
-    
+
     @Override
     public Vectorer getVectorer() {
-        return tdDispatcher.getVectorerBasic(new int[] {2, 3});
+        return tdDispatcher.getVectorerBasic(new int[]{2, 3, 4});
     }
-    
+
     @Override
     public ComparatorCreator getComparatorCreator() {
-        return tdDispatcher.getComparatorCreator(new int[] {2, 3});
+        return tdDispatcher.getComparatorCreator(new int[]{2, 3, 4});
     }
 
     @Override
     public String getTitle() {
         return AppLocal.getIntString("Menu.Dispatcher");
     }
-    
+
     @Override
     public ListCellRenderer getListCellRenderer() {
-        return new ListCellRendererBasic(tdDispatcher.getRenderStringBasic(new int[]{1, 2, 3}));
+        return new ListCellRendererBasic(tdDispatcher.getRenderStringBasic(new int[]{4, 3}));
     }
 }
