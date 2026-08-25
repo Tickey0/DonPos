@@ -65,6 +65,7 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
     private DataLogicSuppliers dlSupplier;
     private DataLogicSales dlSales;
     private DataLogicTaxpayer dlTaxPayer;
+    private DataLogicWithhold dlWithhold;
     protected DataLogicSystem dlSystem;
 
     private ComboBoxValModel modelReason;
@@ -133,6 +134,7 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
         cmdInsert = new javax.swing.JButton();
         cmdSearch = new javax.swing.JButton();
         cmdDelete = new javax.swing.JButton();
+        cmdWithhold = new javax.swing.JButton();
         panelHead = new javax.swing.JPanel();
         lblNumber = new javax.swing.JLabel();
         txtNumber = new javax.swing.JTextField();
@@ -196,6 +198,13 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
         cmdDelete.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 cmdDeleteActionPerformed(evt);
+            }
+        });
+
+        cmdWithhold.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/unicenta/images/cheque.png"))); // NOI18N
+        cmdWithhold.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cmdWithholdActionPerformed(evt);
             }
         });
 
@@ -515,7 +524,7 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
                 .addComponent(lblTotalTitle)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(lblTotal)
-                .addContainerGap(27, Short.MAX_VALUE))
+                .addContainerGap(19, Short.MAX_VALUE))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
@@ -535,8 +544,10 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(cmdSearch, javax.swing.GroupLayout.PREFERRED_SIZE, 180, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(cmdWithhold, javax.swing.GroupLayout.PREFERRED_SIZE, 180, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(cmdDelete, javax.swing.GroupLayout.PREFERRED_SIZE, 180, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(0, 0, Short.MAX_VALUE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                     .addGroup(layout.createSequentialGroup()
                         .addGap(0, 0, Short.MAX_VALUE)
                         .addComponent(panelAction, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -561,12 +572,13 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
                     .addComponent(panelAction, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(panelTotal, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(cmdSave)
-                    .addComponent(cmdInsert)
-                    .addComponent(cmdSearch)
-                    .addComponent(cmdDelete))
-                .addGap(14, 14, 14))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(cmdSave, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(cmdInsert, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(cmdSearch, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(cmdDelete, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(cmdWithhold, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
+                .addGap(22, 22, 22))
         );
     }// </editor-fold>//GEN-END:initComponents
 
@@ -878,6 +890,66 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
         }
     }//GEN-LAST:event_cmdDeleteActionPerformed
 
+    private void cmdWithholdActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmdWithholdActionPerformed
+        openWithholdDialog();
+    }//GEN-LAST:event_cmdWithholdActionPerformed
+
+    /**
+     * Abre el dialogo de retencion sobre la compra cargada.
+     *
+     * Exige que la compra este guardada: withholds.purchase_id es una clave
+     * foranea a purchases.id. Y verifica que no tenga ya una retencion, para
+     * avisar en vez de dejar que reviente el indice unico uk_withholds_purchase.
+     */
+    private void openWithholdDialog() {
+        if (purchase == null || purchase.getNumber() == null) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    AppLocal.getIntString("message.withhold.savepurchasefirst"),
+                    AppLocal.getIntString("label.withhold"),
+                    JOptionPane.WARNING_MESSAGE
+            );
+            return;
+        }
+
+        var subtotal = 0.0;
+        var iva = 0.0;
+        for (InventoryLine line : purchaseLines.getLines()) {
+            subtotal += line.getSubValue();
+            iva += line.getTaxPurchase();
+        }
+
+        final var base = subtotal;
+        final var tax = iva;
+
+        // El PurchaseInfo cargado desde el buscador trae el id del proveedor pero
+        // no siempre su nombre; el combo si lo tiene.
+        var selected = modelSupplier.getSelectedItem();
+        final var supplierName = selected == null
+                ? purchase.getSupplier().getName()
+                : selected.toString();
+
+        java.awt.EventQueue.invokeLater(() -> {
+            var dialog = new WithholdDialog(app, new javax.swing.JFrame(), true,
+                    purchase, supplierName, base, tax);
+            dialog.setLocationRelativeTo(null);
+            dialog.setVisible(true);
+
+            if (dialog.getReturnStatus() == WithholdDialog.RET_OK) {
+                updateWithholdButton();
+            }
+        });
+    }
+
+    /**
+     * El boton solo exige que la compra este guardada, porque withholds.purchase_id
+     * es una clave foranea a purchases.id. Si esa compra ya tiene retencion, el
+     * dialogo la abre para verla, y decide si es editable segun el estado en el SRI.
+     */
+    private void updateWithholdButton() {
+        cmdWithhold.setEnabled(purchase != null && purchase.getNumber() != null);
+    }
+
     private void loadPurchase(PurchaseInfo purchase) {
         this.purchase = purchase;
 
@@ -900,6 +972,7 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
 
         printInvLines();
         enableForm(false);
+        updateWithholdButton();
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -915,6 +988,7 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
     private javax.swing.JButton cmdInsert;
     private javax.swing.JButton cmdSave;
     private javax.swing.JButton cmdSearch;
+    private javax.swing.JButton cmdWithhold;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel lblAuthorization;
     private javax.swing.JLabel lblCreatedAt;
@@ -1001,6 +1075,7 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
         dlSales = (DataLogicSales) app.getBean("com.unicenta.pos.forms.DataLogicSales");
         dlTaxPayer = (DataLogicTaxpayer) app.getBean("dev.joguenco.pos.taxpayer.DataLogicTaxpayer");
         dlSystem = (DataLogicSystem) app.getBean("com.unicenta.pos.forms.DataLogicSystem");
+        dlWithhold = (DataLogicWithhold) app.getBean("dev.resolvedor.pos.inventory.management.DataLogicWithhold");
     }
 
     @Override
@@ -1035,6 +1110,7 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
         purchase = new PurchaseInfo();
         purchase.setUser(app.getAppUserView().getUser().getUserInfo());
         purchaseLines.clear();
+        updateWithholdButton();
 
         cboReason.requestFocus();
     }

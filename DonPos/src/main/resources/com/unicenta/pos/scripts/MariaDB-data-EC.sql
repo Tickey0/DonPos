@@ -30,7 +30,7 @@ VALUES (1, '9999999999999', 'Mi Empresa', 'SI', '12345', '1', 'CONTRIBUYENTE RÉ
 -- Customer default
 delete from resources where id = '90';
 INSERT INTO resources(id, name, restype, content) VALUES('90', 'Customer.Default', 0, $FILE{/com/unicenta/pos/templates/Customer.Default.EC.txt});
-
+-- TABLES
 CREATE TABLE `ticketsnum_purchase` (
     `code`      varchar(10) not null,
     `people_id` varchar(255) not null,
@@ -64,6 +64,67 @@ CREATE TABLE `ele_documents` (
     KEY `inx_fecha` (`code` , `number` , `status`) USING BTREE
 )  ENGINE = InnoDB DEFAULT CHARSET=utf8;
 
+-- Catálogo de tipos de retención del SRI
+CREATE TABLE `withhold_taxes` (
+    `id` varchar(255) NOT NULL,
+    `name` varchar(255) NOT NULL,
+    `percentage` double NOT NULL DEFAULT '0',
+    `code` varchar(90) DEFAULT NULL,
+    `tax_type` varchar(90) NOT NULL,
+    `created_at` date DEFAULT NULL,
+    `status` boolean DEFAULT true,
+    PRIMARY KEY (`id`),
+    KEY `withhold_taxes_code_inx` (`code`) USING BTREE
+) ENGINE = InnoDB DEFAULT CHARSET=utf8;
+
+-- Cabecera del comprobante de retención
+CREATE TABLE `withholds` (
+    `id` varchar(255) NOT NULL,
+    `code` varchar(10) NOT NULL DEFAULT 'RT',
+    `serie_number` varchar(100) NOT NULL,
+    `purchase_id` varchar(255) NOT NULL,
+    `date_withhold` datetime NOT NULL,
+    `observation` varchar(900) DEFAULT NULL,
+    `fiscal_period` date DEFAULT NULL,
+    `access_key` varchar(180) DEFAULT NULL,
+    `status` boolean DEFAULT true,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_withholds` (`code`, `serie_number`) USING BTREE,
+    KEY `withholds_purchase_inx` (`purchase_id`) USING BTREE
+) ENGINE = InnoDB DEFAULT CHARSET=utf8;
+
+-- Detalle: las retenciones aplicadas
+CREATE TABLE `withholds_detail` (
+    `withhold_id` varchar(255) NOT NULL,
+    `line` int(11) NOT NULL,
+    `withhold_taxes_id` varchar(255) NOT NULL,
+    `percentage` double NOT NULL DEFAULT '0',
+    `base_value` double NOT NULL DEFAULT '0',
+    `withholded_value` double NOT NULL DEFAULT '0',
+    `tax_rate` double DEFAULT '-1',
+    PRIMARY KEY (`withhold_id`, `line`),
+    KEY `withholds_detail_taxes_inx` (`withhold_taxes_id`) USING BTREE
+) ENGINE = InnoDB DEFAULT CHARSET=utf8;
+
+-- RELATIONS
+alter table `ticketsnum_purchase` add constraint `ticketsnum_purchase_people_fk`
+    foreign key ( `people_id` ) references `people` ( `id` );
+
+alter table `withholds` add constraint `withholds_purchase_fk`
+    foreign key ( `purchase_id` ) references `purchases` ( `id` );
+
+alter table `withholds_detail` add constraint `withholds_detail_fk`
+    foreign key ( `withhold_id` ) references `withholds` ( `id` ) on delete cascade;
+
+alter table `withholds_detail` add constraint `withholds_detail_taxes_fk`
+    foreign key ( `withhold_taxes_id` ) references `withhold_taxes` ( `id` );
+
+-- Una sola retencion por compra: el comprobante de retencion se emite sobre un
+-- unico documento de sustento. El SRI admite varios (docSustento es una lista),
+-- pero el modelo de DonPos es 1:1 y la base lo garantiza.
+alter table `withholds` add unique index `uk_withholds_purchase` ( `purchase_id` );
+
+-- VIEWs 
 CREATE VIEW `v_ele_taxpayer` AS SELECT 
         `id`,
         `identification`,
@@ -470,6 +531,225 @@ CREATE VIEW `v_ele_general_observations` AS select 900 AS `id`,
 from `suppliers`
 where `is_system_supplier` = 1;
 
+-- Vistas de liquidación de compra
+CREATE VIEW `v_ele_liquidations` AS select cast(`p`.`id` as uuid) AS `id`,
+    cast('LQ' as char) AS `code`,
+    `p`.`purchase_reference` AS `number`,
+    cast('03' as char) AS `code_document`,
+    substr(`p`.`purchase_reference`, 1, 3) AS `establishment`,
+    substr(`p`.`purchase_reference`, 4, 3) AS `emission_point`,
+    substr(`p`.`purchase_reference`, 7, 9) AS `sequence`,
+    cast(`p`.`purchase_date` as date) AS `date`,
+    round(sum(cast(`pl`.`units` * `pl`.`price` as decimal(19, 2))), 2) AS `total_without_taxes`,
+    cast(0 as decimal(19, 2)) AS `discount`,
+    round(sum(cast(`pl`.`units` * `pl`.`price` + if(`tx`.`rate` > 0, `pl`.`units` * `pl`.`price` * `tx`.`rate`, 0) as decimal(19, 2))), 2) AS `total`,
+    `i`.`legal_code` AS `identification_type`,
+    `s`.`taxid` AS `identification`,
+    `s`.`name` AS `legal_name`,
+    `s`.`address` AS `address`,
+    (select
+        `e`.`address`
+    from
+        `establishments` `e`
+    where
+        `e`.`id` = substr(`p`.`purchase_reference`, 1, 3)) AS `establishment_address`,
+    `p`.`purchase_authorization` AS `access_key`
+from
+    (`purchases` `p`
+join `suppliers` `s` on
+    `s`.`id` = `p`.`supplier`
+join `identification_type` `i` on
+    `i`.`code` = `s`.`taxid_type`
+join `purchaselines` `pl` on
+    `pl`.`purchase` = `p`.`id`
+join `taxes` `tx` on
+    `tx`.`id` = `pl`.`taxid`)
+where
+    (`p`.`purchase_document` = '03')
+    and (`p`.`status` = 1)
+group by
+    `p`.`id`,
+    `p`.`purchase_reference`,
+    `p`.`purchase_date`,
+    `i`.`legal_code`,
+    `s`.`taxid`,
+    `s`.`name`,
+    `s`.`address`,
+    `p`.`purchase_authorization`;
+
+CREATE VIEW `v_ele_liquidations_detail` AS select cast(concat(substr(`pl`.`purchase`, 1, octet_length(`pl`.`purchase`) - octet_length(`pl`.`line`)), `pl`.`line`) as uuid) AS `id`,
+    cast('LQ' as char) AS `code`,
+    `p`.`purchase_reference` AS `number`,
+    `pr`.`reference` AS `principal_code`,
+    cast(`pl`.`line` as unsigned) AS `line`,
+    `pr`.`name` AS `name`,
+    cast(`pl`.`units` as decimal(19, 2)) AS `quantity`,
+    convert('UN', char) AS `unit`,
+    cast(`pl`.`price` as decimal(19, 2)) AS `unit_price`,
+    convert(`tx`.`legalcode`, char) AS `tax_code`,
+    cast(`tx`.`rate` * 100 as decimal(19, 2)) AS `tax_iva`,
+    cast(`pl`.`units` * `pl`.`price` * `tx`.`rate` as decimal(19, 2)) AS `value_iva`,
+    cast(0 as decimal(19, 2)) AS `discount`,
+    cast(`pl`.`units` * `pl`.`price` as decimal(19, 2)) AS `total_price_without_tax`
+from
+    (`purchases` `p`
+join `purchaselines` `pl` on
+    `pl`.`purchase` = `p`.`id`
+join `products` `pr` on
+    `pr`.`id` = `pl`.`product`
+join `taxes` `tx` on
+    `tx`.`id` = `pl`.`taxid`)
+where
+    (`p`.`purchase_document` = '03')
+    and (`p`.`status` = 1);
+
+CREATE VIEW `v_ele_liquidations_taxes` AS select cast(concat(substr(`pl`.`purchase`, 1, octet_length(`pl`.`purchase`) - octet_length(`pl`.`line`) - 1), `pl`.`line`, '2') as uuid) AS `id`,
+    cast('LQ' as char) AS `code`,
+    `p`.`purchase_reference` AS `number`,
+    `pr`.`reference` AS `principal_code`,
+    cast(`pl`.`line` as unsigned) AS `line`,
+    convert('2', char) AS `tax_code`,
+    convert(`tx`.`legalcode`, char) AS `percentage_code`,
+    abs(cast(`pl`.`units` * `pl`.`price` as decimal(19, 2))) AS `tax_base`,
+    cast(`tx`.`rate` * 100 as decimal(19, 2)) AS `tax_iva`,
+    abs(cast(`pl`.`units` * `pl`.`price` * `tx`.`rate` as decimal(19, 2))) AS `value`
+from
+    (`purchases` `p`
+join `purchaselines` `pl` on
+    `pl`.`purchase` = `p`.`id`
+join `products` `pr` on
+    `pr`.`id` = `pl`.`product`
+join `taxes` `tx` on
+    `tx`.`id` = `pl`.`taxid`)
+where
+    (`p`.`purchase_document` = '03')
+    and (`p`.`status` = 1);
+
+CREATE VIEW `v_ele_report_liquidations` AS select `j`.`id` AS `id`,
+    `j`.`code` AS `code`,
+    `j`.`number` AS `number`,
+    `j`.`access_key` AS `access_key`,
+    `j`.`date` AS `date`,
+    `j`.`total` AS `total`,
+    `j`.`identification` AS `identification`,
+    `j`.`legal_name` AS `legal_name`,
+    (select `sup`.`email` from `suppliers` `sup` where `sup`.`taxid` = `j`.`identification` limit 1) AS `email`,
+    ifnull((select `e`.`status` from `ele_documents` `e` where `e`.`code` = `j`.`code` and `e`.`number` = `j`.`number`), 'NO ENVIADO') AS `status`
+from `v_ele_liquidations` `j`
+order by `j`.`number` desc;
+
+-- Vistas de retención
+CREATE VIEW `v_ele_withholds` AS select cast(`w`.`id` as uuid) AS `id`,
+    `w`.`code` AS `code`,
+    `w`.`serie_number` AS `number`,
+    cast('07' as char) AS `code_document`,
+    substr(`w`.`serie_number`, 1, 3) AS `establishment`,
+    substr(`w`.`serie_number`, 4, 3) AS `emission_point`,
+    substr(`w`.`serie_number`, 7, 9) AS `sequence`,
+    cast(`w`.`date_withhold` as date) AS `date`,
+    date_format(`w`.`fiscal_period`, '%m/%Y') AS `fiscal_period`,
+    `i`.`legal_code` AS `identification_type`,
+    `s`.`taxid` AS `identification`,
+    `s`.`name` AS `legal_name`,
+    `s`.`address` AS `address`,
+    `p`.`purchase_tax_support` AS `code_support`,
+    `p`.`purchase_document` AS `code_document_support`,
+    `p`.`purchase_reference` AS `number_document_support`,
+    cast(`p`.`purchase_date` as date) AS `date_document_support`,
+    `p`.`purchase_authorization` AS `authorization_document_support`,
+    round(sum(cast(`pl`.`units` * `pl`.`price` as decimal(19, 2))), 2) AS `total_without_taxes`,
+    round(sum(cast(`pl`.`units` * `pl`.`price` + if(`tx`.`rate` > 0, `pl`.`units` * `pl`.`price` * `tx`.`rate`, 0) as decimal(19, 2))), 2) AS `total`,
+    (select
+        `e`.`address`
+    from
+        `establishments` `e`
+    where
+        `e`.`id` = substr(`w`.`serie_number`, 1, 3)) AS `establishment_address`,
+    `w`.`access_key` AS `access_key`
+from
+    (`withholds` `w`
+join `purchases` `p` on
+    `p`.`id` = `w`.`purchase_id`
+join `suppliers` `s` on
+    `s`.`id` = `p`.`supplier`
+join `identification_type` `i` on
+    `i`.`code` = `s`.`taxid_type`
+join `purchaselines` `pl` on
+    `pl`.`purchase` = `p`.`id`
+join `taxes` `tx` on
+    `tx`.`id` = `pl`.`taxid`)
+where
+    (`w`.`status` = 1)
+group by
+    `w`.`id`,
+    `w`.`code`,
+    `w`.`serie_number`,
+    `w`.`date_withhold`,
+    `w`.`fiscal_period`,
+    `i`.`legal_code`,
+    `s`.`taxid`,
+    `s`.`name`,
+    `s`.`address`,
+    `p`.`purchase_tax_support`,
+    `p`.`purchase_document`,
+    `p`.`purchase_reference`,
+    `p`.`purchase_date`,
+    `p`.`purchase_authorization`,
+    `w`.`access_key`;
+
+CREATE VIEW `v_ele_withholds_document_taxes` AS select cast(concat(substr(`w`.`id`, 1, octet_length(`w`.`id`) - octet_length(`tx`.`legalcode`)), `tx`.`legalcode`) as uuid) AS `id`,
+    `w`.`code` AS `code`,
+    `w`.`serie_number` AS `number`,
+    convert('2', char) AS `tax_code`,
+    convert(`tx`.`legalcode`, char) AS `percentage_code`,
+    round(sum(cast(`pl`.`units` * `pl`.`price` as decimal(19, 2))), 2) AS `tax_base`,
+    cast(`tx`.`rate` * 100 as decimal(19, 2)) AS `tax_iva`,
+    round(sum(cast(`pl`.`units` * `pl`.`price` * `tx`.`rate` as decimal(19, 2))), 2) AS `value`
+from
+    (`withholds` `w`
+join `purchases` `p` on
+    `p`.`id` = `w`.`purchase_id`
+join `purchaselines` `pl` on
+    `pl`.`purchase` = `p`.`id`
+join `taxes` `tx` on
+    `tx`.`id` = `pl`.`taxid`)
+where
+    (`w`.`status` = 1)
+group by
+    `w`.`id`,
+    `w`.`code`,
+    `w`.`serie_number`,
+    `tx`.`legalcode`,
+    `tx`.`rate`;
+
+CREATE VIEW `v_ele_withholds_detail` AS select cast(concat(substr(`d`.`withhold_id`, 1, octet_length(`d`.`withhold_id`) - octet_length(`d`.`line`)), `d`.`line`) as uuid) AS `id`,
+    `w`.`code` AS `code`,
+    `w`.`serie_number` AS `number`,
+    cast(`d`.`line` as unsigned) AS `line`,
+    (case `t`.`tax_type` when 'RENTA' then '1' when 'IVA' then '2' else '6' end) AS `tax_code`,
+    `t`.`code` AS `withhold_code`,
+    cast(`d`.`base_value` as decimal(19, 2)) AS `base_value`,
+    cast(`d`.`percentage` as decimal(19, 2)) AS `percentage`,
+    cast(`d`.`withholded_value` as decimal(19, 2)) AS `withholded_value`
+from
+    ((`withholds_detail` `d`
+join `withholds` `w` on
+    (`w`.`id` = `d`.`withhold_id`))
+join `withhold_taxes` `t` on
+    (`t`.`id` = `d`.`withhold_taxes_id`));
+
+CREATE VIEW `v_ele_report_withholds` AS select `j`.`id` AS `id`,
+    `j`.`code` AS `code`,
+    `j`.`number` AS `number`,
+    `j`.`access_key` AS `access_key`,
+    `j`.`date` AS `date`,
+    ifnull((select sum(`d`.`withholded_value`) from `v_ele_withholds_detail` `d` where `d`.`code` = `j`.`code` and `d`.`number` = `j`.`number`), 0) AS `total`,
+    `j`.`identification` AS `identification`,
+    `j`.`legal_name` AS `legal_name`,
+    (select `sup`.`email` from `suppliers` `sup` where `sup`.`taxid` = `j`.`identification` limit 1) AS `email`,
+    ifnull((select `e`.`status` from `ele_documents` `e` where `e`.`code` = `j`.`code` and `e`.`number` = `j`.`number`), 'NO ENVIADO') AS `status`
+from `v_ele_withholds` `j`
+order by `j`.`number` desc;
 
 Insert into ele_parameters (ID,name,value,observation,type) 
 values (1,'Base Directory','/app/RoQui','Base directory for files','SRI');
@@ -624,3 +904,41 @@ INSERT INTO ticketsnum VALUES('ND', 'xxx666_666xxx_x6x6x6', '001201', 0, 'primar
 
 INSERT INTO ticketsnum_purchase VALUES('LQ', '0', '001201', 0, 'primary', 'Active');
 INSERT INTO ticketsnum_purchase VALUES('LQ', '1', '001301', 0, 'primary', 'Active');
+
+-- Serie de la retencion. Va en la misma tabla que la liquidacion porque ambos son
+-- documentos que el comprador emite. La llave primaria es (code, people_id), asi que
+-- 'RT' lleva su propio contador, independiente del de 'LQ'.
+INSERT INTO ticketsnum_purchase VALUES('RT', '0', '001201', 0, 'primary', 'Active');
+INSERT INTO ticketsnum_purchase VALUES('RT', '1', '001301', 0, 'primary', 'Active');
+
+-- Retenciones de IVA
+INSERT INTO withhold_taxes(id, name, percentage, code, tax_type, created_at, status) VALUES ('1', '100% IVA HONORARIOS', 100, '3', 'IVA', '2004-06-17', 1);
+INSERT INTO withhold_taxes(id, name, percentage, code, tax_type, created_at, status) VALUES ('2', '100% IVA OTROS', 100, '855', 'IVA', '2006-09-28', 1);
+INSERT INTO withhold_taxes(id, name, percentage, code, tax_type, created_at, status) VALUES ('3', '30% IVA BIENES', 30, '1', 'IVA', '2006-10-02', 1);
+INSERT INTO withhold_taxes(id, name, percentage, code, tax_type, created_at, status) VALUES ('4', '70% IVA SERVICIOS', 70, '2', 'IVA', '2007-02-03', 1);
+INSERT INTO withhold_taxes(id, name, percentage, code, tax_type, created_at, status) VALUES ('5', '10% BIENES CONTR. ESPECIALES', 10, '9', 'IVA', '2015-04-08', 1);
+INSERT INTO withhold_taxes(id, name, percentage, code, tax_type, created_at, status) VALUES ('6', '20% SERVICIOS CONTR. ESPECIALES', 20, '10', 'IVA', '2015-04-08', 1);
+INSERT INTO withhold_taxes(id, name, percentage, code, tax_type, created_at, status) VALUES ('7', '0% IVA', 0, '7', 'IVA', '2015-06-02', 1);
+
+-- Retenciones de RENTA
+INSERT INTO withhold_taxes(id, name, percentage, code, tax_type, created_at, status) VALUES ('8', '8% SERVICIOS PREDOMINA INTELECTO', 8, '304', 'RENTA', '2009-02-16', 1);
+INSERT INTO withhold_taxes(id, name, percentage, code, tax_type, created_at, status) VALUES ('9', '1% TRANSPORTE PASAJEROS Y CARGA', 1, '310', 'RENTA', '2009-03-25', 1);
+INSERT INTO withhold_taxes(id, name, percentage, code, tax_type, created_at, status) VALUES ('10', '10% HONORARIOS PROFESIONALES', 10, '303', 'RENTA', '2010-07-16', 1);
+INSERT INTO withhold_taxes(id, name, percentage, code, tax_type, created_at, status) VALUES ('11', '8% 304A COMISIONES Y PAGOS PRED INTEL NO RELAC. CON TIT.', 8, '304A', 'RENTA', '2015-03-02', 1);
+INSERT INTO withhold_taxes(id, name, percentage, code, tax_type, created_at, status) VALUES ('12', '8% POR ARRENDAMIENTO BIENES INMUEBLES', 8, '320', 'RENTA', '2015-03-10', 1);
+INSERT INTO withhold_taxes(id, name, percentage, code, tax_type, created_at, status) VALUES ('13', 'Otras retenciones incluye Microempresas', 1.75, '351', 'RENTA', '2020-10-05', 1);
+INSERT INTO withhold_taxes(id, name, percentage, code, tax_type, created_at, status) VALUES ('14', '0% IVA en 0', 0, '7', 'RENTA', '2020-10-13', 1);
+INSERT INTO withhold_taxes(id, name, percentage, code, tax_type, created_at, status) VALUES ('15', '0% IVA no procede', 0, '8', 'RENTA', '2020-10-13', 1);
+INSERT INTO withhold_taxes(id, name, percentage, code, tax_type, created_at, status) VALUES ('16', '1% RIMPE', 1, '343', 'RENTA', '2022-01-19', 1);
+INSERT INTO withhold_taxes(id, name, percentage, code, tax_type, created_at, status) VALUES ('17', '1.75% COMPRA BIENES AGRICOLA', 1.75, '312C', 'RENTA', '2020-05-15', 1);
+INSERT INTO withhold_taxes(id, name, percentage, code, tax_type, created_at, status) VALUES ('18', '10% 304B NOTARIOS', 10, '304B', 'RENTA', '2015-03-10', 1);
+INSERT INTO withhold_taxes(id, name, percentage, code, tax_type, created_at, status) VALUES ('19', '5% Servicios profesionales sociedades', 5, '303A', 'RENTA', '2022-01-19', 1);
+INSERT INTO withhold_taxes(id, name, percentage, code, tax_type, created_at, status) VALUES ('20', '2% TRANSFERENCIA DE BIENES MUEBLES', 2, '312', 'RENTA', '2020-04-01', 1);
+INSERT INTO withhold_taxes(id, name, percentage, code, tax_type, created_at, status) VALUES ('21', '3% SERVICIOS PREDOMINA M.O.', 3, '307', 'RENTA', '2009-02-16', 1);
+INSERT INTO withhold_taxes(id, name, percentage, code, tax_type, created_at, status) VALUES ('22', '3% SERVICIOS PUBLICIDAD Y COMUNICA', 3, '309', 'RENTA', '2009-02-16', 1);
+INSERT INTO withhold_taxes(id, name, percentage, code, tax_type, created_at, status) VALUES ('23', '3% 311 PAGOS CON LIQUIDACIONES DE COMPRA', 3, '311', 'RENTA', '2015-03-10', 1);
+INSERT INTO withhold_taxes(id, name, percentage, code, tax_type, created_at, status) VALUES ('24', '2% Seguros y reaseguros', 2, '322', 'RENTA', '2020-04-17', 1);
+INSERT INTO withhold_taxes(id, name, percentage, code, tax_type, created_at, status) VALUES ('25', '3% OTRAS RETENCIONES', 3, '3440', 'RENTA', '2020-04-01', 1);
+INSERT INTO withhold_taxes(id, name, percentage, code, tax_type, created_at, status) VALUES ('26', '0% - 332 OTRAS COMPRAS DE BIENES NO SUJETAS', 0, '332', 'RENTA', '2012-03-20', 1);
+INSERT INTO withhold_taxes(id, name, percentage, code, tax_type, created_at, status) VALUES ('27', '0% - 332I Pago convenio de debito', 0, '332I', 'RENTA', '2019-07-26', 1);
+INSERT INTO withhold_taxes(id, name, percentage, code, tax_type, created_at, status) VALUES ('28', '0% - 332G Pagos tarjeta de crédito', 0, '332G', 'RENTA', '2019-07-26', 1);
