@@ -90,12 +90,51 @@ public class DataLogicPurchase extends BeanFactoryDataSingle {
         return (Integer) s.DB.getSequenceSentence(s, "ticketsnum_purchase", peopleId, code).find();
     }
 
-    public final Integer savePurchase(final PurchaseInfo purchase, final InventoryRecord rec) throws BasicException {
+    /**
+     * Graba la compra y, si viene, su retencion en una sola transaccion.
+     *
+     * Antes eran dos guardados sueltos y podia quedar la compra sin retencion,
+     * con el numero de la serie RT ya consumido. Ahora o quedan las dos o no
+     * queda ninguna.
+     *
+     * Una compra que ya trae numero es una que ya esta en la base: se abrio
+     * desde el buscador solo para agregarle la retencion que le faltaba, asi
+     * que no se vuelve a insertar.
+     */
+    public final Integer savePurchase(final PurchaseInfo purchase, final InventoryRecord rec,
+            final WithholdInfo withhold) throws BasicException {
 
         Transaction t;
         t = new Transaction(s) {
             @Override
             public Object transact() throws BasicException {
+
+                if (purchase.getNumber() == null) {
+                    savePurchaseOnly(purchase, rec);
+                }
+
+                if (withhold != null) {
+                    saveWithholdOnly(withhold);
+                }
+
+                return purchase.getNumber();
+            }
+        };
+
+        return Integer.valueOf(t.execute().toString());
+    }
+
+    /**
+     * La compra en si: recibo, cabecera, lineas y movimientos de stock.
+     *
+     * Corre siempre dentro de la transaccion de savePurchase; el numero se pide
+     * aqui adentro y no antes, o un fallo posterior lo dejaria quemado.
+     */
+    private void savePurchaseOnly(final PurchaseInfo purchase, final InventoryRecord rec)
+            throws BasicException {
+
+                purchase.setNumber((Integer) getPurchaseSequence().find());
+
                 new PreparedSentence(s,
                         "INSERT INTO receipts (ID, MONEY, DATENEW, PERSON) VALUES (?, ?, ?, ?)",
                         SerializerWriteParams.INSTANCE)
@@ -145,8 +184,8 @@ public class DataLogicPurchase extends BeanFactoryDataSingle {
 
                 SentenceExec purchaselineinsert = new PreparedSentence(s,
                         "INSERT INTO purchaselines (PURCHASE, LINE, "
-                        + "PRODUCT, UNITS, PRICE, TAXID, LOT) "
-                        + "VALUES (?, ?, ?, ?, ?, ?, ?)",
+                        + "PRODUCT, UNITS, PRICE, TAXID, LOT, TAX_SUPPORT) "
+                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
                         SerializerWriteParams.INSTANCE);
 
                 for (int i = 0; i < purchase.getInvLines().size(); i++) {
@@ -164,6 +203,7 @@ public class DataLogicPurchase extends BeanFactoryDataSingle {
                             setDouble(5, inv.getPrice());
                             setString(6, inv.getTax().getId());
                             setString(7, inv.getLot());
+                            setString(8, inv.getTaxSupport());
                         }
                     });
 
@@ -219,12 +259,69 @@ public class DataLogicPurchase extends BeanFactoryDataSingle {
                     }
 
                 }
+    }
 
-                return purchase.getNumber();
-            }
-        };
+    /**
+     * La retencion: numero de la serie RT, clave de acceso, cabecera y detalle.
+     *
+     * Antes vivia en DataLogicWithhold.saveWithhold con su propia transaccion.
+     * Se movio aqui para que comparta la de la compra.
+     */
+    private void saveWithholdOnly(final WithholdInfo withhold) throws BasicException {
 
-        return Integer.valueOf(t.execute().toString());
+        var sequence = getNextTicketIndex(withhold.getUser().getId(), withhold.getCode());
+
+        withhold.setSerieNumber(withhold.getSerie()
+                .concat(String.format(withhold.getFormatNumberDigits(), sequence))
+        );
+        withhold.setAccessKey(withhold.buildAccessKey());
+
+        new PreparedSentence(s,
+                "INSERT INTO withholds "
+                + "(id, code, serie_number, purchase_id, date_withhold, "
+                + "observation, fiscal_period, access_key, status) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                SerializerWriteParams.INSTANCE)
+                .exec(new DataParams() {
+                    @Override
+                    public void writeValues() throws BasicException {
+                        setString(1, withhold.getId());
+                        setString(2, withhold.getCode());
+                        setString(3, withhold.getSerieNumber());
+                        setString(4, withhold.getPurchaseId());
+                        setTimestamp(5, withhold.getDateWithhold());
+                        setString(6, withhold.getObservation());
+                        setTimestamp(7, withhold.getFiscalPeriod());
+                        setString(8, withhold.getAccessKey());
+                        setBoolean(9, withhold.getStatus());
+                    }
+                });
+
+        SentenceExec detailInsert = new PreparedSentence(s,
+                "INSERT INTO withholds_detail "
+                + "(withhold_id, line, withhold_taxes_id, percentage, "
+                + "base_value, withholded_value, tax_rate, tax_support) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                SerializerWriteParams.INSTANCE);
+
+        for (int i = 0; i < withhold.getLines().size(); i++) {
+            final int line = i;
+            final WithholdLineInfo detail = withhold.getLines().get(i);
+
+            detailInsert.exec(new DataParams() {
+                @Override
+                public void writeValues() throws BasicException {
+                    setString(1, withhold.getId());
+                    setInt(2, line);
+                    setString(3, detail.getWithholdTaxesId());
+                    setDouble(4, detail.getPercentage());
+                    setDouble(5, detail.getBaseValue());
+                    setDouble(6, detail.getWithholdedValue());
+                    setDouble(7, detail.getTaxRate());
+                    setString(8, detail.getTaxSupport());
+                }
+            });
+        }
     }
 
     public PreparedSentence getPurchaseSequence() {
@@ -315,7 +412,8 @@ public class DataLogicPurchase extends BeanFactoryDataSingle {
 
         purchase.setInvLines(
                 new PreparedSentence(s, "SELECT "
-                        + "l.product, p.name, l.units, l.price, l.taxid, l.lot, tx.category "
+                        + "l.product, p.name, l.units, l.price, l.taxid, l.lot, tx.category, "
+                        + "l.tax_support "
                         + "FROM purchaselines l "
                         + "join products p on p.id = l.product "
                         + "join taxes tx on tx.id = l.taxid "
@@ -335,6 +433,7 @@ public class DataLogicPurchase extends BeanFactoryDataSingle {
                                     dr.getString(6),
                                     tax
                             );
+                            line.setTaxSupport(dr.getString(8));
 
                             return line;
                         })

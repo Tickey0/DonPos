@@ -41,6 +41,15 @@ public class InventoryLine {
     private String attsetinstdesc;
 
     private String lot;
+
+    /**
+     * Sustento tributario de esta linea.
+     *
+     * El SRI lo pide por item, no por documento: una misma factura puede traer
+     * mercaderia con un sustento y servicios con otro, y la retencion se agrupa
+     * por sustento para armar cada bloque docSustento.
+     */
+    private String taxSupport;
     private boolean isService;
     private TaxInfo tax;
 
@@ -242,6 +251,14 @@ public class InventoryLine {
 
     public void setLot(String lot) {
         this.lot = lot;
+    }
+
+    public String getTaxSupport() {
+        return taxSupport;
+    }
+
+    public void setTaxSupport(String taxSupport) {
+        this.taxSupport = taxSupport;
     }
 
     public double getTaxPurchase() {

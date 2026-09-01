@@ -31,6 +31,7 @@ import java.awt.BorderLayout;
 import java.awt.Toolkit;
 import java.io.File;
 import java.util.Date;
+import java.util.stream.Collectors;
 /**
  * pattern
  */
@@ -78,6 +79,15 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
     private SentenceList sentTaxSupport;
 
     private PurchaseInfo purchase;
+
+    /** Retencion armada en el dialogo, todavia sin grabar. */
+    private WithholdInfo pendingWithhold;
+
+    /** La compra que se abrio del buscador ya tenia retencion. */
+    private boolean loadedHasWithhold = false;
+
+    /** Ya se aviso que la retencion quedo desfasada; no repetirlo. */
+    private boolean retencionAvisada = false;
     private final JPurchaseLines purchaseLines;
     private String country;
 
@@ -595,7 +605,6 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
 
         try {
             Date d = (Date) Formats.TIMESTAMP.parseValue(txtCreatedAt.getText());
-            purchase.setNumber((Integer) dlPurchase.getPurchaseSequence().find());
             purchase.setMoney(app.getActiveCashIndex());
             purchase.setCreatedAt(new Date());
             purchase.setReason((Integer) modelReason.getSelectedKey());
@@ -605,7 +614,7 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
             purchase.setPurchaseTaxSupport(modelTaxSupport.getSelectedKey().toString());
             purchase.setPurchaseDocument(modelDocumentType.getSelectedKey().toString());
             purchase.setPurchaseReference(txtSerie.getText());
-            purchase.setPurchaseDate((Date) Formats.DATE.parseValue(txtDatePurchase.getText()));
+            purchase.setPurchaseDate(parsePurchaseDate());
             purchase.setPurchaseAuthorization(txtAuthorization.getText());
 
             purchase.setObservation(txtObservation.getText());
@@ -619,6 +628,9 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
                 purchase.setFormatNumberDigits(dlSystem.getResourceAsText("FormatTicket.NumberDigits"));
             }
 
+            // La compra y su retencion van juntas: savePurchase las mete en
+            // la misma transaccion. Si la compra ya tiene numero es porque se
+            // abrio del buscador, y entonces solo se graba la retencion.
             var result = dlPurchase.savePurchase(purchase, new InventoryRecord(
                     new Date(),
                     reason,
@@ -626,12 +638,19 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
                     app.getAppUserView().getUser().getName(),
                     (SupplierInfo) modelSupplier.getSelectedItem(),
                     purchaseLines.getLines(),
-                    txtSerie.getText())
+                    txtSerie.getText()),
+                    pendingWithhold
             );
+
+            var mensaje = AppLocal.getIntString("label.purchase") + " = " + result;
+            if (pendingWithhold != null) {
+                mensaje += "\n" + AppLocal.getIntString("label.withhold") + " = "
+                        + pendingWithhold.getSerieNumber();
+            }
 
             JOptionPane.showMessageDialog(
                     this,
-                    AppLocal.getIntString("label.purchase") + " = " + result,
+                    mensaje,
                     LocalRes.getIntString("sgn.success"),
                     JOptionPane.INFORMATION_MESSAGE
             );
@@ -642,7 +661,76 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
         stateToInsert();
     }
 
+    /**
+     * Avisa una sola vez si quitar un producto dejo huerfana alguna linea de
+     * la retencion.
+     *
+     * Solo avisa por ese caso, que es el que rompe: la linea apunta a un
+     * sustento que la compra ya no tiene y su bloque docSustento no se arma,
+     * asi que esa retencion se pierde del XML sin que nadie lo note.
+     *
+     * NO avisa por agregar un producto de un sustento nuevo: retener o no
+     * sobre el es una decision valida del usuario, y avisarle ahi seria
+     * gritar por algo que no esta mal.
+     */
+    private void avisarSiLaRetencionQuedoDesfasada() {
+        if (pendingWithhold == null) {
+            retencionAvisada = false;
+            return;
+        }
+
+        var desfasada = !sustentosHuerfanos().isEmpty();
+
+        if (desfasada && !retencionAvisada) {
+            retencionAvisada = true;
+            JOptionPane.showMessageDialog(
+                    this,
+                    AppLocal.getIntString("message.withhold.outofdate"),
+                    AppLocal.getIntString("label.withhold"),
+                    JOptionPane.WARNING_MESSAGE
+            );
+        } else if (!desfasada) {
+            retencionAvisada = false;
+        }
+    }
+
+    /**
+     * Los sustentos que la retencion armada usa y la compra ya no tiene.
+     *
+     * Pasa cuando se quita un producto despues de armar la retencion: la linea
+     * de retencion queda apuntando a un sustento huerfano, y al emitir el XML
+     * su bloque docSustento no se arma y esa retencion se pierde sin aviso.
+     */
+    private java.util.List<String> sustentosHuerfanos() {
+        if (pendingWithhold == null || pendingWithhold.getLines() == null) {
+            return java.util.Collections.emptyList();
+        }
+
+        var enLaCompra = purchaseLines.getLines().stream()
+                .map(InventoryLine::getTaxSupport)
+                .filter(c -> c != null)
+                .collect(Collectors.toSet());
+
+        return pendingWithhold.getLines().stream()
+                .map(WithholdLineInfo::getTaxSupport)
+                .filter(c -> c != null && !enLaCompra.contains(c))
+                .distinct()
+                .collect(Collectors.toList());
+    }
+
     private boolean validateData() {
+
+        var huerfanos = sustentosHuerfanos();
+        if (!huerfanos.isEmpty()) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    AppLocal.getIntString("message.withhold.orphansupport")
+                    + " " + String.join(", ", huerfanos),
+                    AppLocal.getIntString("label.withhold"),
+                    JOptionPane.ERROR_MESSAGE
+            );
+            return false;
+        }
 
         if (modelSupplier.getSelectedKey() == null) {
             JOptionPane.showMessageDialog(
@@ -788,7 +876,6 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
 
 
     private void cmdInsertActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmdInsertActionPerformed
-        enableForm(true);
         stateToInsert();
         cboReason.requestFocus();
     }//GEN-LAST:event_cmdInsertActionPerformed
@@ -801,6 +888,11 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
                 PurchaseProductDialog dialog = new PurchaseProductDialog(app, new javax.swing.JFrame(), true);
+
+                // Se le pasa el sustento de la cabecera como valor de partida:
+                // casi siempre todos los items llevan el mismo.
+                dialog.setTaxSupport(modelTaxSupport.getSelectedKey() == null
+                        ? null : modelTaxSupport.getSelectedKey().toString());
                 dialog.addWindowListener(new java.awt.event.WindowAdapter() {
                     @Override
                     public void windowClosing(java.awt.event.WindowEvent e) {
@@ -811,7 +903,7 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
                 dialog.setVisible(true);
                 if (dialog.getReturnStatus() == PurchaseProductDialog.RET_OK) {
                     ProductInfoExt product = dialog.getProduct();
-                    incProduct(product, dialog.getTax());
+                    incProduct(product, dialog.getTax(), dialog.getTaxSupport());
                 }
             }
         });
@@ -880,7 +972,6 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
             if (purchase != null) {
                 try {
                     dlPurchase.deleteTicket(purchase, dlSales);
-                    enableForm(true);
                     stateToInsert();
                     cboReason.requestFocus();
                 } catch (BasicException ex) {
@@ -895,22 +986,56 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
     }//GEN-LAST:event_cmdWithholdActionPerformed
 
     /**
-     * Abre el dialogo de retencion sobre la compra cargada.
+     * Los sustentos distintos que usan los productos de la compra.
      *
-     * Exige que la compra este guardada: withholds.purchase_id es una clave
-     * foranea a purchases.id. Y verifica que no tenga ya una retencion, para
-     * avisar en vez de dejar que reviente el indice unico uk_withholds_purchase.
+     * Se cruzan con el catalogo para traer el nombre, porque la linea solo
+     * guarda el codigo y el combo tiene que mostrar algo legible.
+     */
+    private java.util.List<Object> sustentosDeLaCompra() {
+        var codigos = purchaseLines.getLines().stream()
+                .map(InventoryLine::getTaxSupport)
+                .filter(c -> c != null && !c.trim().isEmpty())
+                .distinct()
+                .collect(Collectors.toList());
+
+        var sustentos = new java.util.ArrayList<Object>();
+        try {
+            for (Object item : sentTaxSupport.list()) {
+                var clave = ((com.unicenta.data.loader.IKeyed) item).getKey();
+                if (clave != null && codigos.contains(clave.toString())) {
+                    sustentos.add(item);
+                }
+            }
+        } catch (Exception e) {
+            log.error(PurchaseEditor.class.getName() + " " + e.getMessage());
+        }
+
+        return sustentos;
+    }
+
+    /**
+     * La fecha del documento del proveedor, o null si todavia no se escribio.
+     */
+    private Date parsePurchaseDate() {
+        try {
+            return (Date) Formats.DATE.parseValue(txtDatePurchase.getText());
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    /**
+     * Abre el dialogo de retencion. No exige que la compra este guardada: lo
+     * que arme el usuario se queda en memoria y se graba junto con la compra.
      */
     private void openWithholdDialog() {
-        if (purchase == null || purchase.getNumber() == null) {
-            JOptionPane.showMessageDialog(
-                    this,
-                    AppLocal.getIntString("message.withhold.savepurchasefirst"),
-                    AppLocal.getIntString("label.withhold"),
-                    JOptionPane.WARNING_MESSAGE
-            );
-            return;
-        }
+        // El dialogo lee estos tres del objeto compra, y antes se llenaban recien
+        // al guardar. Ahora que abre primero, hay que pasarle lo que hay en el
+        // formulario o mostraria nulos y tomaria el periodo fiscal equivocado.
+        purchase.setPurchaseDocument(modelDocumentType.getSelectedKey() == null
+                ? null : modelDocumentType.getSelectedKey().toString());
+        purchase.setPurchaseReference(txtSerie.getText());
+        purchase.setPurchaseDate(parsePurchaseDate());
 
         var subtotal = 0.0;
         var iva = 0.0;
@@ -922,32 +1047,80 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
         final var base = subtotal;
         final var tax = iva;
 
-        // El PurchaseInfo cargado desde el buscador trae el id del proveedor pero
-        // no siempre su nombre; el combo si lo tiene.
+        // El nombre del proveedor es solo para mostrarlo en el dialogo. El combo
+        // lo tiene; el PurchaseInfo del buscador a veces trae solo el id, y en
+        // una compra nueva puede no tener proveedor todavia.
         var selected = modelSupplier.getSelectedItem();
-        final var supplierName = selected == null
-                ? purchase.getSupplier().getName()
-                : selected.toString();
+        final String supplierName;
+        if (selected != null) {
+            supplierName = selected.toString();
+        } else if (purchase != null && purchase.getSupplier() != null) {
+            supplierName = purchase.getSupplier().getName();
+        } else {
+            supplierName = "";
+        }
+
+        // Los sustentos salen de los productos que hay en pantalla, no de la
+        // base: esta compra todavia no se guardo.
+        final var sustentos = sustentosDeLaCompra();
 
         java.awt.EventQueue.invokeLater(() -> {
             var dialog = new WithholdDialog(app, new javax.swing.JFrame(), true,
-                    purchase, supplierName, base, tax);
+                    purchase, supplierName, base, tax, sustentos, pendingWithhold);
             dialog.setLocationRelativeTo(null);
             dialog.setVisible(true);
 
             if (dialog.getReturnStatus() == WithholdDialog.RET_OK) {
+                pendingWithhold = dialog.getWithhold();
                 updateWithholdButton();
             }
         });
     }
 
     /**
-     * El boton solo exige que la compra este guardada, porque withholds.purchase_id
-     * es una clave foranea a purchases.id. Si esa compra ya tiene retencion, el
-     * dialogo la abre para verla, y decide si es editable segun el estado en el SRI.
+     * Decide si se puede armar una retencion sobre lo que hay en pantalla.
+     *
+     * Hacen falta dos cosas: un documento que admita retencion y al menos un
+     * producto cargado.
+     *
+     * Se retiene sobre una factura (01) o una liquidacion de compra (03). Una
+     * nota de venta (02) no da derecho a credito tributario y una nota de
+     * credito (04) es un documento de ajuste; ninguna de las dos lleva
+     * retencion, asi que el boton se apaga.
+     *
+     * Si ya se armo una en esta pantalla el boton sigue vivo: mientras la compra
+     * no se guarde no hay nada escrito en la base, asi que se puede corregir.
+     *
+     * En una compra ya guardada la regla se invierte: el boton se prende solo
+     * si esa compra TIENE retencion, porque ahi sirve para verla. Sin ella no
+     * hay nada que mostrar.
      */
     private void updateWithholdButton() {
-        cmdWithhold.setEnabled(purchase != null && purchase.getNumber() != null);
+        var documento = modelDocumentType == null
+                ? null : modelDocumentType.getSelectedKey();
+
+        if (!"01".equals(documento) && !"03".equals(documento)) {
+            cmdWithhold.setEnabled(false);
+            return;
+        }
+
+        // Sin productos no hay sobre que retener: la base imponible y el IVA
+        // salen de las lineas de la compra, y con la grilla vacia serian cero.
+        if (purchaseLines == null || purchaseLines.getLines().isEmpty()) {
+            cmdWithhold.setEnabled(false);
+            return;
+        }
+
+        // Compra nueva: se arma la retencion junto con ella.
+        if (purchase == null || purchase.getNumber() == null) {
+            cmdWithhold.setEnabled(true);
+            return;
+        }
+
+        // Compra del buscador: el boton es solo para consultar. Si esa compra
+        // no tiene retencion no hay nada que ver, y crearsela aparte tampoco
+        // corresponde: la retencion se emite junto con su documento.
+        cmdWithhold.setEnabled(loadedHasWithhold);
     }
 
     private void loadPurchase(PurchaseInfo purchase) {
@@ -968,6 +1141,13 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
         purchaseLines.clear();
         for (InventoryLine line : purchase.getInvLines()) {
             purchaseLines.addLine(line);
+        }
+
+        try {
+            loadedHasWithhold = dlWithhold.countByPurchase(purchase.getId()) > 0;
+        } catch (Exception e) {
+            log.error(PurchaseEditor.class.getName() + " " + e.getMessage());
+            loadedHasWithhold = false;
         }
 
         printInvLines();
@@ -1046,6 +1226,9 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
             );
             cboDocumentType.setModel(modelDocumentType);
 
+            // Cambiar el tipo de documento prende o apaga el boton de retencion
+            cboDocumentType.addActionListener(evt -> updateWithholdButton());
+
             // Load locations
             modelLocation = new ComboBoxValModel(dlSales.getLocationsList().list());
             cboLocation.setModel(modelLocation);
@@ -1084,6 +1267,10 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
     }
 
     public void stateToInsert() {
+        pendingWithhold = null;
+        loadedHasWithhold = false;
+        retencionAvisada = false;
+        enableForm(true);
 
         txtNumber.setText(null);
         txtCreatedAt.setText(null);
@@ -1115,18 +1302,28 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
         cboReason.requestFocus();
     }
 
-    private void incProduct(ProductInfoExt product, TaxInfo tax) {
-        addLine(product, product.getQuantity(), product.getTotalCost(), product.getLot(), tax);
+    private void incProduct(ProductInfoExt product, TaxInfo tax, String taxSupport) {
+        addLine(product, product.getQuantity(), product.getTotalCost(), product.getLot(),
+                tax, taxSupport);
         printInvLines();
     }
 
-    private void addLine(ProductInfoExt oProduct, double dpor, double totalCost, String lot, TaxInfo tax) {
+    /**
+     * Agrega la linea a la grilla y a la compra.
+     *
+     * Son dos objetos distintos a proposito: la grilla dibuja uno y la compra
+     * guarda el otro. El sustento se le pone a los dos, o al grabar se perderia.
+     */
+    private void addLine(ProductInfoExt oProduct, double dpor, double totalCost, String lot,
+            TaxInfo tax, String taxSupport) {
 
-        purchaseLines.addLine(new InventoryLine(oProduct, dpor, totalCost, lot, tax));
+        var enGrilla = new InventoryLine(oProduct, dpor, totalCost, lot, tax);
+        enGrilla.setTaxSupport(taxSupport);
+        purchaseLines.addLine(enGrilla);
 
-        this.purchase.getInvLines().add(
-                new InventoryLine(oProduct, dpor, totalCost, lot, tax)
-        );
+        var enCompra = new InventoryLine(oProduct, dpor, totalCost, lot, tax);
+        enCompra.setTaxSupport(taxSupport);
+        this.purchase.getInvLines().add(enCompra);
     }
 
     private void removeInvLine(int index) {
@@ -1139,10 +1336,17 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
         }
     }
 
+    /**
+     * Refresca los totales. Se llama despues de cada cambio en las lineas, asi
+     * que es tambien el lugar natural para revisar el boton de retencion.
+     */
     private void printInvLines() {
         lblSubtotal.setText(purchase.printSubTotal());
         lblTax.setText(purchase.printTax());
         lblTotal.setText(purchase.printTotal());
+
+        updateWithholdButton();
+        avisarSiLaRetencionQuedoDesfasada();
     }
 
     private void enableForm(boolean status) {
