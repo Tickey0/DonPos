@@ -534,6 +534,7 @@ CREATE TABLE `suppliers` (
 	`vatid` varchar(255) default NULL,
         `taxid_type` varchar(90) not null default 'CF',
         `is_system_supplier` boolean default false,
+        `is_related` boolean default false,
 	PRIMARY KEY  ( `id` ),
 	KEY `suppliers_name_inx` ( `name` ),
 	UNIQUE INDEX `suppliers_skey_inx` ( `searchkey` )
@@ -790,6 +791,7 @@ CREATE TABLE `purchaselines` (
 	`price` double NOT NULL,
 	`taxid` varchar(255) NOT NULL,
         `lot` varchar(255) NOT NULL,
+        `tax_support` varchar(90) default NULL,
 	PRIMARY KEY  ( `purchase`, `line` ),
         KEY `purchaselines_purchase_fk` ( `purchase` ),
 	KEY `purchaselines_product_fk` ( `product` ),
@@ -858,13 +860,14 @@ CREATE TABLE `dispatchers` (
 CREATE TABLE `dispatches` (
 	`id` varchar(90) NOT NULL,
         `dispatcher_id` varchar(90) NOT NULL,
-        `code` varchar(9) default NULL, --GUI
-        `serie_number` varchar(90) NOT NULL, --001001000000009
-        `date_dispatch` datetime NOT NULL, --fecha de salida
-        `date_end_dispatch` datetime NOT NULL, --fecha de llagada
-        `address_start` varchar(450) default NULL, -- dirección de establecimientos o bodegas
-        `access_key` varchar(90) default NULL, -- auto genera
+        `code` varchar(9) default NULL,
+        `serie_number` varchar(90) NOT NULL,
+        `date_dispatch` datetime NOT NULL,
+        `date_end_dispatch` datetime NOT NULL,
+        `address_start` varchar(450) default NULL,
+        `access_key` varchar(90) default NULL,
         `observation` varchar(450) default NULL, 
+        `transfer_reason` varchar(300) default NULL,
         `status` BOOLEAN DEFAULT true,
 	`created_at` datetime DEFAULT NOW(),
         PRIMARY KEY  ( `id` )
@@ -872,9 +875,10 @@ CREATE TABLE `dispatches` (
 
 CREATE TABLE `dispatches_detail` (
         `line` int(11) NOT NULL,
-	`dispatches_id` varchar(90) NOT NULL, -- Solo facturas del día
-        `reference_code` varchar(9) default NULL, -- FV
-        `reference_number` varchar(90) NOT NULL, -- 001001000000008
+	`dispatches_id` varchar(90) NOT NULL,
+        `reference_code` varchar(9) default NULL,
+        `reference_number` varchar(90) NOT NULL,
+        `transfer_reason` varchar(300) default NULL,
         PRIMARY KEY  ( `dispatches_id`, `line` )
 ) ENGINE = InnoDB DEFAULT CHARSET=utf8 ;
 
@@ -883,6 +887,11 @@ ALTER TABLE `dispatches` ADD CONSTRAINT `dispatches_dispatchers_FK`
 
 ALTER TABLE `dispatches_detail` ADD CONSTRAINT `dispatches_detail_dispatches_FK`
     FOREIGN KEY (`dispatches_id`) REFERENCES `dispatches` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT;
+
+-- Una factura no puede ir en dos guias. La pantalla lo avisa, pero el indice
+-- lo impide aunque haya un error en el codigo.
+ALTER TABLE `dispatches_detail` ADD UNIQUE INDEX `uk_dispatches_reference`
+    ( `reference_code`, `reference_number` );
 
 ALTER TABLE `volume_discount` ADD CONSTRAINT `volume_discount_product_fk`
 	FOREIGN KEY ( `product` ) REFERENCES `products` ( `id` );

@@ -116,6 +116,7 @@
     <class name="com.unicenta.pos.inventory.TaxCategoriesPanel"/>
     <class name="com.unicenta.pos.inventory.TaxCustCategoriesPanel"/>
     <class name="com.unicenta.pos.inventory.TaxPanel"/>
+    <class name="dev.joguenco.pos.taxes.WithholdTaxPanel"/>
     <class name="com.unicenta.pos.inventory.UomPanel"/>
     <class name="dev.resolvedor.pos.inventory.lot.LotPanel"/>
 
@@ -158,6 +159,7 @@
 
 <class name="com.unicenta.pos.forms.Dispatches"/>
     <class name="dev.joguenco.pos.dispatcher.DispatcherPanel"/>
+    <class name="dev.joguenco.pos.dispatcher.DispatchEditor"/>
             
 <class name="com.unicenta.pos.forms.TaxAuthority"/>     
             

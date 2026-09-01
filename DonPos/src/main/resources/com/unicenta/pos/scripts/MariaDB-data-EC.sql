@@ -94,9 +94,13 @@ CREATE TABLE `withholds` (
 ) ENGINE = InnoDB DEFAULT CHARSET=utf8;
 
 -- Detalle: las retenciones aplicadas
+    -- Sustento tributario de esta linea. El SRI agrupa las retenciones por
+    -- sustento: cada docSustento del XML lleva uno solo y sus retenciones
+    -- adentro, asi que la linea tiene que saber a cual pertenece.
 CREATE TABLE `withholds_detail` (
     `withhold_id` varchar(255) NOT NULL,
     `line` int(11) NOT NULL,
+    `tax_support` varchar(90) default NULL,
     `withhold_taxes_id` varchar(255) NOT NULL,
     `percentage` double NOT NULL DEFAULT '0',
     `base_value` double NOT NULL DEFAULT '0',
@@ -654,7 +658,11 @@ CREATE VIEW `v_ele_withholds` AS select cast(`w`.`id` as uuid) AS `id`,
     `s`.`address` AS `address`,
     `p`.`purchase_tax_support` AS `code_support`,
     `p`.`purchase_document` AS `code_document_support`,
-    `p`.`purchase_reference` AS `number_document_support`,
+    if(length(`p`.`purchase_reference`) = 15,
+        concat(substr(`p`.`purchase_reference`, 1, 3), '-',
+               substr(`p`.`purchase_reference`, 4, 3), '-',
+               substr(`p`.`purchase_reference`, 7, 9)),
+        `p`.`purchase_reference`) AS `number_document_support`,
     cast(`p`.`purchase_date` as date) AS `date_document_support`,
     `p`.`purchase_authorization` AS `authorization_document_support`,
     round(sum(cast(`pl`.`units` * `pl`.`price` as decimal(19, 2))), 2) AS `total_without_taxes`,
@@ -697,9 +705,14 @@ group by
     `p`.`purchase_authorization`,
     `w`.`access_key`;
 
-CREATE VIEW `v_ele_withholds_document_taxes` AS select cast(concat(substr(`w`.`id`, 1, octet_length(`w`.`id`) - octet_length(`tx`.`legalcode`)), `tx`.`legalcode`) as uuid) AS `id`,
+-- Impuestos del documento de sustento, separados POR SUSTENTO.
+-- Antes se sumaban para toda la compra, y con dos bloques docSustento cada uno
+-- se llevaba el total completo: el IVA quedaba contado dos veces. Odoo hace lo
+-- mismo que aqui, filtra las lineas de la factura por sustento antes de sumar.
+CREATE VIEW `v_ele_withholds_document_taxes` AS select cast(concat(substr(`w`.`id`, 1, octet_length(`w`.`id`) - octet_length(concat(`tx`.`legalcode`, ifnull(`pl`.`tax_support`, `p`.`purchase_tax_support`)))), `tx`.`legalcode`, ifnull(`pl`.`tax_support`, `p`.`purchase_tax_support`)) as uuid) AS `id`,
     `w`.`code` AS `code`,
     `w`.`serie_number` AS `number`,
+    ifnull(`pl`.`tax_support`, `p`.`purchase_tax_support`) AS `code_support`,
     convert('2', char) AS `tax_code`,
     convert(`tx`.`legalcode`, char) AS `percentage_code`,
     round(sum(cast(`pl`.`units` * `pl`.`price` as decimal(19, 2))), 2) AS `tax_base`,
@@ -719,6 +732,7 @@ group by
     `w`.`id`,
     `w`.`code`,
     `w`.`serie_number`,
+    ifnull(`pl`.`tax_support`, `p`.`purchase_tax_support`),
     `tx`.`legalcode`,
     `tx`.`rate`;
 
@@ -730,13 +744,64 @@ CREATE VIEW `v_ele_withholds_detail` AS select cast(concat(substr(`d`.`withhold_
     `t`.`code` AS `withhold_code`,
     cast(`d`.`base_value` as decimal(19, 2)) AS `base_value`,
     cast(`d`.`percentage` as decimal(19, 2)) AS `percentage`,
-    cast(`d`.`withholded_value` as decimal(19, 2)) AS `withholded_value`
+    cast(`d`.`withholded_value` as decimal(19, 2)) AS `withholded_value`,
+    ifnull(`d`.`tax_support`, `p`.`purchase_tax_support`) AS `code_support`
 from
-    ((`withholds_detail` `d`
+    (((`withholds_detail` `d`
 join `withholds` `w` on
     (`w`.`id` = `d`.`withhold_id`))
+join `purchases` `p` on
+    (`p`.`id` = `w`.`purchase_id`))
 join `withhold_taxes` `t` on
     (`t`.`id` = `d`.`withhold_taxes_id`));
+
+-- Un bloque docSustento por cada sustento QUE SE RETUVO.
+-- Se parte de withholds_detail, no de purchaselines: el XSD exige al menos una
+-- retencion dentro de cada bloque, asi que un sustento que la compra tiene pero
+-- sobre el que no se retuvo dejaria el bloque vacio y el XML invalido. Odoo hace
+-- lo mismo: recorre las lineas de la retencion, no las de la factura.
+--
+-- El ifnull cubre las retenciones viejas, guardadas antes de que DonPos pidiera
+-- el sustento por linea: caen al sustento de la cabecera de la compra.
+CREATE VIEW `v_ele_withholds_support` AS select cast(concat(substr(`w`.`id`, 1, octet_length(`w`.`id`) - octet_length(ifnull(`d`.`tax_support`, `p`.`purchase_tax_support`))), ifnull(`d`.`tax_support`, `p`.`purchase_tax_support`)) as uuid) AS `id`,
+    `w`.`code` AS `code`,
+    `w`.`serie_number` AS `number`,
+    ifnull(`d`.`tax_support`, `p`.`purchase_tax_support`) AS `code_support`,
+    `p`.`purchase_document` AS `code_document_support`,
+    if(length(`p`.`purchase_reference`) = 15,
+        concat(substr(`p`.`purchase_reference`, 1, 3), '-',
+               substr(`p`.`purchase_reference`, 4, 3), '-',
+               substr(`p`.`purchase_reference`, 7, 9)),
+        `p`.`purchase_reference`) AS `number_document_support`,
+    cast(`p`.`purchase_date` as date) AS `date_document_support`,
+    `p`.`purchase_authorization` AS `authorization_document_support`,
+    round(sum(cast(`l`.`units` * `l`.`price` as decimal(19, 2))), 2) AS `total_without_taxes`,
+    round(sum(cast(`l`.`units` * `l`.`price`
+        + if(`tx`.`rate` > 0, `l`.`units` * `l`.`price` * `tx`.`rate`, 0)
+        as decimal(19, 2))), 2) AS `total`
+from
+    ((((`withholds` `w`
+join `purchases` `p` on
+    (`p`.`id` = `w`.`purchase_id`))
+join (select distinct `withhold_id`, `tax_support` from `withholds_detail`) `d` on
+    (`d`.`withhold_id` = `w`.`id`))
+join `purchaselines` `l` on
+    (`l`.`purchase` = `p`.`id`
+        and ifnull(`l`.`tax_support`, `p`.`purchase_tax_support`)
+            = ifnull(`d`.`tax_support`, `p`.`purchase_tax_support`)))
+join `taxes` `tx` on
+    (`tx`.`id` = `l`.`taxid`))
+where
+    (`w`.`status` = 1)
+group by
+    `w`.`id`,
+    `w`.`code`,
+    `w`.`serie_number`,
+    ifnull(`d`.`tax_support`, `p`.`purchase_tax_support`),
+    `p`.`purchase_document`,
+    `p`.`purchase_reference`,
+    `p`.`purchase_date`,
+    `p`.`purchase_authorization`;
 
 CREATE VIEW `v_ele_report_withholds` AS select `j`.`id` AS `id`,
     `j`.`code` AS `code`,
@@ -749,6 +814,120 @@ CREATE VIEW `v_ele_report_withholds` AS select `j`.`id` AS `id`,
     (select `sup`.`email` from `suppliers` `sup` where `sup`.`taxid` = `j`.`identification` limit 1) AS `email`,
     ifnull((select `e`.`status` from `ele_documents` `e` where `e`.`code` = `j`.`code` and `e`.`number` = `j`.`number`), 'NO ENVIADO') AS `status`
 from `v_ele_withholds` `j`
+order by `j`.`number` desc;
+
+-- Vistas de guía de remisión
+-- El SRI arma el documento en tres niveles: la cabecera con el transportista,
+-- un destinatario por cada factura del viaje, y el detalle de mercadería de
+-- cada destinatario. Las tres vistas siguen esa forma.
+
+CREATE VIEW `v_ele_delivery_notes` AS select cast(`d`.`id` as uuid) AS `id`,
+    `d`.`code` AS `code`,
+    `d`.`serie_number` AS `number`,
+    cast('06' as char) AS `code_document`,
+    substr(`d`.`serie_number`, 1, 3) AS `establishment`,
+    substr(`d`.`serie_number`, 4, 3) AS `emission_point`,
+    substr(`d`.`serie_number`, 7, 9) AS `sequence`,
+    cast(`d`.`date_dispatch` as date) AS `date`,
+    `d`.`address_start` AS `address_start`,
+    `p`.`name` AS `carrier_legal_name`,
+    `i`.`legal_code` AS `carrier_identification_type`,
+    `p`.`taxid` AS `carrier_identification`,
+    `p`.`plate` AS `plate`,
+    cast(`d`.`date_dispatch` as date) AS `date_start_transport`,
+    cast(`d`.`date_end_dispatch` as date) AS `date_end_transport`,
+    `d`.`observation` AS `observation`,
+    (select
+        `e`.`address`
+    from
+        `establishments` `e`
+    where
+        `e`.`id` = substr(`d`.`serie_number`, 1, 3)) AS `establishment_address`,
+    `d`.`access_key` AS `access_key`
+from
+    ((`dispatches` `d`
+join `dispatchers` `p` on
+    (`p`.`id` = `d`.`dispatcher_id`))
+join `identification_type` `i` on
+    (`i`.`code` = `p`.`taxid_type`))
+where
+    (`d`.`status` = 1);
+
+-- Un destinatario por factura. El documento de sustento es siempre la factura
+-- de venta (codDoc 01): de ahi salen el cliente, la direccion de entrega y la
+-- autorizacion que el SRI pide en numAutDocSustento.
+CREATE VIEW `v_ele_delivery_notes_receiver` AS select cast(concat(substr(`dd`.`dispatches_id`, 1, octet_length(`dd`.`dispatches_id`) - octet_length(`dd`.`line`)), `dd`.`line`) as uuid) AS `id`,
+    `d`.`code` AS `code`,
+    `d`.`serie_number` AS `number`,
+    cast(`dd`.`line` as unsigned) AS `line`,
+    `i`.`legal_code` AS `identification_type`,
+    `c`.`taxid` AS `identification`,
+    `c`.`name` AS `legal_name`,
+    `c`.`address` AS `address`,
+    `dd`.`transfer_reason` AS `transfer_reason`,
+    cast('01' as char) AS `code_document_support`,
+    if(length(`dd`.`reference_number`) = 15,
+        concat(substr(`dd`.`reference_number`, 1, 3), '-',
+               substr(`dd`.`reference_number`, 4, 3), '-',
+               substr(`dd`.`reference_number`, 7, 9)),
+        `dd`.`reference_number`) AS `number_document_support`,
+    `t`.`access_key` AS `authorization_document_support`,
+    cast(`r`.`datenew` as date) AS `date_document_support`
+from
+    (((((`dispatches_detail` `dd`
+join `dispatches` `d` on
+    (`d`.`id` = `dd`.`dispatches_id`))
+join `tickets` `t` on
+    (`t`.`code` = `dd`.`reference_code`
+        and `t`.`serie_number` = `dd`.`reference_number`))
+join `receipts` `r` on
+    (`r`.`id` = `t`.`id`))
+join `customers` `c` on
+    (`c`.`id` = `t`.`customer`))
+join `identification_type` `i` on
+    (`i`.`code` = `c`.`taxid_type`))
+where
+    (`d`.`status` = 1);
+
+-- La mercaderia que va en el camion, sacada de las lineas de la factura. El
+-- SRI pide descripcion y cantidad por cada destinatario; el campo `line` dice
+-- a que destinatario pertenece cada producto.
+CREATE VIEW `v_ele_delivery_notes_receiver_detail` AS select cast(concat(substr(`tl`.`ticket`, 1, octet_length(`tl`.`ticket`) - octet_length(`tl`.`line`)), `tl`.`line`) as uuid) AS `id`,
+    `d`.`code` AS `code`,
+    `d`.`serie_number` AS `number`,
+    cast(`dd`.`line` as unsigned) AS `line`,
+    `pr`.`reference` AS `principal_code`,
+    `pr`.`name` AS `name`,
+    cast(`tl`.`units` as decimal(19, 2)) AS `quantity`
+from
+    ((((`dispatches_detail` `dd`
+join `dispatches` `d` on
+    (`d`.`id` = `dd`.`dispatches_id`))
+join `tickets` `t` on
+    (`t`.`code` = `dd`.`reference_code`
+        and `t`.`serie_number` = `dd`.`reference_number`))
+join `ticketlines` `tl` on
+    (`tl`.`ticket` = `t`.`id`))
+join `products` `pr` on
+    (`pr`.`id` = `tl`.`product`))
+where
+    (`d`.`status` = 1)
+    and (`tl`.`product` <> 'xxx998_998xxx_x8x8x8');
+
+CREATE VIEW `v_ele_report_delivery_notes` AS select `j`.`id` AS `id`,
+    `j`.`code` AS `code`,
+    `j`.`number` AS `number`,
+    `j`.`access_key` AS `access_key`,
+    `j`.`date` AS `date`,
+    cast(ifnull((select count(0) from `v_ele_delivery_notes_receiver` `n`
+        where `n`.`code` = `j`.`code` and `n`.`number` = `j`.`number`), 0)
+        as decimal(38, 2)) AS `total`,
+    `j`.`carrier_identification` AS `identification`,
+    `j`.`carrier_legal_name` AS `legal_name`,
+    cast(NULL as char(255)) AS `email`,
+    ifnull((select `e`.`status` from `ele_documents` `e`
+        where `e`.`code` = `j`.`code` and `e`.`number` = `j`.`number`), 'NO ENVIADO') AS `status`
+from `v_ele_delivery_notes` `j`
 order by `j`.`number` desc;
 
 Insert into ele_parameters (ID,name,value,observation,type) 
@@ -902,6 +1081,11 @@ INSERT INTO products_cat(product) VALUES ('xxx666_666xxx_x6x6x6');
 
 INSERT INTO ticketsnum VALUES('ND', 'xxx666_666xxx_x6x6x6', '001201', 0, 'primary', 'Active');
 
+-- Serie de la guia de remision (codDoc 06). Va en ticketsnum, no en
+-- ticketsnum_purchase, porque se emite del lado de la venta.
+INSERT INTO ticketsnum VALUES('GUI', '0', '001201', 0, 'primary', 'Active');
+INSERT INTO ticketsnum VALUES('GUI', '1', '001301', 0, 'primary', 'Active');
+
 INSERT INTO ticketsnum_purchase VALUES('LQ', '0', '001201', 0, 'primary', 'Active');
 INSERT INTO ticketsnum_purchase VALUES('LQ', '1', '001301', 0, 'primary', 'Active');
 
@@ -913,7 +1097,7 @@ INSERT INTO ticketsnum_purchase VALUES('RT', '1', '001301', 0, 'primary', 'Activ
 
 -- Retenciones de IVA
 INSERT INTO withhold_taxes(id, name, percentage, code, tax_type, created_at, status) VALUES ('1', '100% IVA HONORARIOS', 100, '3', 'IVA', '2004-06-17', 1);
-INSERT INTO withhold_taxes(id, name, percentage, code, tax_type, created_at, status) VALUES ('2', '100% IVA OTROS', 100, '855', 'IVA', '2006-09-28', 1);
+INSERT INTO withhold_taxes(id, name, percentage, code, tax_type, created_at, status) VALUES ('2', '100% IVA OTROS', 100, '3', 'IVA', '2006-09-28', 1);
 INSERT INTO withhold_taxes(id, name, percentage, code, tax_type, created_at, status) VALUES ('3', '30% IVA BIENES', 30, '1', 'IVA', '2006-10-02', 1);
 INSERT INTO withhold_taxes(id, name, percentage, code, tax_type, created_at, status) VALUES ('4', '70% IVA SERVICIOS', 70, '2', 'IVA', '2007-02-03', 1);
 INSERT INTO withhold_taxes(id, name, percentage, code, tax_type, created_at, status) VALUES ('5', '10% BIENES CONTR. ESPECIALES', 10, '9', 'IVA', '2015-04-08', 1);
@@ -942,3 +1126,4 @@ INSERT INTO withhold_taxes(id, name, percentage, code, tax_type, created_at, sta
 INSERT INTO withhold_taxes(id, name, percentage, code, tax_type, created_at, status) VALUES ('26', '0% - 332 OTRAS COMPRAS DE BIENES NO SUJETAS', 0, '332', 'RENTA', '2012-03-20', 1);
 INSERT INTO withhold_taxes(id, name, percentage, code, tax_type, created_at, status) VALUES ('27', '0% - 332I Pago convenio de debito', 0, '332I', 'RENTA', '2019-07-26', 1);
 INSERT INTO withhold_taxes(id, name, percentage, code, tax_type, created_at, status) VALUES ('28', '0% - 332G Pagos tarjeta de crédito', 0, '332G', 'RENTA', '2019-07-26', 1);
+INSERT INTO withhold_taxes(id, name, percentage, code, tax_type, created_at, status) VALUES ('29', '50% IVA', 50, '11', 'IVA', '2020-04-01', 1);

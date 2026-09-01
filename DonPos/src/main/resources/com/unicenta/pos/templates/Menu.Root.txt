@@ -96,11 +96,13 @@ group = menu.addGroup("Menu.Backoffice");
     submenu = group.addSubmenu("/com/unicenta/images/stockmaint.png", "Menu.Dispatches", "com.unicenta.pos.forms.Dispatches");
     submenu.addTitle("Menu.Panel.Maintenance.Forms");        
         submenu.addPanel("/com/unicenta/images/stockmaint.png", "Menu.Dispatcher", "dev.joguenco.pos.dispatcher.DispatcherPanel");
+        submenu.addPanel("/com/unicenta/images/stockmaint.png", "Menu.Dispatch", "dev.joguenco.pos.dispatcher.DispatchEditor");
 
     submenu = group.addSubmenu("/com/unicenta/images/maintain.png", "Menu.Tax.Authority", "com.unicenta.pos.forms.TaxAuthority");
     submenu.addTitle("Menu.Panel.Maintenance.Forms");        
         submenu.addPanel("/com/unicenta/images/bookmark.png", "Menu.TaxCategories", "com.unicenta.pos.inventory.TaxCategoriesPanel");
         submenu.addPanel("/com/unicenta/images/bookmark.png", "Menu.Taxes", "com.unicenta.pos.inventory.TaxPanel");
+        submenu.addPanel("/com/unicenta/images/bookmark.png", "Menu.WithholdTaxes", "dev.joguenco.pos.taxes.WithholdTaxPanel");
 
     submenu = group.addSubmenu("/com/unicenta/images/maintain.png", "Menu.Maintenance", "com.unicenta.pos.forms.MenuMaintenance");
     submenu.addTitle("Menu.Panel.Maintenance.Forms");        
