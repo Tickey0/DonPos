@@ -109,6 +109,7 @@ public final class SuppliersView extends javax.swing.JPanel implements EditorRec
         txtCountry.getDocument().addDocumentListener(dirty);
         cbxIdentificationType.addActionListener(dirty);
         checkIsSystemSupplier.addActionListener(dirty);
+        checkIsRelated.addActionListener(dirty);
             init();
         } catch (BeanFactoryException | BasicException ex) {
             log.error(this.getClass().getName() + " " + ex.getMessage());
@@ -195,6 +196,7 @@ public final class SuppliersView extends javax.swing.JPanel implements EditorRec
         txtCountry.setEnabled(false);
         cbxIdentificationType.setEnabled(false);
         checkIsSystemSupplier.setSelected(false);
+        checkIsRelated.setSelected(false);
         
         jTableSupplierTransactions.setEnabled(false);
         
@@ -260,7 +262,11 @@ public final class SuppliersView extends javax.swing.JPanel implements EditorRec
         m_jVisible.setEnabled(true);        
         cbxIdentificationType.setEnabled(true);
         cbxIdentificationType.requestFocus();
-        checkIsSystemSupplier.setSelected(true);
+
+        // Un proveedor nuevo no es del sistema: la columna is_system_supplier
+        // nace en false en la base y la pantalla tiene que decir lo mismo.
+        checkIsSystemSupplier.setSelected(false);
+        checkIsRelated.setSelected(false);
 
         jTableSupplierTransactions.setEnabled(false);
         
@@ -304,6 +310,7 @@ public final class SuppliersView extends javax.swing.JPanel implements EditorRec
         m_jVATID.setText((String) supplier[21]);   
         modelIdentificationType.setSelectedKey(supplier[22]);
         checkIsSystemSupplier.setSelected(((Boolean) supplier[23]));
+        checkIsRelated.setSelected(Boolean.TRUE.equals(supplier[24]));
         
         m_jTaxID.setEnabled(false);
         m_jVATID.setEnabled(false);        
@@ -333,6 +340,7 @@ public final class SuppliersView extends javax.swing.JPanel implements EditorRec
         txtCountry.setEnabled(false);
         cbxIdentificationType.setEnabled(false);
         checkIsSystemSupplier.setEnabled(false);
+        checkIsRelated.setEnabled(false);
         
         transactionModel = new TransactionTableModel(getTransactionOfName((String) m_oId));        
         jTableSupplierTransactions.setModel(transactionModel);
@@ -377,6 +385,7 @@ public final class SuppliersView extends javax.swing.JPanel implements EditorRec
         m_jVATID.setText((String) supplier[21]);  
         modelIdentificationType.setSelectedKey(supplier[22]);
         checkIsSystemSupplier.setSelected(((Boolean) supplier[23]));
+        checkIsRelated.setSelected(Boolean.TRUE.equals(supplier[24]));
 
         m_jSearchkey.setEnabled(true);
         m_jSearchkey.setVisible(false);
@@ -407,6 +416,7 @@ public final class SuppliersView extends javax.swing.JPanel implements EditorRec
         m_jVATID.setEnabled(true);      
         cbxIdentificationType.setEnabled(false);
         checkIsSystemSupplier.setEnabled(true);
+        checkIsRelated.setEnabled(true);
        
         jTableSupplierTransactions.setVisible(false);
         jTableSupplierTransactions.setEnabled(true);
@@ -448,7 +458,7 @@ public void resetTranxTable() {
      */
     @Override
     public Object createValue() throws BasicException {
-        Object[] supplier = new Object[24];
+        Object[] supplier = new Object[25];
         supplier[0] = m_oId == null ? UUID.randomUUID().toString() : m_oId;
         supplier[1] = m_jTaxID.getText();
         supplier[2] = m_jTaxID.getText();
@@ -474,6 +484,7 @@ public void resetTranxTable() {
 
         supplier[22] = modelIdentificationType.getSelectedKey();
         supplier[23] = checkIsSystemSupplier.isSelected();
+        supplier[24] = checkIsRelated.isSelected();
         
         repaint();
         refresh();        
@@ -681,6 +692,8 @@ String rsn = AppLocal.getIntString("label.suptblHeaderCol5");
         jPanel6 = new javax.swing.JPanel();
         lblisSystemSupplier = new javax.swing.JLabel();
         checkIsSystemSupplier = new javax.swing.JCheckBox();
+        lblIsRelated = new javax.swing.JLabel();
+        checkIsRelated = new javax.swing.JCheckBox();
         jLabel19 = new javax.swing.JLabel();
         txtFirstName = new javax.swing.JTextField();
         jLabel15 = new javax.swing.JLabel();
@@ -1209,15 +1222,23 @@ String rsn = AppLocal.getIntString("label.suptblHeaderCol5");
         lblisSystemSupplier.setText(bundle.getString("label.is.system.supplier")); // NOI18N
         lblisSystemSupplier.setPreferredSize(new java.awt.Dimension(190, 17));
 
+        lblIsRelated.setFont(new java.awt.Font("Arial", 0, 14)); // NOI18N
+        lblIsRelated.setText(bundle.getString("label.is.related")); // NOI18N
+        lblIsRelated.setPreferredSize(new java.awt.Dimension(190, 17));
+
         javax.swing.GroupLayout jPanel6Layout = new javax.swing.GroupLayout(jPanel6);
         jPanel6.setLayout(jPanel6Layout);
         jPanel6Layout.setHorizontalGroup(
             jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel6Layout.createSequentialGroup()
                 .addGap(17, 17, 17)
-                .addComponent(lblisSystemSupplier, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(lblisSystemSupplier, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(lblIsRelated, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(checkIsSystemSupplier, javax.swing.GroupLayout.PREFERRED_SIZE, 107, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(checkIsSystemSupplier, javax.swing.GroupLayout.PREFERRED_SIZE, 107, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(checkIsRelated, javax.swing.GroupLayout.PREFERRED_SIZE, 107, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap(330, Short.MAX_VALUE))
         );
         jPanel6Layout.setVerticalGroup(
@@ -1227,7 +1248,11 @@ String rsn = AppLocal.getIntString("label.suptblHeaderCol5");
                 .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(lblisSystemSupplier, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(checkIsSystemSupplier))
-                .addContainerGap(225, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(lblIsRelated, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(checkIsRelated))
+                .addContainerGap(195, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab(bundle.getString("label.others"), jPanel6); // NOI18N
@@ -1401,6 +1426,7 @@ String rsn = AppLocal.getIntString("label.suptblHeaderCol5");
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JComboBox<String> cbxIdentificationType;
+    private javax.swing.JCheckBox checkIsRelated;
     private javax.swing.JCheckBox checkIsSystemSupplier;
     private javax.swing.JButton jBtnShowTrans;
     private javax.swing.JLabel jLabel1;
@@ -1435,6 +1461,7 @@ String rsn = AppLocal.getIntString("label.suptblHeaderCol5");
     private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JTable jTableSupplierTransactions;
+    private javax.swing.JLabel lblIsRelated;
     private javax.swing.JLabel lblisSystemSupplier;
     private javax.swing.JTextField m_jName;
     private javax.swing.JTextArea m_jNotes;

@@ -1,20 +1,17 @@
 package dev.resolvedor.pos.inventory.management;
 
+import java.util.List;
 import com.unicenta.basic.BasicException;
-import com.unicenta.data.loader.DataParams;
 import com.unicenta.data.loader.DataRead;
 import com.unicenta.data.loader.Datas;
 import com.unicenta.data.loader.PreparedSentence;
 import com.unicenta.data.loader.QBFBuilder;
-import com.unicenta.data.loader.SentenceExec;
 import com.unicenta.data.loader.SentenceList;
 import com.unicenta.data.loader.SerializerWriteBasic;
-import com.unicenta.data.loader.SerializerWriteParams;
 import com.unicenta.data.loader.SerializerWriteString;
 import com.unicenta.data.loader.Session;
 import com.unicenta.data.loader.StaticSentence;
 import com.unicenta.pos.forms.BeanFactoryDataSingle;
-import java.util.List;
 
 /**
  * Acceso a datos del comprobante de retencion.
@@ -58,27 +55,12 @@ public class DataLogicWithhold extends BeanFactoryDataSingle {
                 ));
     }
 
-    /**
-     * Siguiente numero de la serie RT del usuario. Lee el contador y lo sube en
-     * uno; debe llamarse SIEMPRE dentro de la transaccion que guarda, o el
-     * numero queda quemado si algo falla despues.
-     */
-    public final Integer getNextTicketIndex(String peopleId, String code) throws BasicException {
-        return (Integer) s.DB.getSequenceSentence(s, "ticketsnum_purchase", peopleId, code).find();
-    }
 
-    /**
-     * Cuantas retenciones tiene ya esa compra. El indice unico
-     * uk_withholds_purchase impide que sea mas de una, pero preguntarlo antes
-     * permite avisar al usuario en vez de dejar que reviente la base.
-     */
-    public final Integer countByPurchase(String purchaseId) throws BasicException {
-        return (Integer) new PreparedSentence(s,
-                "SELECT COUNT(*) FROM withholds WHERE purchase_id = ?",
-                SerializerWriteString.INSTANCE,
-                (DataRead dr) -> dr.getInt(1)
-        ).find(purchaseId);
-    }
+
+
+
+
+
 
     /**
      * Retencion ya emitida para esa compra, o null si no hay.
@@ -116,7 +98,7 @@ public class DataLogicWithhold extends BeanFactoryDataSingle {
         return (List<WithholdLineInfo>) new PreparedSentence(s,
                 "SELECT d.withhold_id, d.line, d.withhold_taxes_id, d.percentage, "
                 + "d.base_value, d.withholded_value, d.tax_rate, "
-                + "t.name, t.code, t.tax_type "
+                + "t.name, t.code, t.tax_type, d.tax_support "
                 + "FROM withholds_detail d "
                 + "JOIN withhold_taxes t ON t.id = d.withhold_taxes_id "
                 + "WHERE d.withhold_id = ? "
@@ -134,169 +116,26 @@ public class DataLogicWithhold extends BeanFactoryDataSingle {
                     line.setWithholdTaxName(dr.getString(8));
                     line.setWithholdTaxCode(dr.getString(9));
                     line.setTaxType(dr.getString(10));
+                    line.setTaxSupport(dr.getString(11));
 
                     return line;
                 }
         ).list(withholdId);
     }
 
+
     /**
-     * Estado del documento en el SRI, o null si todavia no se ha enviado.
-     *
-     * ele_documents la escribe RoQui; DonPos solo la lee. Es lo unico que
-     * distingue una retencion corregible de una intocable: AUTORIZADO significa
-     * que ya esta en los servidores del SRI y el proveedor la puede usar como
-     * credito tributario, asi que cambiarla dejaria las dos copias en desacuerdo.
+     * Cuantas retenciones tiene ya esa compra. El indice unico
+     * uk_withholds_purchase impide que sea mas de una, pero preguntarlo antes
+     * permite avisar al usuario en vez de dejar que reviente la base.
      */
-    public final String getDocumentStatus(String code, String number) throws BasicException {
-        return (String) new PreparedSentence(s,
-                "SELECT status FROM ele_documents WHERE code = ? AND number = ?",
+    public final Integer countByPurchase(String purchaseId) throws BasicException {
+        return (Integer) new PreparedSentence(s,
+                "SELECT COUNT(*) FROM withholds WHERE purchase_id = ?",
                 SerializerWriteString.INSTANCE,
-                (DataRead dr) -> dr.getString(1)
-        ).find(new Object[]{code, number});
+                (DataRead dr) -> dr.getInt(1)
+        ).find(purchaseId);
     }
 
-    /**
-     * Corrige una retencion CONSERVANDO su numero de serie.
-     *
-     * No vuelve a pedir numero al contador: gastar otro dejaria un hueco en la
-     * secuencia que hay que justificar ante el SRI. La clave de acceso si se
-     * recalcula, porque lleva la fecha de emision dentro.
-     *
-     * El detalle se borra y se reinserta completo: es mas simple y seguro que
-     * comparar linea por linea, y va dentro de la misma transaccion.
-     */
-    public final String updateWithhold(final WithholdInfo withhold) throws BasicException {
 
-        com.unicenta.data.loader.Transaction t;
-        t = new com.unicenta.data.loader.Transaction(s) {
-            @Override
-            public Object transact() throws BasicException {
-
-                withhold.setAccessKey(withhold.buildAccessKey());
-
-                new PreparedSentence(s,
-                        "UPDATE withholds SET date_withhold = ?, observation = ?, "
-                        + "fiscal_period = ?, access_key = ? WHERE id = ?",
-                        SerializerWriteParams.INSTANCE)
-                        .exec(new DataParams() {
-                            @Override
-                            public void writeValues() throws BasicException {
-                                setTimestamp(1, withhold.getDateWithhold());
-                                setString(2, withhold.getObservation());
-                                setTimestamp(3, withhold.getFiscalPeriod());
-                                setString(4, withhold.getAccessKey());
-                                setString(5, withhold.getId());
-                            }
-                        });
-
-                new PreparedSentence(s,
-                        "DELETE FROM withholds_detail WHERE withhold_id = ?",
-                        SerializerWriteString.INSTANCE)
-                        .exec(withhold.getId());
-
-                SentenceExec detailInsert = new PreparedSentence(s,
-                        "INSERT INTO withholds_detail "
-                        + "(withhold_id, line, withhold_taxes_id, percentage, "
-                        + "base_value, withholded_value, tax_rate) "
-                        + "VALUES (?, ?, ?, ?, ?, ?, ?)",
-                        SerializerWriteParams.INSTANCE);
-
-                for (int i = 0; i < withhold.getLines().size(); i++) {
-                    final int line = i;
-                    final WithholdLineInfo detail = withhold.getLines().get(i);
-
-                    detailInsert.exec(new DataParams() {
-                        @Override
-                        public void writeValues() throws BasicException {
-                            setString(1, withhold.getId());
-                            setInt(2, line);
-                            setString(3, detail.getWithholdTaxesId());
-                            setDouble(4, detail.getPercentage());
-                            setDouble(5, detail.getBaseValue());
-                            setDouble(6, detail.getWithholdedValue());
-                            setDouble(7, detail.getTaxRate());
-                        }
-                    });
-                }
-
-                return withhold.getSerieNumber();
-            }
-        };
-
-        return t.execute().toString();
-    }
-
-    /**
-     * Guarda cabecera y lineas en una sola transaccion, junto con el avance del
-     * contador de la serie. O queda todo, o no queda nada: un comprobante a
-     * medias con el numero ya consumido dejaria un hueco en la secuencia que
-     * hay que justificar ante el SRI.
-     */
-    public final String saveWithhold(final WithholdInfo withhold) throws BasicException {
-
-        com.unicenta.data.loader.Transaction t;
-        t = new com.unicenta.data.loader.Transaction(s) {
-            @Override
-            public Object transact() throws BasicException {
-
-                var sequence = getNextTicketIndex(withhold.getUser().getId(), withhold.getCode());
-
-                withhold.setSerieNumber(withhold.getSerie()
-                        .concat(String.format(withhold.getFormatNumberDigits(), sequence))
-                );
-                withhold.setAccessKey(withhold.buildAccessKey());
-
-                new PreparedSentence(s,
-                        "INSERT INTO withholds "
-                        + "(id, code, serie_number, purchase_id, date_withhold, "
-                        + "observation, fiscal_period, access_key, status) "
-                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                        SerializerWriteParams.INSTANCE)
-                        .exec(new DataParams() {
-                            @Override
-                            public void writeValues() throws BasicException {
-                                setString(1, withhold.getId());
-                                setString(2, withhold.getCode());
-                                setString(3, withhold.getSerieNumber());
-                                setString(4, withhold.getPurchaseId());
-                                setTimestamp(5, withhold.getDateWithhold());
-                                setString(6, withhold.getObservation());
-                                setTimestamp(7, withhold.getFiscalPeriod());
-                                setString(8, withhold.getAccessKey());
-                                setBoolean(9, withhold.getStatus());
-                            }
-                        });
-
-                SentenceExec detailInsert = new PreparedSentence(s,
-                        "INSERT INTO withholds_detail "
-                        + "(withhold_id, line, withhold_taxes_id, percentage, "
-                        + "base_value, withholded_value, tax_rate) "
-                        + "VALUES (?, ?, ?, ?, ?, ?, ?)",
-                        SerializerWriteParams.INSTANCE);
-
-                for (int i = 0; i < withhold.getLines().size(); i++) {
-                    final int line = i;
-                    final WithholdLineInfo detail = withhold.getLines().get(i);
-
-                    detailInsert.exec(new DataParams() {
-                        @Override
-                        public void writeValues() throws BasicException {
-                            setString(1, withhold.getId());
-                            setInt(2, line);
-                            setString(3, detail.getWithholdTaxesId());
-                            setDouble(4, detail.getPercentage());
-                            setDouble(5, detail.getBaseValue());
-                            setDouble(6, detail.getWithholdedValue());
-                            setDouble(7, detail.getTaxRate());
-                        }
-                    });
-                }
-
-                return withhold.getSerieNumber();
-            }
-        };
-
-        return t.execute().toString();
-    }
 }

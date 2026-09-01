@@ -24,6 +24,15 @@ public class WithholdLineInfo {
     private Double withholdedValue;
     private Double taxRate;
 
+    /**
+     * Sustento tributario al que pertenece esta retencion.
+     *
+     * El SRI agrupa por sustento: cada docSustento del XML lleva uno solo y
+     * sus retenciones adentro. Sin este dato no hay como repartir las lineas
+     * cuando la compra mezcla varios sustentos.
+     */
+    private String taxSupport;
+
     // Solo para mostrar en la grilla, no se guardan en withholds_detail
     private String withholdTaxName;
     private String withholdTaxCode;

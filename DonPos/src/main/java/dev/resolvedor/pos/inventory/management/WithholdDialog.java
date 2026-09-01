@@ -41,17 +41,23 @@ public class WithholdDialog extends javax.swing.JDialog {
     private DataLogicSystem dlSystem;
 
     private WithholdInfo withhold = new WithholdInfo();
-    private boolean editing = false;
+
+    /** La compra ya tenia retencion: el dialogo abre solo para verla. */
     private boolean readOnly = false;
 
     private final Double subtotal;
     private final Double iva;
 
     private ComboBoxValModel modelWithholdTax;
+    private ComboBoxValModel modelTaxSupport;
+
+    /** Sustento unico de la compra, cuando el combo no se muestra. */
+    private String fixedTaxSupport;
     private final LinesTableModel linesModel = new LinesTableModel();
 
     public WithholdDialog(AppView app, java.awt.Frame parent, boolean modal,
-            PurchaseInfo purchase, String supplierName, Double subtotal, Double iva) {
+            PurchaseInfo purchase, String supplierName, Double subtotal, Double iva,
+            java.util.List<Object> taxSupports, WithholdInfo pending) {
         super(parent, modal);
 
         this.app = app;
@@ -72,8 +78,14 @@ public class WithholdDialog extends javax.swing.JDialog {
                 "com.unicenta.pos.forms.DataLogicSystem");
 
         loadWithholdTaxes();
+        loadTaxSupports(taxSupports, purchase.getPurchaseTaxSupport());
         loadPurchase(purchase, supplierName);
-        loadExistingWithhold();
+
+        if (pending != null) {
+            loadPending(pending);
+        } else {
+            loadExistingWithhold();
+        }
     }
 
     public int getReturnStatus() {
@@ -82,6 +94,83 @@ public class WithholdDialog extends javax.swing.JDialog {
 
     public WithholdInfo getWithhold() {
         return withhold;
+    }
+
+    /**
+     * Vuelve a cargar la retencion que se armo antes de guardar la compra.
+     *
+     * Sigue editable: mientras no se guarde la compra, nada se escribio en la
+     * base y el usuario puede corregir lo que quiera.
+     */
+    private void loadPending(WithholdInfo pending) {
+        withhold = pending;
+
+        txtDate.setText(new SimpleDateFormat("dd-MM-yyyy").format(withhold.getDateWithhold()));
+        txtFiscalPeriod.setText(new SimpleDateFormat("MM/yyyy").format(withhold.getFiscalPeriod()));
+        txtObservation.setText(withhold.getObservation());
+
+        for (WithholdLineInfo line : withhold.getLines()) {
+            linesModel.addLine(line);
+        }
+
+        refreshTotal();
+    }
+
+    /**
+     * Si la compra ya tiene retencion, la muestra y bloquea todo.
+     *
+     * Este dialogo dejo de servir para corregir: una retencion se crea junto
+     * con su compra y despues solo se consulta. Corregirla, si hiciera falta,
+     * se hace anulando en el SRI y emitiendo otra.
+     */
+    private void loadExistingWithhold() {
+        try {
+            var existing = dlWithhold.getByPurchase(withhold.getPurchaseId());
+
+            if (existing == null) {
+                return;
+            }
+
+            existing.setUser(withhold.getUser());
+            existing.setLines(dlWithhold.getLinesByWithhold(existing.getId()));
+            withhold = existing;
+
+            txtDate.setText(new SimpleDateFormat("dd-MM-yyyy").format(withhold.getDateWithhold()));
+            txtFiscalPeriod.setText(new SimpleDateFormat("MM/yyyy").format(withhold.getFiscalPeriod()));
+            txtObservation.setText(withhold.getObservation());
+
+            for (WithholdLineInfo line : withhold.getLines()) {
+                linesModel.addLine(line);
+            }
+            refreshTotal();
+
+            setTitle(AppLocal.getIntString("label.withhold") + "  " + withhold.getSerieNumber());
+            setReadOnly(true);
+        } catch (Exception e) {
+            showError("message.cannotloaddata", e);
+        }
+    }
+
+    /**
+     * Apaga el formulario entero. El boton de crear no se pone gris sino que
+     * desaparece: en modo consulta no hay nada que crear, y un boton apagado
+     * invita a preguntarse por que no funciona.
+     */
+    private void setReadOnly(boolean value) {
+        readOnly = value;
+
+        txtDate.setEditable(!value);
+        txtFiscalPeriod.setEditable(!value);
+        txtObservation.setEditable(!value);
+        txtBase.setEditable(!value);
+        txtPercentage.setEditable(!value);
+        txtValue.setEditable(!value);
+
+        cboWithholdTax.setEnabled(!value);
+        cboTaxSupport.setEnabled(!value);
+        cmdAdd.setEnabled(!value);
+        cmdRemove.setEnabled(!value);
+        cmdSave.setVisible(!value);
     }
 
     // -----------------------------------------------------------------------
@@ -97,13 +186,56 @@ public class WithholdDialog extends javax.swing.JDialog {
         }
     }
 
+    /**
+     * Sustentos disponibles: solo los que esa compra realmente usa.
+     *
+     * Vienen de la pantalla de Compra, no de la base: la compra todavia no
+     * esta guardada, sus productos estan en memoria.
+     *
+     * El combo solo aparece cuando hay algo que decidir. Con un solo sustento
+     * queda elegido y se esconde; sin ninguno (compras viejas, guardadas antes
+     * de que se pidiera el sustento por producto) se cae al de la cabecera, que
+     * es lo mismo que hace la vista al armar el XML.
+     */
+    private void loadTaxSupports(java.util.List<Object> taxSupports, String headerTaxSupport) {
+        modelTaxSupport = new ComboBoxValModel(taxSupports);
+        cboTaxSupport.setModel(modelTaxSupport);
+
+        if (taxSupports.size() > 1) {
+            modelTaxSupport.setSelectedKey(null);
+            return;
+        }
+
+        var unico = taxSupports.isEmpty()
+                ? headerTaxSupport
+                : ((com.unicenta.data.loader.IKeyed) taxSupports.get(0)).getKey();
+
+        modelTaxSupport.setSelectedKey(unico);
+
+        // No hay nada que elegir: se esconde en vez de quedar gris, para que
+        // no invite a preguntarse por que no responde.
+        lblTaxSupportTitle.setVisible(false);
+        cboTaxSupport.setVisible(false);
+
+        if (unico == null) {
+            fixedTaxSupport = null;
+        } else {
+            fixedTaxSupport = unico.toString();
+        }
+    }
+
     private void loadPurchase(PurchaseInfo purchase, String supplierName) {
         withhold.setPurchaseId(purchase.getId());
         withhold.setUser(app.getAppUserView().getUser().getUserInfo());
 
         txtSupplier.setText(supplierName);
-        txtDocument.setText(purchase.getPurchaseDocument() + "  "
-                + purchase.getPurchaseReference());
+        // En una liquidacion (03) el numero lo asigna el contador al guardar, asi
+        // que aqui todavia no existe: se muestra solo el codigo del documento.
+        var referencia = purchase.getPurchaseReference();
+        txtDocument.setText(
+                (purchase.getPurchaseDocument() == null ? "" : purchase.getPurchaseDocument())
+                + (referencia == null || referencia.trim().isEmpty()
+                        ? "" : "  " + referencia));
         txtSubtotal.setText(Formats.CURRENCY.formatValue(subtotal));
         txtIva.setText(Formats.CURRENCY.formatValue(iva));
 
@@ -114,81 +246,6 @@ public class WithholdDialog extends javax.swing.JDialog {
 
         txtDate.setText(new SimpleDateFormat("dd-MM-yyyy").format(withhold.getDateWithhold()));
         txtFiscalPeriod.setText(new SimpleDateFormat("MM/yyyy").format(withhold.getFiscalPeriod()));
-    }
-
-    /**
-     * Si la compra ya tiene retencion la carga y decide el modo.
-     *
-     * El criterio para bloquear NO es "ya existe" sino "el SRI la autorizo":
-     * una devuelta o una que nunca se envio si se puede corregir, y si no se
-     * pudiera, esa compra quedaria sin retencion valida para siempre.
-     */
-    private void loadExistingWithhold() {
-        try {
-            var existing = dlWithhold.getByPurchase(withhold.getPurchaseId());
-
-            if (existing == null) {
-                lblStatus.setText(AppLocal.getIntString("label.withhold.notcreated"));
-                lblStatus.setForeground(java.awt.Color.GRAY);
-                return;
-            }
-
-            editing = true;
-            existing.setUser(withhold.getUser());
-            existing.setLines(dlWithhold.getLinesByWithhold(existing.getId()));
-            withhold = existing;
-
-            txtDate.setText(new SimpleDateFormat("dd-MM-yyyy").format(withhold.getDateWithhold()));
-            txtFiscalPeriod.setText(new SimpleDateFormat("MM/yyyy").format(withhold.getFiscalPeriod()));
-            txtObservation.setText(withhold.getObservation());
-
-            for (WithholdLineInfo line : withhold.getLines()) {
-                linesModel.addLine(line);
-            }
-            refreshTotal();
-
-            var status = dlWithhold.getDocumentStatus(withhold.getCode(), withhold.getSerieNumber());
-
-            setTitle(AppLocal.getIntString("label.withhold") + "  " + withhold.getSerieNumber());
-
-            if ("AUTORIZADO".equalsIgnoreCase(status)) {
-                lblStatus.setText(AppLocal.getIntString("label.withhold.created")
-                        + " - " + withhold.getSerieNumber()
-                        + " - " + AppLocal.getIntString("label.authorized"));
-                lblStatus.setForeground(new java.awt.Color(0, 128, 0));
-                setReadOnly(true);
-            } else {
-                lblStatus.setText(AppLocal.getIntString("label.withhold.created")
-                        + " - " + withhold.getSerieNumber()
-                        + " - " + (status == null
-                                ? AppLocal.getIntString("label.notsent") : status));
-                // Naranja, no gris: creada pero sin enviar es una tarea pendiente,
-                // hay que ir a RoQui a autorizarla.
-                lblStatus.setForeground(new java.awt.Color(196, 98, 0));
-            }
-        } catch (Exception e) {
-            showError("message.cannotloaddata", e);
-        }
-    }
-
-    /**
-     * Bloquea todo el formulario. Una retencion AUTORIZADA no se toca: ya esta
-     * en los servidores del SRI y el proveedor la puede usar como credito
-     * tributario. Corregirla se hace anulando y emitiendo otra, no editando.
-     */
-    private void setReadOnly(boolean value) {
-        readOnly = value;
-
-        txtDate.setEditable(!value);
-        txtFiscalPeriod.setEditable(!value);
-        txtObservation.setEditable(!value);
-        txtBase.setEditable(!value);
-        txtValue.setEditable(!value);
-
-        cboWithholdTax.setEnabled(!value);
-        cmdAdd.setEnabled(!value);
-        cmdRemove.setEnabled(!value);
-        cmdSave.setVisible(!value);
     }
 
     // -----------------------------------------------------------------------
@@ -287,9 +344,6 @@ public class WithholdDialog extends javax.swing.JDialog {
     private void initComponents() {
 
         panelTop = new javax.swing.JPanel();
-        panelStatus = new javax.swing.JPanel();
-        lblStatusTitle = new javax.swing.JLabel();
-        lblStatus = new javax.swing.JLabel();
         panelPurchase = new javax.swing.JPanel();
         lblSupplierTitle = new javax.swing.JLabel();
         txtSupplier = new javax.swing.JTextField();
@@ -309,6 +363,8 @@ public class WithholdDialog extends javax.swing.JDialog {
         panelType = new javax.swing.JPanel();
         lblWithholdTypeTitle = new javax.swing.JLabel();
         cboWithholdTax = new javax.swing.JComboBox();
+        lblTaxSupportTitle = new javax.swing.JLabel();
+        cboTaxSupport = new javax.swing.JComboBox();
         panelValues = new javax.swing.JPanel();
         lblBaseTitle = new javax.swing.JLabel();
         txtBase = new javax.swing.JTextField();
@@ -328,19 +384,9 @@ public class WithholdDialog extends javax.swing.JDialog {
         cmdSave = new javax.swing.JButton();
         cmdClose = new javax.swing.JButton();
 
-        panelTop.setLayout(new java.awt.GridLayout(5, 1));
-
-        panelStatus.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT));
+        panelTop.setLayout(new java.awt.GridLayout(4, 1));
 
         java.util.ResourceBundle bundle = java.util.ResourceBundle.getBundle("pos_messages"); // NOI18N
-        lblStatusTitle.setText(bundle.getString("label.Status")); // NOI18N
-        panelStatus.add(lblStatusTitle);
-
-        lblStatus.setFont(new java.awt.Font("Arial", 1, 14)); // NOI18N
-        lblStatus.setText(" ");
-        panelStatus.add(lblStatus);
-
-        panelTop.add(panelStatus);
 
         panelPurchase.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT));
 
@@ -408,6 +454,12 @@ public class WithholdDialog extends javax.swing.JDialog {
             }
         });
         panelType.add(cboWithholdTax);
+
+        lblTaxSupportTitle.setText(bundle.getString("label.taxSupport")); // NOI18N
+        panelType.add(lblTaxSupportTitle);
+
+        cboTaxSupport.setPreferredSize(new java.awt.Dimension(260, 26));
+        panelType.add(cboTaxSupport);
 
         panelTop.add(panelType);
 
@@ -482,7 +534,7 @@ public class WithholdDialog extends javax.swing.JDialog {
 
         panelButtons.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.RIGHT));
 
-        cmdSave.setText(bundle.getString("Button.Save")); // NOI18N
+        cmdSave.setText(bundle.getString("label.withhold.create")); // NOI18N
         cmdSave.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 cmdSaveActionPerformed(evt);
@@ -545,8 +597,22 @@ public class WithholdDialog extends javax.swing.JDialog {
             return;
         }
 
+        // El SRI agrupa las retenciones por sustento, asi que la linea tiene
+        // que decir a cual pertenece. Con el combo escondido se usa el unico
+        // que tiene la compra.
+        var sustento = cboTaxSupport.isVisible()
+                ? (modelTaxSupport == null || modelTaxSupport.getSelectedKey() == null
+                        ? null : modelTaxSupport.getSelectedKey().toString())
+                : fixedTaxSupport;
+
+        if (sustento == null) {
+            showMessage("message.withhold.selecttaxsupport");
+            return;
+        }
+
         var line = new WithholdLineInfo();
         line.setWithholdTax(tax);
+        line.setTaxSupport(sustento);
         line.setBaseValue(parseDouble(txtBase.getText()));
         line.setWithholdedValue(parseDouble(txtValue.getText()));
 
@@ -569,9 +635,14 @@ public class WithholdDialog extends javax.swing.JDialog {
         refreshTotal();
     }//GEN-LAST:event_cmdRemoveActionPerformed
 
+    /**
+     * Arma la retencion y la devuelve; no escribe nada en la base.
+     *
+     * La escritura la hace savePurchase, para que la compra y su retencion
+     * queden en la misma transaccion.
+     */
     private void cmdSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmdSaveActionPerformed
         if (readOnly) {
-            showMessage("message.withhold.cannotedit");
             return;
         }
 
@@ -594,6 +665,8 @@ public class WithholdDialog extends javax.swing.JDialog {
                 return;
             }
 
+            // El numero de la serie no se pide aqui: se pide al guardar, dentro
+            // de la transaccion. Aqui solo se deja lo necesario para armarlo.
             withhold.setSerie(ticketNum.getSerie());
             withhold.setFormatNumberDigits(dlSystem.getResourceAsText("FormatTicket.NumberDigits"));
             withhold.setTaxPayerInfo((TaxpayerInfo) dlTaxPayer.getTaxPayerInfo().find("1"));
@@ -606,21 +679,10 @@ public class WithholdDialog extends javax.swing.JDialog {
             withhold.setObservation(txtObservation.getText());
             withhold.setLines(linesModel.getLines());
 
-            // Corregir conserva el numero: pedir otro al contador dejaria un
-            // hueco en la secuencia que hay que justificar ante el SRI.
-            var serieNumber = editing
-                    ? dlWithhold.updateWithhold(withhold)
-                    : dlWithhold.saveWithhold(withhold);
-
-            JOptionPane.showMessageDialog(this,
-                    AppLocal.getIntString("label.withhold") + ": " + serieNumber,
-                    AppLocal.getIntString("label.withhold"),
-                    JOptionPane.INFORMATION_MESSAGE);
-
             returnStatus = RET_OK;
             dispose();
         } catch (Exception e) {
-            showError("message.cannotsavedata", e);
+            showError("message.cannotloaddata", e);
         }
     }//GEN-LAST:event_cmdSaveActionPerformed
 
@@ -630,6 +692,7 @@ public class WithholdDialog extends javax.swing.JDialog {
     }//GEN-LAST:event_cmdCloseActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JComboBox cboTaxSupport;
     private javax.swing.JComboBox cboWithholdTax;
     private javax.swing.JButton cmdAdd;
     private javax.swing.JButton cmdClose;
@@ -646,12 +709,11 @@ public class WithholdDialog extends javax.swing.JDialog {
     private javax.swing.JLabel lblIvaTitle;
     private javax.swing.JLabel lblObservationTitle;
     private javax.swing.JLabel lblPercentageTitle;
-    private javax.swing.JLabel lblStatus;
-    private javax.swing.JLabel lblStatusTitle;
     private javax.swing.JTextField txtSubtotal;
     private javax.swing.JLabel lblSubtotalTitle;
     private javax.swing.JTextField txtSupplier;
     private javax.swing.JLabel lblSupplierTitle;
+    private javax.swing.JLabel lblTaxSupportTitle;
     private javax.swing.JLabel lblTotalWithheld;
     private javax.swing.JLabel lblTotalWithheldTitle;
     private javax.swing.JLabel lblValueTitle;
@@ -660,7 +722,6 @@ public class WithholdDialog extends javax.swing.JDialog {
     private javax.swing.JPanel panelButtons;
     private javax.swing.JPanel panelDates;
     private javax.swing.JPanel panelPurchase;
-    private javax.swing.JPanel panelStatus;
     private javax.swing.JPanel panelTop;
     private javax.swing.JPanel panelTotal;
     private javax.swing.JPanel panelType;
