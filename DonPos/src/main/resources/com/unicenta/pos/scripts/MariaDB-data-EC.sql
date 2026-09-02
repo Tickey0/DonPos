@@ -655,18 +655,7 @@ CREATE VIEW `v_ele_withholds` AS select cast(`w`.`id` as uuid) AS `id`,
     `i`.`legal_code` AS `identification_type`,
     `s`.`taxid` AS `identification`,
     `s`.`name` AS `legal_name`,
-    `s`.`address` AS `address`,
-    `p`.`purchase_tax_support` AS `code_support`,
-    `p`.`purchase_document` AS `code_document_support`,
-    if(length(`p`.`purchase_reference`) = 15,
-        concat(substr(`p`.`purchase_reference`, 1, 3), '-',
-               substr(`p`.`purchase_reference`, 4, 3), '-',
-               substr(`p`.`purchase_reference`, 7, 9)),
-        `p`.`purchase_reference`) AS `number_document_support`,
-    cast(`p`.`purchase_date` as date) AS `date_document_support`,
-    `p`.`purchase_authorization` AS `authorization_document_support`,
-    round(sum(cast(`pl`.`units` * `pl`.`price` as decimal(19, 2))), 2) AS `total_without_taxes`,
-    round(sum(cast(`pl`.`units` * `pl`.`price` + if(`tx`.`rate` > 0, `pl`.`units` * `pl`.`price` * `tx`.`rate`, 0) as decimal(19, 2))), 2) AS `total`,
+    if(`s`.`is_related` = true, 'SI', 'NO') AS `related`,
     (select
         `e`.`address`
     from
@@ -1127,3 +1116,5 @@ INSERT INTO withhold_taxes(id, name, percentage, code, tax_type, created_at, sta
 INSERT INTO withhold_taxes(id, name, percentage, code, tax_type, created_at, status) VALUES ('27', '0% - 332I Pago convenio de debito', 0, '332I', 'RENTA', '2019-07-26', 1);
 INSERT INTO withhold_taxes(id, name, percentage, code, tax_type, created_at, status) VALUES ('28', '0% - 332G Pagos tarjeta de crédito', 0, '332G', 'RENTA', '2019-07-26', 1);
 INSERT INTO withhold_taxes(id, name, percentage, code, tax_type, created_at, status) VALUES ('29', '50% IVA', 50, '11', 'IVA', '2020-04-01', 1);
+
+INSERT INTO dispatchers (id,taxid_type,taxid,name,plate,created_at) VALUES ('9999999999999','CF','9999999999999','Dispatcher','ZZZ999', SYSDATE());
