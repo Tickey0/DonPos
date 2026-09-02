@@ -42,11 +42,12 @@ public class DataLogicDispatch extends BeanFactoryDataSingle {
      */
     public SentenceList getDispatcherList() {
         return new StaticSentence(s,
-                "SELECT `id`, `name`, `plate` FROM `dispatchers` "
+                "SELECT `id`, `name`, `plate`, `taxid` FROM `dispatchers` "
                 + "WHERE `status` = TRUE ORDER BY `name`",
                 null,
                 (DataRead dr) -> new DispatcherComboInfo(
-                        dr.getString(1), dr.getString(2), dr.getString(3)));
+                        dr.getString(1), dr.getString(2), dr.getString(3),
+                        dr.getString(4)));
     }
 
     /**
@@ -211,6 +212,35 @@ public class DataLogicDispatch extends BeanFactoryDataSingle {
     }
 
     /**
+     * Los productos que van dentro de una factura despachada.
+     *
+     * El SRI pide en el detalle de la guia codigo, cantidad y descripcion de lo
+     * que viaja. Eso no esta en dispatches_detail a proposito: la guia solo
+     * referencia la factura, y copiar aqui los productos permitiria que se
+     * contradigan. Se leen de la factura cada vez que hace falta.
+     *
+     * Se agrupa por producto porque una misma factura puede repetir el mismo
+     * item en varias lineas, y en el camion lo que importa es cuantas unidades
+     * van en total.
+     */
+    @SuppressWarnings("unchecked")
+    public final List<DispatchProductInfo> getProductsOfInvoice(
+            final String code, final String serieNumber) throws BasicException {
+        return (List<DispatchProductInfo>) new PreparedSentence(s,
+                "SELECT `p`.`reference`, `p`.`name`, SUM(`tl`.`units`) units "
+                + "FROM `tickets` `t` "
+                + "JOIN `ticketlines` `tl` ON `tl`.`ticket` = `t`.`id` "
+                + "LEFT JOIN `products` `p` ON `p`.`id` = `tl`.`product` "
+                + "WHERE `t`.`code` = ? AND `t`.`serie_number` = ? "
+                + "GROUP BY `p`.`reference`, `p`.`name` "
+                + "ORDER BY `p`.`name`",
+                new SerializerWriteBasic(new Datas[]{Datas.STRING, Datas.STRING}),
+                (DataRead dr) -> new DispatchProductInfo(
+                        dr.getString(1), dr.getString(2), dr.getDouble(3))
+        ).list(new Object[]{code, serieNumber});
+    }
+
+    /**
      * Siguiente numero de la serie GUI. Debe llamarse SIEMPRE dentro de la
      * transaccion que guarda, o el numero queda quemado si algo falla despues.
      */
@@ -322,6 +352,7 @@ public class DataLogicDispatch extends BeanFactoryDataSingle {
      * Fila del combo de transportistas: la clave es el id, el texto visible
      * es el nombre con la placa.
      */
+    @lombok.Getter
     public static class DispatcherComboInfo
             implements com.unicenta.data.loader.IKeyed {
 
@@ -329,10 +360,18 @@ public class DataLogicDispatch extends BeanFactoryDataSingle {
         private final String name;
         private final String plate;
 
-        public DispatcherComboInfo(String id, String name, String plate) {
+        /**
+         * El SRI pide la identificacion del transportista en la guia, asi que
+         * no alcanza con el nombre y la placa que muestra el combo.
+         */
+        private final String taxid;
+
+        public DispatcherComboInfo(String id, String name, String plate,
+                String taxid) {
             this.id = id;
             this.name = name;
             this.plate = plate;
+            this.taxid = taxid;
         }
 
         @Override

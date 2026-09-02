@@ -9,6 +9,9 @@ import com.unicenta.format.Formats;
 import com.unicenta.pos.forms.AppConfig;
 import com.unicenta.pos.forms.AppLocal;
 import com.unicenta.pos.forms.AppView;
+import com.unicenta.pos.printer.TicketParser;
+import com.unicenta.pos.scripting.ScriptEngine;
+import com.unicenta.pos.scripting.ScriptFactory;
 import com.unicenta.pos.forms.BeanFactoryApp;
 import com.unicenta.pos.forms.BeanFactoryException;
 import com.unicenta.pos.forms.DataLogicSales;
@@ -23,6 +26,8 @@ import com.unicenta.pos.suppliers.SupplierInfo;
 import com.unicenta.pos.ticket.ProductInfoExt;
 import com.unicenta.pos.ticket.TaxInfo;
 import com.unicenta.pos.ticket.UserInfo;
+import dev.joguenco.pos.establishment.DataLogicEstablishment;
+import dev.joguenco.pos.establishment.EstablishmentInfo;
 import dev.joguenco.pos.taxpayer.DataLogicTaxpayer;
 import dev.joguenco.pos.taxpayer.TaxpayerInfo;
 import dev.joguenco.pos.ticketsnum.TicketsNumInfo;
@@ -66,6 +71,7 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
     private DataLogicSuppliers dlSupplier;
     private DataLogicSales dlSales;
     private DataLogicTaxpayer dlTaxPayer;
+    private DataLogicEstablishment dlEstablishment;
     private DataLogicWithhold dlWithhold;
     protected DataLogicSystem dlSystem;
 
@@ -79,6 +85,9 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
     private SentenceList sentTaxSupport;
 
     private PurchaseInfo purchase;
+
+    /** Interpreta la plantilla ya resuelta y la manda a la impresora. */
+    private TicketParser ticketParser;
 
     /** Retencion armada en el dialogo, todavia sin grabar. */
     private WithholdInfo pendingWithhold;
@@ -608,11 +617,19 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
             purchase.setMoney(app.getActiveCashIndex());
             purchase.setCreatedAt(new Date());
             purchase.setReason((Integer) modelReason.getSelectedKey());
-            purchase.setSupplier(new SupplierInfo(modelSupplier.getSelectedKey().toString()));
+            // El objeto completo, no uno armado con el id: el combo ya trae
+            // nombre, RUC, telefono y correo, y son los que salen impresos en
+            // la liquidacion y en la retencion. Con solo el id se imprimian
+            // vacios, porque el resto de campos quedaban en null.
+            purchase.setSupplier((SupplierInfo) modelSupplier.getSelectedItem());
             purchase.setLocation((String) modelLocation.getSelectedKey());
             // Purchase tax support
             purchase.setPurchaseTaxSupport(modelTaxSupport.getSelectedKey().toString());
             purchase.setPurchaseDocument(modelDocumentType.getSelectedKey().toString());
+            // El codigo "03" no le dice nada al proveedor: se guarda tambien el
+            // texto del combo para poder imprimirlo en palabras.
+            purchase.setPurchaseDocumentName(modelDocumentType.getSelectedItem() == null
+                    ? null : modelDocumentType.getSelectedItem().toString());
             purchase.setPurchaseReference(txtSerie.getText());
             purchase.setPurchaseDate(parsePurchaseDate());
             purchase.setPurchaseAuthorization(txtAuthorization.getText());
@@ -628,6 +645,12 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
                 purchase.setFormatNumberDigits(dlSystem.getResourceAsText("FormatTicket.NumberDigits"));
             }
 
+            // Los datos del local (nombre comercial, direccion, telefono) van
+            // en la cabecera impresa, igual que en la factura. Salen del
+            // establecimiento, que se identifica con los tres primeros digitos
+            // de la serie.
+            purchase.setEstablishment(findEstablishment(purchase.getSerie()));
+
             // La compra y su retencion van juntas: savePurchase las mete en
             // la misma transaccion. Si la compra ya tiene numero es porque se
             // abrio del buscador, y entonces solo se graba la retencion.
@@ -641,6 +664,18 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
                     txtSerie.getText()),
                     pendingWithhold
             );
+
+            // Se imprime lo que emitimos nosotros. La factura no: la trae el
+            // proveedor. Si la compra es liquidacion CON retencion, salen las dos.
+            if ("03".equals(purchase.getPurchaseDocument())) {
+                printLiquidation();
+            }
+
+            if (pendingWithhold != null) {
+                pendingWithhold.setEstablishment(
+                        findEstablishment(pendingWithhold.getSerie()));
+                printWithhold();
+            }
 
             var mensaje = AppLocal.getIntString("label.purchase") + " = " + result;
             if (pendingWithhold != null) {
@@ -1014,6 +1049,98 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
     }
 
     /**
+     * El establecimiento al que pertenece una serie.
+     *
+     * Los tres primeros digitos de la serie son el codigo del establecimiento,
+     * asi que con eso alcanza para traer nombre comercial, direccion, telefono
+     * y correo del local que emite. Es el mismo camino que usa la factura.
+     *
+     * Devuelve null si no se puede resolver: la impresion se lo salta y el
+     * documento sale sin esa cabecera, pero sale.
+     */
+    private EstablishmentInfo findEstablishment(String serie) {
+        if (serie == null || serie.length() < 3) {
+            return null;
+        }
+
+        try {
+            return (EstablishmentInfo) dlEstablishment
+                    .getEstablishmentInfo()
+                    .find(serie.substring(0, 3));
+        } catch (BasicException e) {
+            log.error(PurchaseEditor.class.getName() + " " + e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Imprime la liquidacion de compra.
+     *
+     * La factura del proveedor no se imprime: la emite el y ya te la entrega.
+     * La liquidacion la emitimos nosotros, asi que hay que darle una copia.
+     */
+    private void printLiquidation() {
+        print("Printer.Liquidation", script -> {
+            // Todo lo demas (emisor, local, proveedor) cuelga de purchase, para
+            // que la plantilla nunca pregunte por un objeto que puede ser nulo.
+            script.put("purchase", purchase);
+            script.put("lines", purchase.getInvLines());
+        });
+    }
+
+    /**
+     * Imprime el comprobante de retencion.
+     *
+     * El proveedor lo necesita como credito tributario, asi que se imprime
+     * siempre que la compra genere una retencion, sea sobre factura o sobre
+     * liquidacion.
+     */
+    private void printWithhold() {
+        print("Printer.Withhold", script -> {
+            script.put("withhold", pendingWithhold);
+            script.put("purchase", purchase);
+            script.put("lines", pendingWithhold.getLines());
+        });
+    }
+
+    /**
+     * Resuelve una plantilla y la manda a la impresora.
+     *
+     * Los errores se avisan pero no cortan nada: la compra ya quedo grabada, y
+     * no poder imprimirla no la invalida. Frenar aqui dejaria al usuario
+     * pensando que no se guardo.
+     */
+    private void print(String plantilla, java.util.function.Consumer<ScriptEngine> datos) {
+        var recurso = dlSystem.getResourceAsXML(plantilla);
+
+        if (recurso == null) {
+            showPrintError();
+            return;
+        }
+
+        try {
+            ScriptEngine script = ScriptFactory.getScriptEngine(ScriptFactory.VELOCITY);
+
+            // Cada nombre que se pone aqui es el que la plantilla usa con $
+            datos.accept(script);
+
+            ticketParser.printTicket(script.eval(recurso).toString());
+        } catch (Exception e) {
+            log.error(PurchaseEditor.class.getName() + " " + e.getMessage());
+            showPrintError();
+        }
+    }
+
+    private void showPrintError() {
+        JOptionPane.showMessageDialog(
+                this,
+                AppLocal.getIntString("message.cannotprintticket"),
+                AppLocal.getIntString("label.purchase"),
+                JOptionPane.WARNING_MESSAGE
+        );
+    }
+
+    /**
      * La fecha del documento del proveedor, o null si todavia no se escribio.
      */
     private Date parsePurchaseDate() {
@@ -1257,8 +1384,10 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
         dlSupplier = (DataLogicSuppliers) app.getBean("com.unicenta.pos.suppliers.DataLogicSuppliers");
         dlSales = (DataLogicSales) app.getBean("com.unicenta.pos.forms.DataLogicSales");
         dlTaxPayer = (DataLogicTaxpayer) app.getBean("dev.joguenco.pos.taxpayer.DataLogicTaxpayer");
+        dlEstablishment = (DataLogicEstablishment) app.getBean("dev.joguenco.pos.establishment.DataLogicEstablishment");
         dlSystem = (DataLogicSystem) app.getBean("com.unicenta.pos.forms.DataLogicSystem");
         dlWithhold = (DataLogicWithhold) app.getBean("dev.resolvedor.pos.inventory.management.DataLogicWithhold");
+        ticketParser = new TicketParser(app.getDeviceTicket(), dlSystem);
     }
 
     @Override

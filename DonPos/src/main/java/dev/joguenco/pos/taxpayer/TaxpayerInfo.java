@@ -18,6 +18,7 @@ package dev.joguenco.pos.taxpayer;
 import com.unicenta.basic.BasicException;
 import com.unicenta.data.loader.DataRead;
 import com.unicenta.data.loader.SerializableRead;
+import dev.resolvedor.util.PrintFormat;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -51,6 +52,55 @@ public class TaxpayerInfo implements SerializableRead {
         legalName = "";
     }    
     
+    /**
+     * Razon social del emisor.
+     */
+    public String printLegalName() {
+        return PrintFormat.text(legalName);
+    }
+
+    /**
+     * RUC del emisor.
+     */
+    public String printIdentification() {
+        return PrintFormat.text(identification);
+    }
+
+    /**
+     * Leyenda "Obligado a llevar contabilidad", obligatoria en el documento
+     * impreso cuando el emisor lo esta.
+     */
+    public String printForcedAccounting() {
+        return "SI".equals(PrintFormat.text(text1))
+                ? "Obligado a llevar contabilidad: SI"
+                : "";
+    }
+
+    /**
+     * Resolucion de contribuyente especial, si la hay.
+     */
+    public String printSpecialTaxpayer() {
+        var value = PrintFormat.text(text2);
+
+        return value.isEmpty() ? "" : "Contribuyente especial No: " + value;
+    }
+
+    /**
+     * Resolucion de agente de retencion, si la hay.
+     */
+    public String printRetentionAgent() {
+        var value = PrintFormat.text(text3);
+
+        return value.isEmpty() ? "" : "Agente de retención resolución No: " + value;
+    }
+
+    /**
+     * Cualquier otra leyenda que el emisor quiera en el pie del documento.
+     */
+    public String printOther() {
+        return PrintFormat.text(text4);
+    }
+
     @Override
     public void readValues(DataRead dr) throws BasicException {
         this.identification = dr.getString(1);

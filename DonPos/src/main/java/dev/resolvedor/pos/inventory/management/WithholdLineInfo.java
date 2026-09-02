@@ -2,6 +2,7 @@ package dev.resolvedor.pos.inventory.management;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import dev.resolvedor.util.PrintFormat;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -67,6 +68,52 @@ public class WithholdLineInfo {
      */
     public final void calculate() {
         withholdedValue = round(baseValue * percentage / 100);
+    }
+
+    // -----------------------------------------------------------------------
+    // Impresion
+    // -----------------------------------------------------------------------
+
+    /**
+     * Nombre del concepto retenido, tal como esta en el catalogo.
+     */
+    public String printName() {
+        return PrintFormat.text(withholdTaxName);
+    }
+
+    /**
+     * Codigo del SRI para ese concepto (312, 3440, etc).
+     */
+    public String printCode() {
+        return PrintFormat.text(withholdTaxCode);
+    }
+
+    /**
+     * Codigo del sustento tributario al que pertenece la linea.
+     */
+    public String printTaxSupport() {
+        return PrintFormat.text(taxSupport);
+    }
+
+    /**
+     * Base imponible sobre la que se calculo la retencion.
+     */
+    public String printBaseValue() {
+        return PrintFormat.currency(baseValue);
+    }
+
+    /**
+     * Porcentaje aplicado: 1.75 sale como "1.75%".
+     */
+    public String printPercentage() {
+        return PrintFormat.percentage(percentage);
+    }
+
+    /**
+     * Valor efectivamente retenido.
+     */
+    public String printWithholdedValue() {
+        return PrintFormat.currency(withholdedValue);
     }
 
     private Double round(Double value) {

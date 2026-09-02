@@ -2,7 +2,9 @@ package dev.joguenco.pos.dispatcher;
 
 import com.unicenta.pos.ticket.UserInfo;
 import dev.joguenco.pos.taxpayer.TaxpayerInfo;
+import dev.joguenco.pos.establishment.EstablishmentInfo;
 import dev.resolvedor.util.Module11;
+import dev.resolvedor.util.PrintFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -47,8 +49,14 @@ public class DispatchInfo {
     private String formatNumberDigits;
     private UserInfo user;
     private TaxpayerInfo taxPayerInfo;
+    private EstablishmentInfo establishment;
     private String environment; // Test -> 1; Production -> 2
-    private String dispatcherLabel; // nombre y placa, solo para la busqueda
+    private String dispatcherLabel; // nombre y placa juntos, para la busqueda
+
+    // El SRI los pide por separado en la guia, no como una sola etiqueta
+    private String dispatcherName;
+    private String dispatcherTaxId;
+    private String dispatcherPlate;
     private Integer lineCount;      // cuantas facturas trae, para la busqueda
 
     private List<DispatchLineInfo> lines;
@@ -86,6 +94,136 @@ public class DispatchInfo {
             accessKey = "";
             return accessKey;
         }
+    }
+
+    // -----------------------------------------------------------------------
+    // Impresion
+    //
+    // La guia viaja en el camion, asi que lo que sale mal impreso aqui es lo
+    // que el control de carretera va a leer. Nada de Date ni null crudos.
+    // -----------------------------------------------------------------------
+
+    /**
+     * Numero de la guia con guiones: 001-001-000000002.
+     */
+    public String printSequential() {
+        return PrintFormat.sequential(serieNumber);
+    }
+
+    /**
+     * Fecha de inicio del traslado.
+     */
+    public String printDateDispatch() {
+        return PrintFormat.date(dateDispatch);
+    }
+
+    /**
+     * Fecha de fin del traslado. El SRI la exige, nunca va vacia.
+     */
+    public String printDateEndDispatch() {
+        return PrintFormat.date(dateEndDispatch);
+    }
+
+    /**
+     * Razon social o nombre del transportista.
+     */
+    public String printDispatcher() {
+        return PrintFormat.text(dispatcherName).isEmpty()
+                ? PrintFormat.text(dispatcherLabel)
+                : PrintFormat.text(dispatcherName);
+    }
+
+    /**
+     * Identificacion del transportista, que el SRI exige en la guia.
+     */
+    public String printDispatcherTaxId() {
+        return PrintFormat.text(dispatcherTaxId);
+    }
+
+    /**
+     * Placa del vehiculo.
+     */
+    public String printDispatcherPlate() {
+        return PrintFormat.text(dispatcherPlate);
+    }
+
+    public String printAddressStart() {
+        return PrintFormat.text(addressStart);
+    }
+
+    public String printTransferReason() {
+        return PrintFormat.text(transferReason);
+    }
+
+    public String printObservation() {
+        return PrintFormat.text(observation);
+    }
+
+    public String printUser() {
+        return user == null ? "" : PrintFormat.text(user.getName());
+    }
+
+    /**
+     * Cuantas facturas van en este viaje.
+     */
+    public String printLinesCount() {
+        return Integer.toString(lines == null ? 0 : lines.size());
+    }
+
+    // --- Emisor ------------------------------------------------------------
+
+    public String printLegalName() {
+        return taxPayerInfo == null ? "" : taxPayerInfo.printLegalName();
+    }
+
+    public String printIdentification() {
+        return taxPayerInfo == null ? "" : taxPayerInfo.printIdentification();
+    }
+
+    public String printForcedAccounting() {
+        return taxPayerInfo == null ? "" : taxPayerInfo.printForcedAccounting();
+    }
+
+    public String printSpecialTaxpayer() {
+        return taxPayerInfo == null ? "" : taxPayerInfo.printSpecialTaxpayer();
+    }
+
+    public String printRetentionAgent() {
+        return taxPayerInfo == null ? "" : taxPayerInfo.printRetentionAgent();
+    }
+
+    public String printOther() {
+        return taxPayerInfo == null ? "" : taxPayerInfo.printOther();
+    }
+
+    public String printComercialName() {
+        return establishment == null ? "" : PrintFormat.text(establishment.getComercialName());
+    }
+
+    public String printEstablishmentAddress() {
+        return establishment == null ? "" : PrintFormat.text(establishment.getAddress());
+    }
+
+    public String printEstablishmentPhone() {
+        return establishment == null ? "" : PrintFormat.text(establishment.getPhone());
+    }
+
+    public String printEstablishmentEmail() {
+        return establishment == null ? "" : PrintFormat.text(establishment.getEmail());
+    }
+
+    // --- Clave de acceso ---------------------------------------------------
+
+    public String printAccessKeyLine1() {
+        return PrintFormat.accessKeyLine1(accessKey);
+    }
+
+    public String printAccessKeyLine2() {
+        return PrintFormat.accessKeyLine2(accessKey);
+    }
+
+    public String printEnvironment() {
+        return PrintFormat.environment(environment);
     }
 
     @Override

@@ -11,6 +11,11 @@ import com.unicenta.pos.forms.BeanFactoryApp;
 import com.unicenta.pos.forms.BeanFactoryException;
 import com.unicenta.pos.forms.DataLogicSystem;
 import com.unicenta.pos.forms.JPanelView;
+import com.unicenta.pos.printer.TicketParser;
+import com.unicenta.pos.scripting.ScriptEngine;
+import com.unicenta.pos.scripting.ScriptFactory;
+import dev.joguenco.pos.establishment.DataLogicEstablishment;
+import dev.joguenco.pos.establishment.EstablishmentInfo;
 import dev.joguenco.pos.taxpayer.DataLogicTaxpayer;
 import dev.joguenco.pos.taxpayer.TaxpayerInfo;
 import dev.joguenco.pos.ticketsnum.DataLogicTicketsNum;
@@ -51,10 +56,14 @@ public class DispatchEditor extends JPanel implements JPanelView, BeanFactoryApp
 
     private DataLogicDispatch dlDispatch;
     private DataLogicTaxpayer dlTaxPayer;
+    private DataLogicEstablishment dlEstablishment;
     private DataLogicSystem dlSystem;
 
     private ComboBoxValModel modelDispatcher;
     private ComboBoxValModel modelAddressStart;
+
+    /** Interpreta la plantilla ya resuelta y la manda a la impresora. */
+    private TicketParser ticketParser;
 
     private DispatchInfo dispatch = new DispatchInfo();
     private final LinesTableModel linesModel = new LinesTableModel();
@@ -129,8 +138,12 @@ public class DispatchEditor extends JPanel implements JPanelView, BeanFactoryApp
                 "dev.joguenco.pos.dispatcher.DataLogicDispatch");
         dlTaxPayer = (DataLogicTaxpayer) app.getBean(
                 "dev.joguenco.pos.taxpayer.DataLogicTaxpayer");
+        dlEstablishment = (DataLogicEstablishment) app.getBean(
+                "dev.joguenco.pos.establishment.DataLogicEstablishment");
         dlSystem = (DataLogicSystem) app.getBean(
                 "com.unicenta.pos.forms.DataLogicSystem");
+
+        ticketParser = new TicketParser(app.getDeviceTicket(), dlSystem);
     }
 
     @Override
@@ -315,7 +328,26 @@ public class DispatchEditor extends JPanel implements JPanelView, BeanFactoryApp
             dispatch.setTaxPayerInfo((TaxpayerInfo) dlTaxPayer.getTaxPayerInfo().find("1"));
             dispatch.setEnvironment(dlSystem.getResourceAsText("Electronic.Environment"));
 
+            // Los datos del local van en la cabecera impresa, igual que en la
+            // factura: los tres primeros digitos de la serie son el codigo del
+            // establecimiento que emite.
+            dispatch.setEstablishment(findEstablishment(dispatch.getSerie()));
+
             dispatch.setDispatcherId((String) modelDispatcher.getSelectedKey());
+
+            // Los datos del transportista los tiene el combo: DispatchInfo
+            // guarda solo el id, y en el papel un UUID no sirve de nada. Van
+            // por separado porque el SRI pide identificacion y placa como
+            // campos propios, no como una sola etiqueta.
+            var transportista = (DataLogicDispatch.DispatcherComboInfo)
+                    modelDispatcher.getSelectedItem();
+
+            if (transportista != null) {
+                dispatch.setDispatcherLabel(transportista.toString());
+                dispatch.setDispatcherName(transportista.getName());
+                dispatch.setDispatcherTaxId(transportista.getTaxid());
+                dispatch.setDispatcherPlate(transportista.getPlate());
+            }
             dispatch.setAddressStart((String) modelAddressStart.getSelectedKey());
             dispatch.setDateDispatch(parseDate(txtDateDispatch.getText()));
 
@@ -330,6 +362,8 @@ public class DispatchEditor extends JPanel implements JPanelView, BeanFactoryApp
             dispatch.setLines(linesModel.getLines());
 
             var serieNumber = dlDispatch.saveDispatch(dispatch);
+
+            printDeliveryNote();
 
             JOptionPane.showMessageDialog(this,
                     AppLocal.getIntString("message.dispatch.saved") + "\n"
@@ -353,6 +387,88 @@ public class DispatchEditor extends JPanel implements JPanelView, BeanFactoryApp
             }
 
             showError("message.cannotsavedata", e);
+        }
+    }
+
+    /**
+     * Imprime la guia de remision.
+     *
+     * Acompana a la mercaderia durante el traslado, asi que se imprime apenas
+     * se guarda y viaja en el camion.
+     *
+     * Los errores se avisan pero no cortan nada: la guia ya quedo grabada y no
+     * poder imprimirla no la invalida.
+     */
+    private void printDeliveryNote() {
+        var plantilla = dlSystem.getResourceAsXML("Printer.Note.Delivery");
+
+        if (plantilla == null) {
+            showMessage("message.cannotprintticket");
+            return;
+        }
+
+        try {
+            loadProducts();
+
+            ScriptEngine script = ScriptFactory.getScriptEngine(ScriptFactory.VELOCITY);
+
+            // Cada nombre de aqui es el que la plantilla usa con $. Todo lo
+            // demas (emisor, local, transportista) cuelga de dispatch, para que
+            // la plantilla nunca tenga que preguntar por un objeto que puede
+            // venir nulo.
+            script.put("dispatch", dispatch);
+            script.put("lines", dispatch.getLines());
+
+            ticketParser.printTicket(script.eval(plantilla).toString());
+        } catch (Exception e) {
+            log.error(DispatchEditor.class.getName() + " " + e.getMessage());
+            showMessage("message.cannotprintticket");
+        }
+    }
+
+    /**
+     * Llena cada factura de la guia con los productos que van adentro.
+     *
+     * Se hace recien al imprimir, no al armar la guia: la pantalla solo
+     * necesita saber que facturas van, y traer los productos de todas mientras
+     * el usuario arma el viaje seria cargar datos que quizas descarte.
+     *
+     * Si una factura falla, esa se queda sin detalle pero la guia igual sale.
+     * Un producto que no se pudo leer no invalida el traslado.
+     */
+    private void loadProducts() {
+        for (var linea : dispatch.getLines()) {
+            try {
+                linea.setProducts(dlDispatch.getProductsOfInvoice(
+                        linea.getReferenceCode(), linea.getReferenceNumber()));
+            } catch (Exception e) {
+                log.error(DispatchEditor.class.getName() + " " + e.getMessage());
+            }
+        }
+    }
+
+    /**
+     * El establecimiento al que pertenece una serie.
+     *
+     * Los tres primeros digitos de la serie son su codigo, y con eso se traen
+     * nombre comercial, direccion, telefono y correo del local que emite. Es el
+     * mismo camino que usa la factura.
+     *
+     * Devuelve null si no se puede resolver: la impresion se lo salta y la guia
+     * sale sin esa cabecera, pero sale.
+     */
+    private EstablishmentInfo findEstablishment(String serie) {
+        if (serie == null || serie.length() < 3) {
+            return null;
+        }
+
+        try {
+            return (EstablishmentInfo) dlEstablishment
+                    .getEstablishmentInfo()
+                    .find(serie.substring(0, 3));
+        } catch (Exception e) {
+            log.error(DispatchEditor.class.getName() + " " + e.getMessage());
+            return null;
         }
     }
 

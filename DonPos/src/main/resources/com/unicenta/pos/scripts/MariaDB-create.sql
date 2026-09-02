@@ -1213,6 +1213,11 @@ INSERT INTO resources(id, name, restype, content) VALUES('67', 'Printer.TicketPr
 INSERT INTO resources(id, name, restype, content) VALUES('68', 'Printer.TicketRemote', 0, $FILE{/com/unicenta/pos/templates/Printer.TicketRemote.xml});
 INSERT INTO resources(id, name, restype, content) VALUES('69', 'Printer.TicketTotal', 0, $FILE{/com/unicenta/pos/templates/Printer.TicketTotal.xml});
 
+-- Documentos que emite el comprador y hay que entregar.
+INSERT INTO resources(id, name, restype, content) VALUES('109', 'Printer.Liquidation', 0, $FILE{/com/unicenta/pos/templates/Printer.Liquidation.xml});
+INSERT INTO resources(id, name, restype, content) VALUES('110', 'Printer.Withhold', 0, $FILE{/com/unicenta/pos/templates/Printer.Withhold.xml});
+INSERT INTO resources(id, name, restype, content) VALUES('111', 'Printer.Note.Delivery', 0, $FILE{/com/unicenta/pos/templates/Printer.Note.Delivery.xml});
+
 -- SCRIPTS
 INSERT INTO resources(id, name, restype, content) VALUES('70', 'script.Keyboard', 0, $FILE{/com/unicenta/pos/templates/script.Keyboard.txt});
 INSERT INTO resources(id, name, restype, content) VALUES('71', 'script.Linediscount', 0, $FILE{/com/unicenta/pos/templates/script.Linediscount.txt});
