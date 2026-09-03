@@ -35,8 +35,7 @@ import com.unicenta.pos.payment.PaymentInfo;
 import com.unicenta.pos.payment.PaymentInfoMagcard;
 import com.unicenta.pos.payment.PaymentInfoTicket;
 import com.unicenta.pos.util.StringUtils;
-import dev.joguenco.pos.taxpayer.TaxpayerInfo;
-import dev.resolvedor.util.Module11;
+import dev.joguenco.receipt.MasterMoldInfo;
 import dev.resolvedor.util.Size;
 import java.io.*;
 import java.nio.file.Paths;
@@ -48,7 +47,7 @@ import java.util.*;
  *
  * @author adrianromero
  */
-public final class TicketInfo implements SerializableRead, Externalizable {
+public final class TicketInfo extends MasterMoldInfo implements SerializableRead, Externalizable {
 
     private static final long serialVersionUID = 2765650092387265178L;
 
@@ -90,62 +89,11 @@ public final class TicketInfo implements SerializableRead, Externalizable {
 
     private static String hostname;
 
-    // New properties for serie
-    private String code;
-    private String serie;
-
-    private String serieNumber;
-    private String formatNumberDigits;
-
     private String ticketTicketId;
-    private TaxpayerInfo taxPayerInfo;
-    private String environment; // Test -> 1; Production -> 2
-    private String accessKey;
-
-    private String comercialName;
-    private String addressEstablishment;
-    private String phoneEstablishment;
-    private String emailEstablishment;
 
     public enum Code {
         QR,
         BARCODE
-    }
-
-    public String getAccessKey() {
-        return accessKey;
-    }
-
-    public String getCode() {
-        return code;
-    }
-
-    public void setCode(String code) {
-        this.code = code;
-    }
-
-    public String getSerie() {
-        return serie;
-    }
-
-    public void setSerie(String serie) {
-        this.serie = serie;
-    }
-
-    public String getSerieNumber() {
-        return serieNumber;
-    }
-
-    public void setSerieNumber(String serieNumber) {
-        this.serieNumber = serieNumber;
-    }
-
-    public String getFormatNumberDigits() {
-        return formatNumberDigits;
-    }
-
-    public void setFormatNumberDigits(String formatNumberDigits) {
-        this.formatNumberDigits = formatNumberDigits;
     }
 
     public String getTicketTicketId() {
@@ -154,54 +102,6 @@ public final class TicketInfo implements SerializableRead, Externalizable {
 
     public void setTicketTicketId(String ticketTicketId) {
         this.ticketTicketId = ticketTicketId;
-    }
-
-    public TaxpayerInfo getTaxPayerInfo() {
-        return taxPayerInfo;
-    }
-
-    public void setTaxPayerInfo(TaxpayerInfo taxPayerInfo) {
-        this.taxPayerInfo = taxPayerInfo;
-    }
-
-    public String getEnvironment() {
-        return environment;
-    }
-
-    public void setEnvironment(String environment) {
-        this.environment = environment;
-    }
-
-    public String getComercialName() {
-        return comercialName;
-    }
-
-    public void setComercialName(String comercialName) {
-        this.comercialName = comercialName;
-    }
-
-    public String getAddressEstablishment() {
-        return addressEstablishment;
-    }
-
-    public void setAddressEstablishment(String addressEstablishment) {
-        this.addressEstablishment = addressEstablishment;
-    }
-
-    public String getPhoneEstablishment() {
-        return phoneEstablishment;
-    }
-
-    public void setPhoneEstablishment(String phoneEstablishment) {
-        this.phoneEstablishment = phoneEstablishment;
-    }
-
-    public String getEmailEstablishment() {
-        return emailEstablishment;
-    }
-
-    public void setEmailEstablishment(String emailEstablishment) {
-        this.emailEstablishment = emailEstablishment;
     }
 
     public static void setHostname(String name) {
@@ -295,8 +195,8 @@ public final class TicketInfo implements SerializableRead, Externalizable {
         taxes = null;
 
         ticketstatus = dr.getInt(10);
-        code = dr.getString(11);
-        serieNumber = dr.getString(12);
+        setCode(dr.getString(11));
+        setSerieNumber(dr.getString(12));
     }
 
     /**
@@ -955,113 +855,68 @@ public final class TicketInfo implements SerializableRead, Externalizable {
     }
 
     public String printForcedAccounting() {
-        if ("SI".equals(taxPayerInfo.getText1())) {
+        if ("SI".equals(getTaxPayerInfo().getText1())) {
             return "Obligado a llevar contabilidad: "
-                    + taxPayerInfo.getText1();
+                    + getTaxPayerInfo().getText1();
         }
 
         return "";
     }
 
     public String printSpecialTaxpayer() {
-        if (taxPayerInfo.getText2() == null) {
+        if (getTaxPayerInfo().getText2() == null) {
             return "";
         }
 
-        return "Contribuyente especial No: " + taxPayerInfo.getText2();
+        return "Contribuyente especial No: " + getTaxPayerInfo().getText2();
     }
 
     public String printRetentionAgent() {
-        if (taxPayerInfo.getText3() == null) {
+        if (getTaxPayerInfo().getText3() == null) {
             return "";
         }
         return "Agente de retención resolución No: "
-                + taxPayerInfo.getText3();
+                + getTaxPayerInfo().getText3();
     }
 
     public String printOther() {
-        if (taxPayerInfo.getText4() == null) {
+        if (getTaxPayerInfo().getText4() == null) {
             return "";
         }
-        return taxPayerInfo.getText4();
+        return getTaxPayerInfo().getText4();
     }
 
     public String printSequential() {
         if (m_iTicketId > 0) {
 
-            return serieNumber.substring(0, 3)
+            return getSerieNumber().substring(0, 3)
                     + "-"
-                    + serieNumber.substring(3, 6)
+                    + getSerieNumber().substring(3, 6)
                     + "-"
-                    + serieNumber.substring(6, 15);
+                    + getSerieNumber().substring(6, 15);
         } else {
             return "";
         }
     }
 
     public String buildAccessKey() {
-        String codeDocument;
-        final var m11 = new Module11();
-        try {
-            if (null == getCode()) {
-                accessKey = "";
-                return accessKey;
-            } else {
-                switch (getCode()) {
-                    case "FV":
-                        codeDocument = "01"; // Invoice
-                        break;
-                    case "DV":
-                        codeDocument = "04"; // Credit Note
-                        break;
-                    case "ND":
-                        codeDocument = "05"; // Debit Note
-                        break;
-                    default:
-                        accessKey = "";
-                        return accessKey;
-                }
-            }
-
-            accessKey = new SimpleDateFormat("ddMMyyyy").format(getDate());
-            accessKey = accessKey + codeDocument;
-            accessKey = accessKey + getTaxPayerInfo().getIdentification();
-            accessKey = accessKey + getEnvironment();
-            accessKey = accessKey + serieNumber;
-            accessKey = accessKey + "12345678" + "1";
-            accessKey = accessKey + m11.module11(accessKey);
-
-            return accessKey;
-        } catch (Exception e) {
-            System.err.println("Error buildAccessKey: " + e.getMessage());
-            accessKey = "";
-            return accessKey;
-        }
+        return buildAccessKey(getDate());
     }
 
     public String printAccessKeyLine1() {
         buildAccessKey();
-        if (accessKey.length() == 49) {
-            return accessKey.substring(0, 39);
+        if (getAccessKey().length() == 49) {
+            return getAccessKey().substring(0, 39);
         }
 
         return "";
     }
 
     public String printAccessKeyLine2() {
-        if (accessKey.length() == 49) {
-            return accessKey.substring(39, 49);
+        if (getAccessKey().length() == 49) {
+            return getAccessKey().substring(39, 49);
         }
 
-        return "";
-    }
-
-    public String printEnvironment() {
-        if (getEnvironment().equals("1")) {
-            return "Ambiente: Pruebas";
-        } else if (getEnvironment().equals("2")) {
-            return "Ambiente: Producción";
-        }
         return "";
     }
 

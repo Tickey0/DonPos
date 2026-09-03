@@ -1,11 +1,8 @@
 package dev.joguenco.pos.dispatcher;
 
 import com.unicenta.pos.ticket.UserInfo;
-import dev.joguenco.pos.taxpayer.TaxpayerInfo;
-import dev.joguenco.pos.establishment.EstablishmentInfo;
-import dev.resolvedor.util.Module11;
+import dev.joguenco.receipt.MasterMoldInfo;
 import dev.resolvedor.util.PrintFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -21,7 +18,7 @@ import lombok.Setter;
  */
 @Getter
 @Setter
-public class DispatchInfo {
+public class DispatchInfo extends MasterMoldInfo {
 
     /**
      * Motivo del traslado que se propone al abrir la pantalla.
@@ -34,23 +31,15 @@ public class DispatchInfo {
 
     private String id;
     private String dispatcherId;
-    private String code;
-    private String serieNumber;
     private Date dateDispatch;
     private Date dateEndDispatch;
     private String addressStart;
-    private String accessKey;
     private String observation;
     private String transferReason;
     private Boolean status;
 
     // Datos de apoyo: sirven para armar el numero y la clave, no se guardan
-    private String serie;
-    private String formatNumberDigits;
     private UserInfo user;
-    private TaxpayerInfo taxPayerInfo;
-    private EstablishmentInfo establishment;
-    private String environment; // Test -> 1; Production -> 2
     private String dispatcherLabel; // nombre y placa juntos, para la busqueda
 
     // El SRI los pide por separado en la guia, no como una sola etiqueta
@@ -63,7 +52,7 @@ public class DispatchInfo {
 
     public DispatchInfo() {
         id = UUID.randomUUID().toString();
-        code = "GUI";
+        setCode("GUI");
         lines = new ArrayList<>();
         dateDispatch = new Date();
         dateEndDispatch = new Date();
@@ -76,24 +65,7 @@ public class DispatchInfo {
      * WithholdInfo, cambiando el codigo de documento: 06 = guia de remision.
      */
     public String buildAccessKey() {
-        final var m11 = new Module11();
-        try {
-
-            var codeDocument = "06"; // Delivery note
-
-            accessKey = new SimpleDateFormat("ddMMyyyy").format(getDateDispatch());
-            accessKey = accessKey + codeDocument;
-            accessKey = accessKey + getTaxPayerInfo().getIdentification();
-            accessKey = accessKey + getEnvironment();
-            accessKey = accessKey + getSerieNumber().replace("-", "");
-            accessKey = accessKey + "12345678" + "1";
-            accessKey = accessKey + m11.module11(accessKey);
-
-            return accessKey;
-        } catch (Exception e) {
-            accessKey = "";
-            return accessKey;
-        }
+        return buildAccessKey(getDateDispatch());
     }
 
     // -----------------------------------------------------------------------
@@ -102,12 +74,11 @@ public class DispatchInfo {
     // La guia viaja en el camion, asi que lo que sale mal impreso aqui es lo
     // que el control de carretera va a leer. Nada de Date ni null crudos.
     // -----------------------------------------------------------------------
-
     /**
      * Numero de la guia con guiones: 001-001-000000002.
      */
     public String printSequential() {
-        return PrintFormat.sequential(serieNumber);
+        return PrintFormat.sequential(getSerieNumber());
     }
 
     /**
@@ -171,63 +142,41 @@ public class DispatchInfo {
     }
 
     // --- Emisor ------------------------------------------------------------
-
     public String printLegalName() {
-        return taxPayerInfo == null ? "" : taxPayerInfo.printLegalName();
+        return getTaxPayerInfo() == null ? "" : getTaxPayerInfo().printLegalName();
     }
 
     public String printIdentification() {
-        return taxPayerInfo == null ? "" : taxPayerInfo.printIdentification();
+        return getTaxPayerInfo() == null ? "" : getTaxPayerInfo().printIdentification();
     }
 
     public String printForcedAccounting() {
-        return taxPayerInfo == null ? "" : taxPayerInfo.printForcedAccounting();
+        return getTaxPayerInfo() == null ? "" : getTaxPayerInfo().printForcedAccounting();
     }
 
     public String printSpecialTaxpayer() {
-        return taxPayerInfo == null ? "" : taxPayerInfo.printSpecialTaxpayer();
+        return getTaxPayerInfo() == null ? "" : getTaxPayerInfo().printSpecialTaxpayer();
     }
 
     public String printRetentionAgent() {
-        return taxPayerInfo == null ? "" : taxPayerInfo.printRetentionAgent();
+        return getTaxPayerInfo() == null ? "" : getTaxPayerInfo().printRetentionAgent();
     }
 
     public String printOther() {
-        return taxPayerInfo == null ? "" : taxPayerInfo.printOther();
-    }
-
-    public String printComercialName() {
-        return establishment == null ? "" : PrintFormat.text(establishment.getComercialName());
-    }
-
-    public String printEstablishmentAddress() {
-        return establishment == null ? "" : PrintFormat.text(establishment.getAddress());
-    }
-
-    public String printEstablishmentPhone() {
-        return establishment == null ? "" : PrintFormat.text(establishment.getPhone());
-    }
-
-    public String printEstablishmentEmail() {
-        return establishment == null ? "" : PrintFormat.text(establishment.getEmail());
+        return getTaxPayerInfo() == null ? "" : getTaxPayerInfo().printOther();
     }
 
     // --- Clave de acceso ---------------------------------------------------
-
     public String printAccessKeyLine1() {
-        return PrintFormat.accessKeyLine1(accessKey);
+        return PrintFormat.accessKeyLine1(getAccessKey());
     }
 
     public String printAccessKeyLine2() {
-        return PrintFormat.accessKeyLine2(accessKey);
-    }
-
-    public String printEnvironment() {
-        return PrintFormat.environment(environment);
-    }
+        return PrintFormat.accessKeyLine2(getAccessKey());
+    }    
 
     @Override
     public String toString() {
-        return code + " " + serieNumber + " - " + lines.size();
+        return getCode() + " " + getSerieNumber() + " - " + lines.size();
     }
 }

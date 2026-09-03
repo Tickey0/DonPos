@@ -234,10 +234,7 @@ public class JTicketsBagTicket extends JTicketsBag {
                 ticket.setTaxPayerInfo((TaxpayerInfo) dataLogicTaxPayer.getTaxPayerInfo().find("1"));
                 ticket.setEnvironment(m_dlSystem.getResourceAsText("Electronic.Environment"));
                 if (establishmentInfo != null) {
-                    ticket.setComercialName(establishmentInfo.getComercialName());
-                    ticket.setAddressEstablishment(establishmentInfo.getAddress());
-                    ticket.setPhoneEstablishment(establishmentInfo.getPhone());
-                    ticket.setEmailEstablishment(establishmentInfo.getEmail());
+                    ticket.setEstablishment(establishmentInfo);                 
                 }
 
                 m_ticket = ticket;

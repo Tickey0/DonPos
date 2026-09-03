@@ -8,11 +8,8 @@ import com.unicenta.format.Formats;
 import com.unicenta.pos.inventory.InventoryLine;
 import com.unicenta.pos.suppliers.SupplierInfo;
 import com.unicenta.pos.ticket.UserInfo;
-import dev.joguenco.pos.taxpayer.TaxpayerInfo;
-import dev.joguenco.pos.establishment.EstablishmentInfo;
-import dev.resolvedor.util.Module11;
+import dev.joguenco.receipt.MasterMoldInfo;
 import dev.resolvedor.util.PrintFormat;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -27,7 +24,7 @@ import lombok.Setter;
  */
 @Getter
 @Setter
-public class PurchaseInfo implements SerializableRead {
+public class PurchaseInfo extends MasterMoldInfo implements SerializableRead {
 
     private String id;
 
@@ -43,24 +40,17 @@ public class PurchaseInfo implements SerializableRead {
     private String location;
     private String observation;
     private Boolean status;
-    private String serie;
-    private String accessKey;
-    private String formatNumberDigits;
 
     private String money;
     private UserInfo user;
 
     private List<InventoryLine> invLines;
-    
-    private TaxpayerInfo taxPayerInfo;
-    private EstablishmentInfo establishment;
-    private String environment; // Test -> 1; Production -> 2
 
     /**
      * Nombre legible del tipo de documento ("Liquidacion de compra").
      *
-     * La columna guarda solo el codigo del SRI, y en el papel un "03" no
-     * le dice nada al proveedor. Lo llena la pantalla desde el combo.
+     * La columna guarda solo el codigo del SRI, y en el papel un "03" no le
+     * dice nada al proveedor. Lo llena la pantalla desde el combo.
      */
     private String purchaseDocumentName;
 
@@ -113,7 +103,6 @@ public class PurchaseInfo implements SerializableRead {
     // Si la plantilla llamara directo a un getter que devuelve null o Date, en
     // el papel saldria "${purchase.getPurchaseDate()}" o "Mon Sep 01 00:00:00".
     // -----------------------------------------------------------------------
-
     /**
      * Numero del documento con guiones: 001-001-000000002.
      */
@@ -168,7 +157,6 @@ public class PurchaseInfo implements SerializableRead {
     }
 
     // --- Proveedor ---------------------------------------------------------
-
     public String printSupplierName() {
         return supplier == null ? "" : PrintFormat.text(supplier.getName());
     }
@@ -190,59 +178,37 @@ public class PurchaseInfo implements SerializableRead {
     }
 
     // --- Emisor ------------------------------------------------------------
-
     public String printLegalName() {
-        return taxPayerInfo == null ? "" : taxPayerInfo.printLegalName();
+        return getTaxPayerInfo() == null ? "" : getTaxPayerInfo().printLegalName();
     }
 
     public String printIdentification() {
-        return taxPayerInfo == null ? "" : taxPayerInfo.printIdentification();
+        return getTaxPayerInfo() == null ? "" : getTaxPayerInfo().printIdentification();
     }
 
     public String printForcedAccounting() {
-        return taxPayerInfo == null ? "" : taxPayerInfo.printForcedAccounting();
+        return getTaxPayerInfo() == null ? "" : getTaxPayerInfo().printForcedAccounting();
     }
 
     public String printSpecialTaxpayer() {
-        return taxPayerInfo == null ? "" : taxPayerInfo.printSpecialTaxpayer();
+        return getTaxPayerInfo() == null ? "" : getTaxPayerInfo().printSpecialTaxpayer();
     }
 
     public String printRetentionAgent() {
-        return taxPayerInfo == null ? "" : taxPayerInfo.printRetentionAgent();
+        return getTaxPayerInfo() == null ? "" : getTaxPayerInfo().printRetentionAgent();
     }
 
     public String printOther() {
-        return taxPayerInfo == null ? "" : taxPayerInfo.printOther();
-    }
-
-    public String printComercialName() {
-        return establishment == null ? "" : PrintFormat.text(establishment.getComercialName());
-    }
-
-    public String printEstablishmentAddress() {
-        return establishment == null ? "" : PrintFormat.text(establishment.getAddress());
-    }
-
-    public String printEstablishmentPhone() {
-        return establishment == null ? "" : PrintFormat.text(establishment.getPhone());
-    }
-
-    public String printEstablishmentEmail() {
-        return establishment == null ? "" : PrintFormat.text(establishment.getEmail());
+        return getTaxPayerInfo() == null ? "" : getTaxPayerInfo().printOther();
     }
 
     // --- Clave de acceso ---------------------------------------------------
-
     public String printAccessKeyLine1() {
-        return PrintFormat.accessKeyLine1(accessKey);
+        return PrintFormat.accessKeyLine1(getAccessKey());
     }
 
     public String printAccessKeyLine2() {
-        return PrintFormat.accessKeyLine2(accessKey);
-    }
-
-    public String printEnvironment() {
-        return PrintFormat.environment(environment);
+        return PrintFormat.accessKeyLine2(getAccessKey());
     }
 
     public InventoryLine getLine(int index) {
@@ -292,24 +258,8 @@ public class PurchaseInfo implements SerializableRead {
     }
 
     public String buildAccessKey() {
-        final var m11 = new Module11();
-        try {
-
-            var codeDocument = "03"; // Purchase Liquidation
-
-            accessKey = new SimpleDateFormat("ddMMyyyy").format(getPurchaseDate());
-            accessKey = accessKey + codeDocument;
-            accessKey = accessKey + getTaxPayerInfo().getIdentification();
-            accessKey = accessKey + getEnvironment();
-            accessKey = accessKey + getPurchaseReference().replace("-", "");
-            accessKey = accessKey + "12345678" + "1";
-            accessKey = accessKey + m11.module11(accessKey);
-
-            return accessKey;
-        } catch (Exception e) {
-            accessKey = "";
-            return accessKey;
-        }
+        setSerieNumber(getPurchaseReference());
+        return buildAccessKey(getPurchaseDate());
     }
 
     @Override

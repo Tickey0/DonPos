@@ -640,7 +640,8 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
             purchase.setEnvironment(dlSystem.getResourceAsText("Electronic.Environment"));
 
             if ("03".equals(modelDocumentType.getSelectedKey())) {
-                var seriePurchase = getSeriePurchase(purchase.getUser());
+                purchase.setCode("LQ");
+                var seriePurchase = getSeriePurchase(purchase.getUser(), purchase.getCode());
                 purchase.setSerie(seriePurchase.getSerie());
                 purchase.setFormatNumberDigits(dlSystem.getResourceAsText("FormatTicket.NumberDigits"));
             }
@@ -889,7 +890,7 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
         return true;
     }
 
-    private TicketsNumInfo getSeriePurchase(UserInfo user) throws BasicException {
+    private TicketsNumInfo getSeriePurchase(UserInfo user, String code) throws BasicException {
         var dataLogicTicketsNum
                 = (DataLogicTicketsNumPurchase) app
                         .getBean("dev.joguenco.pos.ticketsnumpurchase.DataLogicTicketsNumPurchase");
@@ -897,7 +898,7 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
         // Get serie and code actives
         var ticketNum = (TicketsNumInfo) dataLogicTicketsNum
                 .getSerial()
-                .find(user.getId(), "LQ", "primary");
+                .find(user.getId(), code, "primary");
 
         return ticketNum;
     }

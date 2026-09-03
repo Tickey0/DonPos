@@ -150,7 +150,8 @@ public class DataLogicPurchase extends BeanFactoryDataSingle {
                         });
 
                 if ("03".equals(purchase.getPurchaseDocument())) {
-                    var sequence = getNextTicketIndex(purchase.getUser().getId(), "LQ");
+                    purchase.setCode("LQ");
+                    var sequence = getNextTicketIndex(purchase.getUser().getId(), purchase.getCode());
                     purchase.setPurchaseReference(purchase.getSerie()
                             .concat(String.format(purchase.getFormatNumberDigits(), sequence))
                     );
