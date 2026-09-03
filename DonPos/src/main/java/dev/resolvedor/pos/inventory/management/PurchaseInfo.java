@@ -9,7 +9,9 @@ import com.unicenta.pos.inventory.InventoryLine;
 import com.unicenta.pos.suppliers.SupplierInfo;
 import com.unicenta.pos.ticket.UserInfo;
 import dev.joguenco.pos.taxpayer.TaxpayerInfo;
+import dev.joguenco.pos.establishment.EstablishmentInfo;
 import dev.resolvedor.util.Module11;
+import dev.resolvedor.util.PrintFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -51,7 +53,16 @@ public class PurchaseInfo implements SerializableRead {
     private List<InventoryLine> invLines;
     
     private TaxpayerInfo taxPayerInfo;
+    private EstablishmentInfo establishment;
     private String environment; // Test -> 1; Production -> 2
+
+    /**
+     * Nombre legible del tipo de documento ("Liquidacion de compra").
+     *
+     * La columna guarda solo el codigo del SRI, y en el papel un "03" no
+     * le dice nada al proveedor. Lo llena la pantalla desde el combo.
+     */
+    private String purchaseDocumentName;
 
     public PurchaseInfo() {
         id = UUID.randomUUID().toString();
@@ -93,6 +104,145 @@ public class PurchaseInfo implements SerializableRead {
 
     public String printTotal() {
         return Formats.CURRENCY.formatValue(getTotal());
+    }
+
+    // -----------------------------------------------------------------------
+    // Impresion
+    //
+    // Todo lo que la plantilla usa pasa por aqui y sale siempre como String.
+    // Si la plantilla llamara directo a un getter que devuelve null o Date, en
+    // el papel saldria "${purchase.getPurchaseDate()}" o "Mon Sep 01 00:00:00".
+    // -----------------------------------------------------------------------
+
+    /**
+     * Numero del documento con guiones: 001-001-000000002.
+     */
+    public String printSequential() {
+        return PrintFormat.sequential(purchaseReference);
+    }
+
+    /**
+     * Fecha del documento, la que el SRI toma como fecha de emision.
+     */
+    public String printPurchaseDate() {
+        return PrintFormat.date(purchaseDate);
+    }
+
+    /**
+     * Fecha y hora en que se grabo la compra en el sistema.
+     */
+    public String printCreatedAt() {
+        return PrintFormat.dateTime(createdAt);
+    }
+
+    /**
+     * Tipo de documento en palabras, o el codigo si nadie puso el nombre.
+     */
+    public String printDocument() {
+        var name = PrintFormat.text(purchaseDocumentName);
+
+        return name.isEmpty() ? PrintFormat.text(purchaseDocument) : name;
+    }
+
+    public String printTaxSupport() {
+        return PrintFormat.text(purchaseTaxSupport);
+    }
+
+    public String printObservation() {
+        return PrintFormat.text(observation);
+    }
+
+    public String printUser() {
+        return user == null ? "" : PrintFormat.text(user.getName());
+    }
+
+    /**
+     * Cuantas unidades entraron con esta compra.
+     */
+    public String printArticlesCount() {
+        var count = invLines.stream()
+                .mapToDouble(InventoryLine::getMultiply)
+                .sum();
+
+        return Formats.DOUBLE.formatValue(count);
+    }
+
+    // --- Proveedor ---------------------------------------------------------
+
+    public String printSupplierName() {
+        return supplier == null ? "" : PrintFormat.text(supplier.getName());
+    }
+
+    public String printSupplierTaxId() {
+        return supplier == null ? "" : PrintFormat.text(supplier.getTaxid());
+    }
+
+    public String printSupplierAddress() {
+        return supplier == null ? "" : PrintFormat.text(supplier.getPostal());
+    }
+
+    public String printSupplierPhone() {
+        return supplier == null ? "" : PrintFormat.text(supplier.getPhone());
+    }
+
+    public String printSupplierEmail() {
+        return supplier == null ? "" : PrintFormat.text(supplier.getEmail());
+    }
+
+    // --- Emisor ------------------------------------------------------------
+
+    public String printLegalName() {
+        return taxPayerInfo == null ? "" : taxPayerInfo.printLegalName();
+    }
+
+    public String printIdentification() {
+        return taxPayerInfo == null ? "" : taxPayerInfo.printIdentification();
+    }
+
+    public String printForcedAccounting() {
+        return taxPayerInfo == null ? "" : taxPayerInfo.printForcedAccounting();
+    }
+
+    public String printSpecialTaxpayer() {
+        return taxPayerInfo == null ? "" : taxPayerInfo.printSpecialTaxpayer();
+    }
+
+    public String printRetentionAgent() {
+        return taxPayerInfo == null ? "" : taxPayerInfo.printRetentionAgent();
+    }
+
+    public String printOther() {
+        return taxPayerInfo == null ? "" : taxPayerInfo.printOther();
+    }
+
+    public String printComercialName() {
+        return establishment == null ? "" : PrintFormat.text(establishment.getComercialName());
+    }
+
+    public String printEstablishmentAddress() {
+        return establishment == null ? "" : PrintFormat.text(establishment.getAddress());
+    }
+
+    public String printEstablishmentPhone() {
+        return establishment == null ? "" : PrintFormat.text(establishment.getPhone());
+    }
+
+    public String printEstablishmentEmail() {
+        return establishment == null ? "" : PrintFormat.text(establishment.getEmail());
+    }
+
+    // --- Clave de acceso ---------------------------------------------------
+
+    public String printAccessKeyLine1() {
+        return PrintFormat.accessKeyLine1(accessKey);
+    }
+
+    public String printAccessKeyLine2() {
+        return PrintFormat.accessKeyLine2(accessKey);
+    }
+
+    public String printEnvironment() {
+        return PrintFormat.environment(environment);
     }
 
     public InventoryLine getLine(int index) {

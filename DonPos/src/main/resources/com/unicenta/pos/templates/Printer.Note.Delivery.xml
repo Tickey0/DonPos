@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Guia de remision (codDoc 06).
+
+    Acompana a la mercaderia durante el traslado, asi que se imprime al guardar
+    el despacho y viaja en el camion. Lo que salga mal impreso aqui es lo que
+    va a leer el control de carretera.
+
+    Sigue el molde de Printer.Ticket: mismo orden de cabecera, misma forma de
+    partir la clave de acceso y las mismas leyendas del SRI.
+
+    Objetos disponibles en esta plantilla:
+      $dispatch  DispatchInfo, de donde cuelga todo lo demas
+      $lines     las facturas del viaje (DispatchLineInfo)
+
+    Todo se pide con metodos print*, nunca con getters: un getter que devuelve
+    null hace que Velocity imprima el texto crudo ${dispatch.getX()} en el
+    papel, y uno que devuelve Date imprime "Mon Sep 01 00:00:00 ECT 2026".
+-->
+
+<output>
+
+    <ticket>
+
+        <line><text align="center" length="40">GUÍA DE REMISIÓN</text></line>
+        <line></line>
+
+        #if (${dispatch.printComercialName()} != "")
+        <line><text align="center" length="40">${dispatch.printComercialName()}</text></line>
+        #end
+        #if (${dispatch.printLegalName()} != "")
+        <line><text align="center" length="40">${dispatch.printLegalName()}</text></line>
+        #end
+        #if (${dispatch.printIdentification()} != "")
+        <line><text align="center" length="40">RUC: ${dispatch.printIdentification()}</text></line>
+        #end
+        #if (${dispatch.printEstablishmentAddress()} != "")
+        <line><text align="center" length="40">${dispatch.printEstablishmentAddress()}</text></line>
+        #end
+        #if (${dispatch.printEstablishmentPhone()} != "")
+        <line><text align="center" length="40">${dispatch.printEstablishmentPhone()}</text></line>
+        #end
+        #if (${dispatch.printEstablishmentEmail()} != "")
+        <line><text align="center" length="40">${dispatch.printEstablishmentEmail()}</text></line>
+        #end
+
+        #if (${dispatch.printForcedAccounting()} != "")
+        <line><text align="center" length="40">${dispatch.printForcedAccounting()}</text></line>
+        #end
+        #if (${dispatch.printSpecialTaxpayer()} != "")
+        <line><text align="center" length="40">${dispatch.printSpecialTaxpayer()}</text></line>
+        #end
+        #if (${dispatch.printRetentionAgent()} != "")
+        <line><text align="center" length="40">${dispatch.printRetentionAgent()}</text></line>
+        #end
+        #if (${dispatch.printOther()} != "")
+        <line><text align="center" length="40">${dispatch.printOther()}</text></line>
+        #end
+
+        #if (${dispatch.printAccessKeyLine1()} != "")
+        <line></line>
+        <line><text align="center" length="40">Clave de acceso:</text></line>
+        <line><text>${dispatch.printAccessKeyLine1()}</text></line>
+        <line><text align="center" length="40">${dispatch.printAccessKeyLine2()}</text></line>
+        <line><text align="center" length="40">${dispatch.printEnvironment()}</text></line>
+        #end
+
+        <line></line>
+        <line><text align="left" length="40">Guía: ${dispatch.printSequential()}</text></line>
+        <line><text align="left" length="40">Salida: ${dispatch.printDateDispatch()}</text></line>
+        <line><text align="left" length="40">Llegada: ${dispatch.printDateEndDispatch()}</text></line>
+
+        <line></line>
+        <line><text align="center" length="40">TRANSPORTISTA</text></line>
+        <line><text align="left" length="40">${dispatch.printDispatcher()}</text></line>
+        #if (${dispatch.printDispatcherTaxId()} != "")
+        <line><text align="left" length="40">Identificación: ${dispatch.printDispatcherTaxId()}</text></line>
+        #end
+        #if (${dispatch.printDispatcherPlate()} != "")
+        <line><text align="left" length="40">Placa: ${dispatch.printDispatcherPlate()}</text></line>
+        #end
+
+        <line></line>
+        <line><text align="left" length="40">Punto de partida:</text></line>
+        <line><text align="left" length="40">${dispatch.printAddressStart()}</text></line>
+
+        #if (${dispatch.printTransferReason()} != "")
+        <line></line>
+        <line><text align="left" length="40">Motivo del traslado:</text></line>
+        <line><text align="left" length="40">${dispatch.printTransferReason()}</text></line>
+        #end
+
+        <line></line>
+        <line><text align="center" length="40">DESTINATARIOS</text></line>
+        <line><text align="left" length="40">- - - - - - - - - - - - - - - - - - - -</text></line>
+
+        #foreach ($line in $lines)
+        <line><text align="left" length="40">${line.printReference()}</text></line>
+        #if (${line.printDate()} != "")
+        <line><text align="left" length="40">Emitida: ${line.printDate()}</text></line>
+        #end
+        <line><text align="left" length="40">${line.printCustomerName()}</text></line>
+        #if (${line.printCustomerTaxId()} != "")
+        <line><text align="left" length="40">Identificación: ${line.printCustomerTaxId()}</text></line>
+        #end
+        #if (${line.printCustomerAddress()} != "")
+        <line><text align="left" length="40">Dirección: ${line.printCustomerAddress()}</text></line>
+        #end
+
+        <line>
+            <text align="left" length="8">Código</text>
+            <text align="right" length="6">Cant</text>
+            <text align="left" length="26"> Descripción</text>
+        </line>
+        #foreach ($product in $line.getProducts())
+        <line>
+            <text align="left" length="8">${product.printCode()}</text>
+            <text align="right" length="6">${product.printUnits()}</text>
+            <text align="left" length="26"> ${product.printName()}</text>
+        </line>
+        #end
+
+        <line></line>
+        #end
+
+        <line><text align="left" length="40">- - - - - - - - - - - - - - - - - - - -</text></line>
+        <line>
+            <text>Facturas: </text>
+            <text align="left" length="14">${dispatch.printLinesCount()}</text>
+        </line>
+
+        #if (${dispatch.printObservation()} != "")
+        <line></line>
+        <line><text align="left" length="40">Observación:</text></line>
+        <line><text align="left" length="40">${dispatch.printObservation()}</text></line>
+        #end
+
+        <line></line>
+        <line><text align="left" length="15">Atendido por:</text><text>${dispatch.printUser()}</text></line>
+        <line></line>
+        <line></line>
+    </ticket>
+
+</output>

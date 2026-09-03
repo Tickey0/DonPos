@@ -2,7 +2,9 @@ package dev.resolvedor.pos.inventory.management;
 
 import com.unicenta.pos.ticket.UserInfo;
 import dev.joguenco.pos.taxpayer.TaxpayerInfo;
+import dev.joguenco.pos.establishment.EstablishmentInfo;
 import dev.resolvedor.util.Module11;
+import dev.resolvedor.util.PrintFormat;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.SimpleDateFormat;
@@ -38,6 +40,7 @@ public class WithholdInfo {
     private String formatNumberDigits;
     private UserInfo user;
     private TaxpayerInfo taxPayerInfo;
+    private EstablishmentInfo establishment;
     private String environment; // Test -> 1; Production -> 2
 
     private List<WithholdLineInfo> lines;
@@ -85,6 +88,105 @@ public class WithholdInfo {
         return BigDecimal.valueOf(total)
                 .setScale(2, RoundingMode.HALF_UP)
                 .doubleValue();
+    }
+
+    // -----------------------------------------------------------------------
+    // Impresion
+    //
+    // La plantilla no toca getters directos: los Date y los Double crudos se
+    // imprimen feos, y un null en Velocity sale como "${withhold.getX()}".
+    // -----------------------------------------------------------------------
+
+    /**
+     * Numero del comprobante con guiones: 001-001-000000002.
+     */
+    public String printSequential() {
+        return PrintFormat.sequential(serieNumber);
+    }
+
+    /**
+     * Fecha de emision de la retencion.
+     */
+    public String printDate() {
+        return PrintFormat.date(dateWithhold);
+    }
+
+    /**
+     * Periodo fiscal en MM/yyyy, que es como lo pide el SRI.
+     */
+    public String printFiscalPeriod() {
+        return PrintFormat.fiscalPeriod(fiscalPeriod);
+    }
+
+    /**
+     * Total retenido, con simbolo de moneda.
+     */
+    public String printTotalWithheld() {
+        return PrintFormat.currency(getTotalWithheld());
+    }
+
+    public String printObservation() {
+        return PrintFormat.text(observation);
+    }
+
+    public String printUser() {
+        return user == null ? "" : PrintFormat.text(user.getName());
+    }
+
+    // --- Emisor ------------------------------------------------------------
+
+    public String printLegalName() {
+        return taxPayerInfo == null ? "" : taxPayerInfo.printLegalName();
+    }
+
+    public String printIdentification() {
+        return taxPayerInfo == null ? "" : taxPayerInfo.printIdentification();
+    }
+
+    public String printForcedAccounting() {
+        return taxPayerInfo == null ? "" : taxPayerInfo.printForcedAccounting();
+    }
+
+    public String printSpecialTaxpayer() {
+        return taxPayerInfo == null ? "" : taxPayerInfo.printSpecialTaxpayer();
+    }
+
+    public String printRetentionAgent() {
+        return taxPayerInfo == null ? "" : taxPayerInfo.printRetentionAgent();
+    }
+
+    public String printOther() {
+        return taxPayerInfo == null ? "" : taxPayerInfo.printOther();
+    }
+
+    public String printComercialName() {
+        return establishment == null ? "" : PrintFormat.text(establishment.getComercialName());
+    }
+
+    public String printEstablishmentAddress() {
+        return establishment == null ? "" : PrintFormat.text(establishment.getAddress());
+    }
+
+    public String printEstablishmentPhone() {
+        return establishment == null ? "" : PrintFormat.text(establishment.getPhone());
+    }
+
+    public String printEstablishmentEmail() {
+        return establishment == null ? "" : PrintFormat.text(establishment.getEmail());
+    }
+
+    // --- Clave de acceso ---------------------------------------------------
+
+    public String printAccessKeyLine1() {
+        return PrintFormat.accessKeyLine1(accessKey);
+    }
+
+    public String printAccessKeyLine2() {
+        return PrintFormat.accessKeyLine2(accessKey);
+    }
+
+    public String printEnvironment() {
+        return PrintFormat.environment(environment);
     }
 
     @Override

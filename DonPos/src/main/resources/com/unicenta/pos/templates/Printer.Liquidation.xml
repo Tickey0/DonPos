@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Liquidacion de compra (codDoc 03).
+
+    La emite el comprador, no el proveedor, asi que hay que entregarle una
+    copia impresa. Se imprime al guardar la compra cuando el documento es 03.
+
+    Sigue el molde de Printer.Ticket: mismo orden de cabecera, misma forma de
+    partir la clave de acceso y las mismas leyendas del SRI.
+
+    Objetos disponibles en esta plantilla:
+      $purchase  PurchaseInfo, de donde cuelga todo lo demas
+      $lines     las lineas de la compra (InventoryLine)
+
+    Todo se pide con metodos print*, nunca con getters: un getter que devuelve
+    null hace que Velocity imprima el texto crudo ${purchase.getX()} en el
+    papel, y uno que devuelve Date imprime "Mon Sep 01 00:00:00 ECT 2026".
+-->
+
+<output>
+
+    <ticket>
+
+        <line><text align="center" length="40">LIQUIDACIÓN DE COMPRA</text></line>
+        <line></line>
+
+        #if (${purchase.printComercialName()} != "")
+        <line><text align="center" length="40">${purchase.printComercialName()}</text></line>
+        #end
+        #if (${purchase.printLegalName()} != "")
+        <line><text align="center" length="40">${purchase.printLegalName()}</text></line>
+        #end
+        #if (${purchase.printIdentification()} != "")
+        <line><text align="center" length="40">RUC: ${purchase.printIdentification()}</text></line>
+        #end
+        #if (${purchase.printEstablishmentAddress()} != "")
+        <line><text align="center" length="40">${purchase.printEstablishmentAddress()}</text></line>
+        #end
+        #if (${purchase.printEstablishmentPhone()} != "")
+        <line><text align="center" length="40">${purchase.printEstablishmentPhone()}</text></line>
+        #end
+        #if (${purchase.printEstablishmentEmail()} != "")
+        <line><text align="center" length="40">${purchase.printEstablishmentEmail()}</text></line>
+        #end
+
+        #if (${purchase.printForcedAccounting()} != "")
+        <line><text align="center" length="40">${purchase.printForcedAccounting()}</text></line>
+        #end
+        #if (${purchase.printSpecialTaxpayer()} != "")
+        <line><text align="center" length="40">${purchase.printSpecialTaxpayer()}</text></line>
+        #end
+        #if (${purchase.printRetentionAgent()} != "")
+        <line><text align="center" length="40">${purchase.printRetentionAgent()}</text></line>
+        #end
+        #if (${purchase.printOther()} != "")
+        <line><text align="center" length="40">${purchase.printOther()}</text></line>
+        #end
+
+        #if (${purchase.printAccessKeyLine1()} != "")
+        <line></line>
+        <line><text align="center" length="40">Clave de acceso:</text></line>
+        <line><text>${purchase.printAccessKeyLine1()}</text></line>
+        <line><text align="center" length="40">${purchase.printAccessKeyLine2()}</text></line>
+        <line><text align="center" length="40">${purchase.printEnvironment()}</text></line>
+        #end
+
+        <line></line>
+        <line><text align="left" length="40">Liquidación: ${purchase.printSequential()}</text></line>
+        <line><text align="left" length="40">Fecha: ${purchase.printPurchaseDate()}</text></line>
+
+        <line></line>
+        <line><text align="center" length="40">PROVEEDOR</text></line>
+        #if (${purchase.printSupplierTaxId()} != "")
+        <line><text align="left" length="40">Identificación: ${purchase.printSupplierTaxId()}</text></line>
+        #end
+        <line><text align="left" length="40">Proveedor: ${purchase.printSupplierName()}</text></line>
+        #if (${purchase.printSupplierAddress()} != "")
+        <line><text align="left" length="40">Dirección: ${purchase.printSupplierAddress()}</text></line>
+        #end
+        #if (${purchase.printSupplierPhone()} != "")
+        <line><text align="left" length="40">Teléfono: ${purchase.printSupplierPhone()}</text></line>
+        #end
+        #if (${purchase.printSupplierEmail()} != "")
+        <line><text align="left" length="40">E-mail: ${purchase.printSupplierEmail()}</text></line>
+        #end
+
+        <line></line>
+        <line>
+            <text align="left" length="16">Descripción</text>
+            <text align="right" length="5">Cant</text>
+            <text align="right" length="9">P.Unit</text>
+            <text align="right" length="10">P.Total</text>
+        </line>
+        <line><text align="left" length="40">- - - - - - - - - - - - - - - - - - - -</text></line>
+
+        #foreach ($line in $lines)
+        <line>
+            <text align="left" length="16">${line.printName()}</text>
+            <text align="right" length="5">${line.printMultiply()}</text>
+            <text align="right" length="9">${line.printPrice()}</text>
+            <text align="right" length="10">${line.printSubValue()}</text>
+        </line>
+        #end
+
+        <line><text align="left" length="40">- - - - - - - - - - - - - - - - - - - -</text></line>
+
+        <line>
+            <text>Productos: </text>
+            <text align="left" length="14">${purchase.printArticlesCount()}</text>
+        </line>
+        <line>
+            <text align="left" length="16" bold="true">Subtotal</text>
+            <text align="right" length="24">${purchase.printSubTotal()}</text>
+        </line>
+        <line>
+            <text align="left" length="16">Impuestos</text>
+            <text align="right" length="24">${purchase.printTax()}</text>
+        </line>
+        <line size="1">
+            <text align="left" length="16" bold="true">Total</text>
+            <text align="right" length="24" bold="true">${purchase.printTotal()}</text>
+        </line>
+
+        #if (${purchase.printObservation()} != "")
+        <line></line>
+        <line><text align="left" length="40">Observación:</text></line>
+        <line><text align="left" length="40">${purchase.printObservation()}</text></line>
+        #end
+
+        <line></line>
+        <line><text align="left" length="15">Atendido por:</text><text>${purchase.printUser()}</text></line>
+        <line></line>
+        <line></line>
+    </ticket>
+
+</output>

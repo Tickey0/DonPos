@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Comprobante de retencion (codDoc 07).
+
+    Lo emite el comprador y se lo entrega al proveedor, que lo necesita como
+    credito tributario. Se imprime siempre que la compra genere una retencion,
+    sea sobre factura o sobre liquidacion.
+
+    Sigue el molde de Printer.Ticket: mismo orden de cabecera, misma forma de
+    partir la clave de acceso y las mismas leyendas del SRI.
+
+    Objetos disponibles en esta plantilla:
+      $withhold  WithholdInfo con la retencion y su emisor
+      $purchase  PurchaseInfo del documento sobre el que se retiene
+      $lines     las lineas de la retencion (WithholdLineInfo)
+
+    Todo se pide con metodos print*, nunca con getters: un getter que devuelve
+    null hace que Velocity imprima el texto crudo ${withhold.getX()} en el
+    papel, y uno que devuelve Date o Double imprime "Mon Sep 01..." o "12.5".
+-->
+
+<output>
+
+    <ticket>
+
+        <line><text align="center" length="40">COMPROBANTE DE RETENCIÓN</text></line>
+        <line></line>
+
+        #if (${withhold.printComercialName()} != "")
+        <line><text align="center" length="40">${withhold.printComercialName()}</text></line>
+        #end
+        #if (${withhold.printLegalName()} != "")
+        <line><text align="center" length="40">${withhold.printLegalName()}</text></line>
+        #end
+        #if (${withhold.printIdentification()} != "")
+        <line><text align="center" length="40">RUC: ${withhold.printIdentification()}</text></line>
+        #end
+        #if (${withhold.printEstablishmentAddress()} != "")
+        <line><text align="center" length="40">${withhold.printEstablishmentAddress()}</text></line>
+        #end
+        #if (${withhold.printEstablishmentPhone()} != "")
+        <line><text align="center" length="40">${withhold.printEstablishmentPhone()}</text></line>
+        #end
+        #if (${withhold.printEstablishmentEmail()} != "")
+        <line><text align="center" length="40">${withhold.printEstablishmentEmail()}</text></line>
+        #end
+
+        #if (${withhold.printForcedAccounting()} != "")
+        <line><text align="center" length="40">${withhold.printForcedAccounting()}</text></line>
+        #end
+        #if (${withhold.printSpecialTaxpayer()} != "")
+        <line><text align="center" length="40">${withhold.printSpecialTaxpayer()}</text></line>
+        #end
+        #if (${withhold.printRetentionAgent()} != "")
+        <line><text align="center" length="40">${withhold.printRetentionAgent()}</text></line>
+        #end
+        #if (${withhold.printOther()} != "")
+        <line><text align="center" length="40">${withhold.printOther()}</text></line>
+        #end
+
+        #if (${withhold.printAccessKeyLine1()} != "")
+        <line></line>
+        <line><text align="center" length="40">Clave de acceso:</text></line>
+        <line><text>${withhold.printAccessKeyLine1()}</text></line>
+        <line><text align="center" length="40">${withhold.printAccessKeyLine2()}</text></line>
+        <line><text align="center" length="40">${withhold.printEnvironment()}</text></line>
+        #end
+
+        <line></line>
+        <line><text align="left" length="40">Retención: ${withhold.printSequential()}</text></line>
+        <line><text align="left" length="40">Fecha: ${withhold.printDate()}</text></line>
+        <line><text align="left" length="40">Ejercicio fiscal: ${withhold.printFiscalPeriod()}</text></line>
+
+        <line></line>
+        <line><text align="center" length="40">SUJETO RETENIDO</text></line>
+        #if (${purchase.printSupplierTaxId()} != "")
+        <line><text align="left" length="40">Identificación: ${purchase.printSupplierTaxId()}</text></line>
+        #end
+        <line><text align="left" length="40">Proveedor: ${purchase.printSupplierName()}</text></line>
+        #if (${purchase.printSupplierAddress()} != "")
+        <line><text align="left" length="40">Dirección: ${purchase.printSupplierAddress()}</text></line>
+        #end
+        #if (${purchase.printSupplierEmail()} != "")
+        <line><text align="left" length="40">E-mail: ${purchase.printSupplierEmail()}</text></line>
+        #end
+
+        <line></line>
+        <line><text align="center" length="40">DOCUMENTO DE SUSTENTO</text></line>
+        <line><text align="left" length="40">Documento: ${purchase.printDocument()}</text></line>
+        <line><text align="left" length="40">Número: ${purchase.printSequential()}</text></line>
+        <line><text align="left" length="40">Fecha: ${purchase.printPurchaseDate()}</text></line>
+
+        <line></line>
+        <line>
+            <text align="left" length="16">Impuesto</text>
+            <text align="right" length="9">Base Imp.</text>
+            <text align="right" length="6">%</text>
+            <text align="right" length="9">Retenido</text>
+        </line>
+        <line><text align="left" length="40">- - - - - - - - - - - - - - - - - - - -</text></line>
+
+        #foreach ($line in $lines)
+        <line>
+            <text align="left" length="16">${line.printName()}</text>
+            <text align="right" length="9">${line.printBaseValue()}</text>
+            <text align="right" length="6">${line.printPercentage()}</text>
+            <text align="right" length="9">${line.printWithholdedValue()}</text>
+        </line>
+        <line><text align="left" length="40">  Cód. ${line.printCode()}  Sustento ${line.printTaxSupport()}</text></line>
+        #end
+
+        <line><text align="left" length="40">- - - - - - - - - - - - - - - - - - - -</text></line>
+
+        <line size="1">
+            <text align="left" length="16" bold="true">Total retenido</text>
+            <text align="right" length="24" bold="true">${withhold.printTotalWithheld()}</text>
+        </line>
+
+        #if (${withhold.printObservation()} != "")
+        <line></line>
+        <line><text align="left" length="40">Observación:</text></line>
+        <line><text align="left" length="40">${withhold.printObservation()}</text></line>
+        #end
+
+        <line></line>
+        <line><text align="left" length="15">Atendido por:</text><text>${withhold.printUser()}</text></line>
+        <line></line>
+        <line></line>
+    </ticket>
+
+</output>
