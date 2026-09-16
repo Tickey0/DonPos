@@ -1189,7 +1189,7 @@ CREATE TABLE `ele_documents` (
     `id` BIGINT(18) NOT NULL AUTO_INCREMENT,
     `code` VARCHAR(18) NOT NULL,
     `number` VARCHAR(18) NOT NULL,
-    `authorization` VARCHAR(90) DEFAULT NULL,
+    `authorization_code` VARCHAR(90) DEFAULT NULL,
     `authorization_date` DATETIME DEFAULT NULL,
     `observation` VARCHAR(3000) DEFAULT NULL,
     `status` VARCHAR(30) DEFAULT NULL,
