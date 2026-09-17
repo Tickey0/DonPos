@@ -529,11 +529,12 @@ CREATE VIEW `v_assets` AS select `id` AS `id`,
 from `resources`
 where `name` = 'Electronic.Environment';
 
-CREATE VIEW `v_ele_general_observations` AS select 900 AS `id`,
-    'RUC Proveedor' AS `name`,
-    `taxid` AS `value`
-from `suppliers`
-where `is_system_supplier` = 1;
+CREATE VIEW `v_ele_general_observations` AS select `p`.`id` AS `id`,
+    `p`.`name`  AS `name`,
+    `p`.`value` AS `value`
+from `ele_parameters` `p`
+where `p`.`name` = 'RUC Proveedor'
+and `p`.`status` = true;
 
 -- Vistas de liquidación de compra
 CREATE VIEW `v_ele_liquidations` AS select cast(`p`.`id` as uuid) AS `id`,
@@ -943,8 +944,14 @@ Insert into ele_parameters (ID,name,value,observation,type)
 values (11,'Email HTTP Server Token','**************==','Token Email HTTP Server','Email HTTP');
 Insert into ele_parameters (ID,name,value,observation,type) 
 values (12,'Logo PNG','logo.png','URL Logo PNG','Resource');
-Insert into ele_parameters (ID,name,value,observation,type) 
+Insert into ele_parameters (ID,name,value,observation,type)
 values (13,'Template Email','template.html','URL template','Resource');
+Insert into ele_parameters (ID,name,value,observation,type)
+values (14, 'RoQui HTTP Server', 'http://localhost:8080', 'Server for electronic documents authorization', 'Resource');
+Insert into ele_parameters (ID,name,value,observation,type)
+values (15, 'RoQui HTTP X-API-KEY', 'api__6tpXYCxsXpCs7QeuI44KtoCq', 'X-API-KEY for authentication', 'Resource');
+Insert into ele_parameters (ID,name,value,observation,type)
+values (16, 'RUC Proveedor', '0123456789001', 'Identification of the provider', 'SRI' );
 Insert into ele_parameters (ID,name,value,observation,type) 
 values (99,'Subscription','w1b5fZ31Z+8qnlYW0Sa3vA==','Subscription','Subscription');
 
