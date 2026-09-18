@@ -529,7 +529,7 @@ CREATE VIEW `v_assets` AS select `id` AS `id`,
 from `resources`
 where `name` = 'Electronic.Environment';
 
-CREATE VIEW `v_ele_general_observations` AS select `p`.`id` AS `id`,
+CREATE VIEW `v_ele_general_informations` AS select `p`.`id` AS `id`,
     `p`.`name`  AS `name`,
     `p`.`value` AS `value`
 from `ele_parameters` `p`
