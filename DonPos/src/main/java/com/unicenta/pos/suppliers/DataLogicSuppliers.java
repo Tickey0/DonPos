@@ -79,10 +79,9 @@ public class DataLogicSuppliers extends BeanFactoryDataSingle {
                 "CURDEBT",
                 "VATID",
                 "TAXID_TYPE",
-                "IS_SYSTEM_SUPPLIER",
                 "IS_RELATED"}
-            , new String[] { 
-                "ID", 
+            , new String[] {
+                "ID",
                 AppLocal.getIntString("label.searchkey"),
                 AppLocal.getIntString("label.suppliertaxid"),
                 AppLocal.getIntString("label.name"),
@@ -110,24 +109,21 @@ public class DataLogicSuppliers extends BeanFactoryDataSingle {
                 AppLocal.getIntString("label.curdebt"),
                 AppLocal.getIntString("label.suppliervatid"),
                 "TAXID_TYPE",
-                "IS_SYSTEM_SUPPLIER",
                 "IS_RELATED"}
-            , new Datas[] { 
+            , new Datas[] {
                 Datas.STRING, Datas.STRING, Datas.STRING, Datas.STRING, 
                 Datas.DOUBLE, Datas.STRING, Datas.STRING, Datas.STRING, 
                 Datas.STRING, Datas.STRING, Datas.STRING, Datas.STRING,
                 Datas.STRING, Datas.STRING, Datas.STRING, Datas.STRING,
                 Datas.STRING, Datas.STRING, Datas.BOOLEAN, Datas.TIMESTAMP,                 
-                Datas.DOUBLE, Datas.STRING, Datas.STRING, Datas.BOOLEAN,
-                Datas.BOOLEAN }
+                Datas.DOUBLE, Datas.STRING, Datas.STRING, Datas.BOOLEAN }
             , new Formats[] {
                 Formats.STRING, Formats.STRING, Formats.STRING, Formats.STRING,
                 Formats.CURRENCY, Formats.STRING, Formats.STRING, Formats.STRING,
                 Formats.STRING, Formats.STRING, Formats.STRING, Formats.STRING,                
                 Formats.STRING, Formats.STRING, Formats.STRING, Formats.STRING,
                 Formats.STRING, Formats.STRING, Formats.BOOLEAN, Formats.TIMESTAMP,
-                Formats.CURRENCY, Formats.STRING, Formats.STRING, Formats.BOOLEAN,
-                Formats.BOOLEAN }
+                Formats.CURRENCY, Formats.STRING, Formats.STRING, Formats.BOOLEAN }
             , new int[] {0}
         );   
     }
