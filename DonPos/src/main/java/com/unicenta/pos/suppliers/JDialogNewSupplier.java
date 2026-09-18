@@ -86,9 +86,9 @@ public class JDialogNewSupplier extends javax.swing.JDialog {
     
      public Object createValue() throws BasicException {
         // El arreglo tiene que medir lo mismo que el TableDefinition de
-        // suppliers: el serializador recorre sus 25 columnas y si el arreglo
+        // suppliers: el serializador recorre sus 24 columnas y si el arreglo
         // llega corto revienta con ArrayIndexOutOfBounds.
-        Object[] supplier = new Object[25];
+        Object[] supplier = new Object[24];
         supplier[0] =  m_oId;        
         supplier[1] = m_jTaxID.getText();
         supplier[2] = m_jTaxID.getText();
@@ -113,7 +113,6 @@ public class JDialogNewSupplier extends javax.swing.JDialog {
         supplier[21] = null;  
         supplier[22] = modelIdentificationType.getSelectedKey();
         supplier[23] = false;
-        supplier[24] = false;
         
         return supplier;
     }
