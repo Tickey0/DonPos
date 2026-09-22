@@ -8,6 +8,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import lombok.Getter;
 import lombok.Setter;
+import java.security.SecureRandom;
 
 /**
  *
@@ -31,6 +32,8 @@ public class MasterMoldInfo {
     public String buildAccessKey(Date date) {
         String codeDocument;
         final var m11 = new Module11();
+        SecureRandom secureRandom = new SecureRandom();
+
         try {
             if (null == getCode()) {
                 accessKey = "";
@@ -66,7 +69,8 @@ public class MasterMoldInfo {
             accessKey = accessKey + getTaxPayerInfo().getIdentification();
             accessKey = accessKey + getEnvironment();
             accessKey = accessKey + getSerieNumber().replace("-", "");
-            accessKey = accessKey + "12345678" + "1";
+            String randomString = String.format("%08d", secureRandom.nextInt(100_000_000));
+            accessKey = accessKey + randomString + "1"; // Emission type
             accessKey = accessKey + m11.module11(accessKey);
 
             return accessKey;
@@ -75,7 +79,7 @@ public class MasterMoldInfo {
             return accessKey;
         }
     }
-    
+
     public String printComercialName() {
         return establishment == null ? "" : PrintFormat.text(establishment.getComercialName());
     }
@@ -90,8 +94,8 @@ public class MasterMoldInfo {
 
     public String printEstablishmentEmail() {
         return establishment == null ? "" : PrintFormat.text(establishment.getEmail());
-    }   
-    
+    }
+
     public String printEnvironment() {
         return PrintFormat.environment(getEnvironment());
     }
@@ -100,7 +104,6 @@ public class MasterMoldInfo {
     // Los datos del emisor son los mismos en todos los documentos: quien firma
     // la factura es quien firma la liquidacion, la retencion y la guia. Por eso
     // viven aqui y no repetidos en cada clase.
-
     public String printLegalName() {
         return taxPayerInfo == null ? "" : taxPayerInfo.printLegalName();
     }
@@ -129,7 +132,6 @@ public class MasterMoldInfo {
     // Los 49 digitos no entran en un rollo de 40 columnas, asi que se parten en
     // dos lineas. Si la clave no esta completa las dos salen vacias y la
     // plantilla se salta el bloque entero.
-
     public String printAccessKeyLine1() {
         return PrintFormat.accessKeyLine1(getAccessKey());
     }
