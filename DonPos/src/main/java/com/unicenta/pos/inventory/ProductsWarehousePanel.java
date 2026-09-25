@@ -19,6 +19,7 @@
 
 package com.unicenta.pos.inventory;
 
+import com.github.f4b6a3.uuid.UuidCreator;
 import com.unicenta.basic.BasicException;
 import com.unicenta.data.loader.*;
 import com.unicenta.data.model.Field;
@@ -33,7 +34,6 @@ import com.unicenta.pos.reports.JParamsLocation;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.UUID;
 
 /**
  *
@@ -89,7 +89,7 @@ public class ProductsWarehousePanel extends JPanelTable2 {
                 Object[] values = (Object[]) params;
                 if (values[0] == null)  {
                     // INSERT
-                    values[0] = UUID.randomUUID().toString();
+                    values[0] = UuidCreator.getTimeOrderedEpoch().toString();
                     return new PreparedSentence(app.getSession()
                         , "INSERT INTO stocklevel (ID, LOCATION, PRODUCT, STOCKSECURITY, STOCKMAXIMUM) VALUES (?, ?, ?, ?, ?)"
                         , new SerializerWriteBasicExt(row.getDatas(), new int[] {0, 4, 1, 5, 6})).exec(params);

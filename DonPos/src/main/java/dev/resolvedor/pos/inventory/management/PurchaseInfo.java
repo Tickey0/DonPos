@@ -1,5 +1,6 @@
 package dev.resolvedor.pos.inventory.management;
 
+import com.github.f4b6a3.uuid.UuidCreator;
 import com.unicenta.basic.BasicException;
 import com.unicenta.data.loader.DataRead;
 import com.unicenta.data.loader.SerializableRead;
@@ -12,7 +13,6 @@ import dev.joguenco.receipt.MasterMoldInfo;
 import dev.resolvedor.util.PrintFormat;
 import java.util.Date;
 import java.util.List;
-import java.util.UUID;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -55,7 +55,7 @@ public class PurchaseInfo extends MasterMoldInfo implements SerializableRead {
     private String purchaseDocumentName;
 
     public PurchaseInfo() {
-        id = UUID.randomUUID().toString();
+        id = UuidCreator.getTimeOrderedEpoch().toString();
         invLines = new java.util.ArrayList<>();
         createdAt = new Date();
         user = new UserInfo("", "");

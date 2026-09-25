@@ -18,6 +18,7 @@
 //    along with uniCenta oPOS.  If not, see <http://www.gnu.org/licenses/>.
 package com.unicenta.pos.inventory;
 
+import com.github.f4b6a3.uuid.UuidCreator;
 import com.unicenta.basic.BasicException;
 import com.unicenta.beans.JCalendarDialog;
 import com.unicenta.data.gui.ComboBoxValModel;
@@ -57,7 +58,6 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.UUID;
 import javax.swing.table.DefaultTableModel;
 
 /**
@@ -364,7 +364,7 @@ public final class ProductsEditor extends javax.swing.JPanel implements EditorRe
         m_jTitle.setText(AppLocal.getIntString("label.recordnew"));
 
 // Tab General        
-        m_oId = UUID.randomUUID().toString();
+        m_oId = UuidCreator.getTimeOrderedEpoch().toString();
         m_jRef.setText(null);
         m_jCode.setText(null);
         m_jCodetype.setSelectedIndex(0);
@@ -463,7 +463,7 @@ public final class ProductsEditor extends javax.swing.JPanel implements EditorRe
 
         Object[] myprod = new Object[32];
 
-        myprod[0] = m_oId == null ? UUID.randomUUID().toString() : m_oId;
+        myprod[0] = m_oId == null ? UuidCreator.getTimeOrderedEpoch().toString() : m_oId;
 
         // Call product sequence
         if (m_jRef.getText().isEmpty()) {

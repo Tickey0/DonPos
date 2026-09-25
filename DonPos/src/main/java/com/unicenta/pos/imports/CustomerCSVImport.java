@@ -19,6 +19,7 @@
 package com.unicenta.pos.imports;
 
 import com.csvreader.CsvReader;
+import com.github.f4b6a3.uuid.UuidCreator;
 import com.unicenta.basic.BasicException;
 import com.unicenta.data.loader.Session;
 import com.unicenta.data.user.SaveProvider;
@@ -38,7 +39,6 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -582,7 +582,7 @@ public class CustomerCSVImport extends JPanel implements JPanelView {
 
         Object[] mycust = new Object[27];
         if ("new".equals(cType)) {
-            mycust[0] = UUID.randomUUID().toString();
+            mycust[0] = UuidCreator.getTimeOrderedEpoch().toString();
         } else {
             mycust[0] = custInfo.getId();
         }                                                                       // id string
@@ -636,7 +636,7 @@ public class CustomerCSVImport extends JPanel implements JPanelView {
     public void createCustomerCSVEntry(String csvError, String searchKey, String Name) {
 
         Object[] mycust = new Object[5];
-        mycust[0] = UUID.randomUUID().toString();                               // ID string
+        mycust[0] = UuidCreator.getTimeOrderedEpoch().toString();                               // ID string
         mycust[1] = Integer.toString(currentRecord);                            // Record number
         mycust[2] = csvError;                                                   // Error description
         mycust[3] = customerSearchKey;                                          // SearchKey String

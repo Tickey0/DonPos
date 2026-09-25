@@ -24,6 +24,7 @@ import com.alee.extended.time.WebClock;
 import com.alee.managers.notification.NotificationIcon;
 import com.alee.managers.notification.NotificationManager;
 import com.alee.managers.notification.WebNotification;
+import com.github.f4b6a3.uuid.UuidCreator;
 import com.unicenta.basic.BasicException;
 import com.unicenta.data.gui.ComboBoxValModel;
 import com.unicenta.data.gui.JMessageDialog;
@@ -48,7 +49,6 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 /**
  * @author adrianromero
@@ -153,7 +153,7 @@ public final class CategoriesEditor extends JPanel implements EditorRecord {
    */
   @Override
   public void writeValueInsert() {
-    m_id = UUID.randomUUID().toString();
+    m_id = UuidCreator.getTimeOrderedEpoch().toString();
     m_jName.setText(null);
     m_CategoryModel.setSelectedKey(null);
     m_jImage.setImage(null);

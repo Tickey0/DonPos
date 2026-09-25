@@ -1,5 +1,6 @@
 package dev.joguenco.pos.dispatcher;
 
+import com.github.f4b6a3.uuid.UuidCreator;
 import com.unicenta.basic.BasicException;
 import com.unicenta.data.gui.ComboBoxValModel;
 import com.unicenta.data.loader.SentenceList;
@@ -13,7 +14,6 @@ import com.unicenta.pos.suppliers.DataLogicSuppliers;
 import dev.joguenco.error.ErrorMessage;
 
 import java.awt.Component;
-import java.util.UUID;
 
 import javax.swing.JPanel;
 import lombok.extern.slf4j.Slf4j;
@@ -305,7 +305,7 @@ public class DispatcherEditor extends JPanel implements EditorRecord {
         }
 
         Object[] dispatcher = new Object[8];
-        dispatcher[0] = id == null ? UUID.randomUUID().toString() : id;
+        dispatcher[0] = id == null ? UuidCreator.getTimeOrderedEpoch().toString() : id;
         dispatcher[1] = modelIdentificationType.getSelectedKey();
         dispatcher[2] = txtIdentification.getText();
         dispatcher[3] = txtName.getText();

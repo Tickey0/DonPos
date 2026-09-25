@@ -19,6 +19,7 @@
 
 package com.unicenta.pos.voucher;
 
+import com.github.f4b6a3.uuid.UuidCreator;
 import com.unicenta.basic.BasicException;
 import com.unicenta.data.gui.ComboBoxValModel;
 import com.unicenta.data.user.DirtyManager;
@@ -39,7 +40,6 @@ import java.awt.image.BufferedImage;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.UUID;
 
 public final class VoucherEditor extends javax.swing.JPanel implements EditorRecord {
 
@@ -94,7 +94,7 @@ public final class VoucherEditor extends javax.swing.JPanel implements EditorRec
     
     @Override
     public void writeValueInsert() {
-        id = UUID.randomUUID().toString();
+        id = UuidCreator.getTimeOrderedEpoch().toString();
         m_jNumber.setText(generateVoucherNumber());
         m_jNumber.setEnabled(true);
         m_jCustomer.setText(null);

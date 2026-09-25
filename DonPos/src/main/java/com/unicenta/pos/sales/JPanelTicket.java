@@ -2172,7 +2172,8 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
                                 restDB.clearTicketIdInTable(ticketext.toString());
                             }
 
-                            if ("FV".equals(ticket.getCode()) || "DV".equals(ticket.getCode())) {
+                            if ("FV".equals(ticket.getCode()) || "DV".equals(ticket.getCode())
+                                    || "ND".equals(ticket.getCode())) {
                                 log.info(
                                         "Start authorization in a thread "
                                         + ticket.getCode()

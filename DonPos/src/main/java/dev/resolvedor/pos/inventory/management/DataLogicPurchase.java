@@ -1,5 +1,6 @@
 package dev.resolvedor.pos.inventory.management;
 
+import com.github.f4b6a3.uuid.UuidCreator;
 import com.unicenta.basic.BasicException;
 import com.unicenta.data.loader.DataParams;
 import com.unicenta.data.loader.DataRead;
@@ -28,7 +29,6 @@ import com.unicenta.pos.ticket.TaxInfo;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.UUID;
 
 /**
  *
@@ -209,7 +209,7 @@ public class DataLogicPurchase extends BeanFactoryDataSingle {
                     });
 
                     Object params = new Object[]{
-                        UUID.randomUUID().toString(),
+                        UuidCreator.getTimeOrderedEpoch().toString(),
                         purchase.getCreatedAt(),
                         rec.getReason().getKey(),
                         rec.getLocation().getID(),
@@ -453,7 +453,7 @@ public class DataLogicPurchase extends BeanFactoryDataSingle {
                 for (int i = 0; i < purchase.getLinesCount(); i++) {
                     if (purchase.getLine(i).getProductID() != null) {
                         dlSales.getStockDiaryInsert().exec(new Object[]{
-                            UUID.randomUUID().toString(),
+                            UuidCreator.getTimeOrderedEpoch().toString(),
                             new Date(),
                             MovementReason.OUT_MOVEMENT.getKey(),
                             purchase.getLocation(),

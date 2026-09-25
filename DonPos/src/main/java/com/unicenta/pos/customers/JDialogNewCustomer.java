@@ -1,5 +1,6 @@
 package com.unicenta.pos.customers;
 
+import com.github.f4b6a3.uuid.UuidCreator;
 import com.unicenta.basic.BasicException;
 import com.unicenta.data.gui.ComboBoxValModel;
 import com.unicenta.data.gui.MessageInf;
@@ -19,7 +20,6 @@ import java.awt.Frame;
 import java.awt.Window;
 import java.io.File;
 import java.util.List;
-import java.util.UUID;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
@@ -539,7 +539,7 @@ public class JDialogNewCustomer extends javax.swing.JDialog {
                 JOptionPane.ERROR_MESSAGE); 
         } else {    
             try {
-                m_oId = UUID.randomUUID().toString();
+                m_oId = UuidCreator.getTimeOrderedEpoch().toString();
                 Object customer = createValue();
 
                 int status = tcustomers.getInsertSentence().exec(customer);

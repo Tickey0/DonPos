@@ -19,6 +19,7 @@
 
 package com.unicenta.pos.panels;
 
+import com.github.f4b6a3.uuid.UuidCreator;
 import com.unicenta.basic.BasicException;
 import com.unicenta.data.gui.ComboBoxValModel;
 import com.unicenta.data.loader.IKeyed;
@@ -28,7 +29,6 @@ import com.unicenta.pos.forms.AppLocal;
 import com.unicenta.pos.forms.AppView;
 import java.awt.Component;
 import java.util.Date;
-import java.util.UUID;
 
 
 /**
@@ -152,10 +152,10 @@ public final class PaymentsEditor extends javax.swing.JPanel implements EditorRe
     public Object createValue() throws BasicException {
 //JG Modified Array + 1 - July 2011
         Object[] payment = new Object[7];
-        payment[0] = m_sId == null ? UUID.randomUUID().toString() : m_sId;
+        payment[0] = m_sId == null ? UuidCreator.getTimeOrderedEpoch().toString() : m_sId;
         payment[1] = m_App.getActiveCashIndex();
         payment[2] = datenew == null ? new Date() : datenew;
-        payment[3] = m_sPaymentId == null ? UUID.randomUUID().toString() : m_sPaymentId;
+        payment[3] = m_sPaymentId == null ? UuidCreator.getTimeOrderedEpoch().toString() : m_sPaymentId;
         payment[4] = m_ReasonModel.getSelectedKey();
         PaymentReason reason = (PaymentReason) m_ReasonModel.getSelectedItem();
         Double dtotal = jTotal.getDoubleValue();

@@ -18,6 +18,7 @@
 //    along with uniCenta oPOS.  If not, see <http://www.gnu.org/licenses/>.
 package com.unicenta.pos.panels;
 
+import com.github.f4b6a3.uuid.UuidCreator;
 import com.unicenta.basic.BasicException;
 import com.unicenta.data.gui.ComboBoxValModel;
 import com.unicenta.data.gui.MessageInf;
@@ -45,7 +46,6 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.UUID;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumnModel;
@@ -306,7 +306,7 @@ public class JPanelCloseMoney extends JPanel implements JPanelView, BeanFactoryA
 
             try {
                 // Create NEW CloshCash Sequence
-                m_App.setActiveCash(UUID.randomUUID().toString(),
+                m_App.setActiveCash(UuidCreator.getTimeOrderedEpoch().toString(),
                         m_App.getActiveCashSequence() + 1, dNow, null);
 
                 // Create CURRENT CloseCash Sequence
@@ -714,7 +714,7 @@ public class JPanelCloseMoney extends JPanel implements JPanelView, BeanFactoryA
 
             try {
                 // Creamos una nueva caja
-                m_App.setActiveCash(UUID.randomUUID().toString(),
+                m_App.setActiveCash(UuidCreator.getTimeOrderedEpoch().toString(),
                         m_App.getActiveCashSequence() + 1, dNow, null);
 
                 // creamos la caja activa

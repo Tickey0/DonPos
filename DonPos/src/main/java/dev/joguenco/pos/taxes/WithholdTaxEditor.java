@@ -1,5 +1,6 @@
 package dev.joguenco.pos.taxes;
 
+import com.github.f4b6a3.uuid.UuidCreator;
 import com.unicenta.basic.BasicException;
 import com.unicenta.data.user.DirtyManager;
 import com.unicenta.data.user.EditorRecord;
@@ -7,7 +8,6 @@ import com.unicenta.format.Formats;
 import com.unicenta.pos.forms.AppLocal;
 import java.awt.Component;
 import java.util.Date;
-import java.util.UUID;
 import javax.swing.JPanel;
 
 /**
@@ -63,7 +63,7 @@ public class WithholdTaxEditor extends JPanel implements EditorRecord {
     public void writeValueInsert() {
         // Igual que TaxEditor: se prepara un UUID, pero si el usuario escribe
         // un id propio se respeta el suyo.
-        m_oId = UUID.randomUUID().toString();
+        m_oId = UuidCreator.getTimeOrderedEpoch().toString();
         txtId.setText(null);
         txtName.setText(null);
         txtPercentage.setText(null);

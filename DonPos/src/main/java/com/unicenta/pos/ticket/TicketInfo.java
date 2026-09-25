@@ -18,6 +18,7 @@
 //    along with uniCenta oPOS.  If not, see <http://www.gnu.org/licenses/>.
 package com.unicenta.pos.ticket;
 
+import com.github.f4b6a3.uuid.UuidCreator;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.MultiFormatWriter;
 import com.google.zxing.WriterException;
@@ -116,7 +117,7 @@ public final class TicketInfo extends MasterMoldInfo implements SerializableRead
      * Creates new TicketModel
      */
     public TicketInfo() {
-        m_sId = UUID.randomUUID().toString();
+        m_sId = UuidCreator.getTimeOrderedEpoch().toString();
         tickettype = RECEIPT_NORMAL;
         m_iTicketId = 0; // incrementamos
         m_dDate = new Date();

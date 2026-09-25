@@ -19,6 +19,7 @@
 
 package com.unicenta.pos.epm;
 
+import com.github.f4b6a3.uuid.UuidCreator;
 import com.unicenta.basic.BasicException;
 import com.unicenta.data.loader.*;
 import com.unicenta.format.Formats;
@@ -26,7 +27,6 @@ import com.unicenta.pos.forms.AppLocal;
 import com.unicenta.pos.forms.BeanFactoryDataSingle;
 import java.util.Date;
 import java.util.List;
-import java.util.UUID;
 
 /**
  *
@@ -216,7 +216,7 @@ public class DataLogicPresenceManagement extends BeanFactoryDataSingle {
      * @throws BasicException
      */
     public final void CheckIn(String user) throws BasicException {
-        Object[] value = new Object[] {UUID.randomUUID().toString(), new Date(), user};
+        Object[] value = new Object[] {UuidCreator.getTimeOrderedEpoch().toString(), new Date(), user};
         m_checkin.exec(value);
     }
 
@@ -253,7 +253,7 @@ public class DataLogicPresenceManagement extends BeanFactoryDataSingle {
      */
     public final void StartBreak(String UserID,  String BreakID) throws BasicException {
         String ShiftID = GetShiftID(UserID);
-        Object[] value = new Object[] {UUID.randomUUID().toString(), ShiftID, BreakID, new Date()};
+        Object[] value = new Object[] {UuidCreator.getTimeOrderedEpoch().toString(), ShiftID, BreakID, new Date()};
         m_startbreak.exec(value);
     }
 

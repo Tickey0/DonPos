@@ -19,6 +19,7 @@
 
 package com.unicenta.pos.admin;
 
+import com.github.f4b6a3.uuid.UuidCreator;
 import com.unicenta.basic.BasicException;
 import com.unicenta.data.gui.ComboBoxValModel;
 import com.unicenta.data.loader.SentenceList;
@@ -32,7 +33,6 @@ import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.awt.image.BufferedImage;
-import java.util.UUID;
 import javax.swing.*;
 
 /**
@@ -184,7 +184,7 @@ public class PeopleView extends JPanel implements EditorRecord {
     @Override
     public Object createValue() throws BasicException {
         Object[] people = new Object[7];
-        people[0] = m_oId == null ? UUID.randomUUID().toString() : m_oId;
+        people[0] = m_oId == null ? UuidCreator.getTimeOrderedEpoch().toString() : m_oId;
         people[1] = Formats.STRING.parseValue(m_jName.getText());
         people[2] = Formats.STRING.parseValue(m_sPassword);
         people[3] = m_RoleModel.getSelectedKey();

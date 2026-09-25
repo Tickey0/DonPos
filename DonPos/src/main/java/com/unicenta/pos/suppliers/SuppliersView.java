@@ -19,6 +19,7 @@
 
 package com.unicenta.pos.suppliers;
 
+import com.github.f4b6a3.uuid.UuidCreator;
 import com.unicenta.basic.BasicException;
 import com.unicenta.data.gui.ComboBoxValModel;
 import com.unicenta.data.loader.SentenceList;
@@ -45,7 +46,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.UUID;
 
 /**
  *
@@ -450,7 +450,7 @@ public void resetTranxTable() {
     @Override
     public Object createValue() throws BasicException {
         Object[] supplier = new Object[24];
-        supplier[0] = m_oId == null ? UUID.randomUUID().toString() : m_oId;
+        supplier[0] = m_oId == null ? UuidCreator.getTimeOrderedEpoch().toString() : m_oId;
         supplier[1] = m_jTaxID.getText();
         supplier[2] = m_jTaxID.getText();
         supplier[3] = m_jName.getText();

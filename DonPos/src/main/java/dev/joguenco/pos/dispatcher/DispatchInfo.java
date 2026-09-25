@@ -1,12 +1,12 @@
 package dev.joguenco.pos.dispatcher;
 
+import com.github.f4b6a3.uuid.UuidCreator;
 import com.unicenta.pos.ticket.UserInfo;
 import dev.joguenco.receipt.MasterMoldInfo;
 import dev.resolvedor.util.PrintFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.UUID;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -51,7 +51,7 @@ public class DispatchInfo extends MasterMoldInfo {
     private List<DispatchLineInfo> lines;
 
     public DispatchInfo() {
-        id = UUID.randomUUID().toString();
+        id = UuidCreator.getTimeOrderedEpoch().toString();
         setCode("GUI");
         lines = new ArrayList<>();
         dateDispatch = new Date();

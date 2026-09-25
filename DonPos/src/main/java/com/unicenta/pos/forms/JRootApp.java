@@ -18,6 +18,7 @@
 //    along with uniCenta oPOS.  If not, see <http://www.gnu.org/licenses/>
 package com.unicenta.pos.forms;
 
+import com.github.f4b6a3.uuid.UuidCreator;
 import com.unicenta.basic.BasicException;
 import com.unicenta.beans.JFlowPanel;
 import com.unicenta.beans.JPasswordDialog;
@@ -358,7 +359,7 @@ public class JRootApp extends JPanel implements AppView {
 
             if (valcash == null || !m_props.getHost().equals(valcash[0])) {
 
-                setActiveCash(UUID.randomUUID().toString(), m_dlSystem.getSequenceCash(m_props.getHost()) + 1, new Date(), null);
+                setActiveCash(UuidCreator.getTimeOrderedEpoch().toString(), m_dlSystem.getSequenceCash(m_props.getHost()) + 1, new Date(), null);
 
                 Object[] cash = new Object[]{
                     getActiveCashIndex(),

@@ -1029,11 +1029,10 @@ VALUES ('1', 'ReIdi', 'https://reidi.ec.service.resolvedor.dev',
 'Token',
 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJyZWlkaS5zZXJ2aWNlLmpvZ3VlbmNvLmRldiIsImlhdCI6MTc0MDM2NjM2OSwiZXhwIjoxNzU1OTE4MzY5LCJhdWQiOiJqb2d1ZW5jby5kZXYiLCJzdWIiOiJqb3JnZWx1aXNAam9ndWVuY28uZGV2IiwiY2xpZW50IjoiOTk5OTk5OTk5OTk5OSIsIm5hbWUiOiJKb3JnZSBMdWlzIiwiZW1haWwiOiJqb3JnZXF1aWd1YW5nb0BvdXRsb29rLmNvbSIsInJvbGUiOiJNYW5hZ2VyIiwic2VydmljZSI6IlJlSWRpIiwibGltaXQiOjB9.X_g2Et9T3P_ZyCZcxB_esNfTlF7PzBYFIYTFSAJgeIo', 
 9, 0);
-INSERT INTO subscriptions (id,name,url,authentication_method,username,password,timeout,status) 
+INSERT INTO subscriptions (id,name,url,authentication_method,token,timeout,status) 
 VALUES ('2', 'Authorize', 'http://localhost:8080', 
-'Password',
-'Administrator',
-'',
+'X-API-KEY',
+'api__6tpXYCxsXpCs7QeuI44KtoCq',
 30, 0);
 
 -- Tax Supports

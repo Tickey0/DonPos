@@ -19,6 +19,7 @@
 
 package com.unicenta.pos.inventory;
 
+import com.github.f4b6a3.uuid.UuidCreator;
 import com.unicenta.basic.BasicException;
 import com.unicenta.data.user.DirtyManager;
 import com.unicenta.data.user.EditorRecord;
@@ -26,7 +27,6 @@ import com.unicenta.format.Formats;
 import com.unicenta.pos.forms.AppLocal;
 import java.awt.Component;
 import java.awt.datatransfer.StringSelection;
-import java.util.UUID;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import javax.swing.JOptionPane;
@@ -71,7 +71,7 @@ public final class LocationsView extends javax.swing.JPanel implements EditorRec
     @Override
     public void writeValueInsert() {
         
-        m_sID = UUID.randomUUID().toString(); 
+        m_sID = UuidCreator.getTimeOrderedEpoch().toString(); 
         m_jName.setText(null);
         m_jAddress.setText(null);
 

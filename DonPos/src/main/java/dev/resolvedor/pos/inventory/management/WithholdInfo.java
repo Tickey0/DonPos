@@ -1,5 +1,6 @@
 package dev.resolvedor.pos.inventory.management;
 
+import com.github.f4b6a3.uuid.UuidCreator;
 import com.unicenta.pos.ticket.UserInfo;
 import dev.joguenco.receipt.MasterMoldInfo;
 import dev.resolvedor.util.PrintFormat;
@@ -8,7 +9,6 @@ import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.UUID;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -37,7 +37,7 @@ public class WithholdInfo extends MasterMoldInfo {
     private List<WithholdLineInfo> lines;
 
     public WithholdInfo() {
-        id = UUID.randomUUID().toString();
+        id = UuidCreator.getTimeOrderedEpoch().toString();
         setCode("RT");
         lines = new ArrayList<>();
         dateWithhold = new Date();

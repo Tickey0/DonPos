@@ -19,6 +19,7 @@
 
 package com.unicenta.pos.sales;
 
+import com.github.f4b6a3.uuid.UuidCreator;
 import com.unicenta.basic.BasicException;
 import com.unicenta.data.loader.DataRead;
 import com.unicenta.data.loader.Datas;
@@ -41,7 +42,6 @@ import java.awt.Frame;
 import java.awt.Window;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import javax.swing.SwingUtilities;
 
 /**
@@ -384,13 +384,13 @@ public class JProductAttEdit2 extends javax.swing.JDialog {
         // Now creates a new ATTRIBUTESETINSTANCE and returns the ID generated
         // to allow for ad-hoc user input i.e.: Serial No
 
-        id = UUID.randomUUID().toString();
+        id = UuidCreator.getTimeOrderedEpoch().toString();
 
         try {
           attsetSave.exec(id, attsetid, description.toString());
 
           for (JProductAttEditI item : itemslist) {
-            attinstSave.exec(UUID.randomUUID().toString(), id, item.getAttribute(), item.getValue());
+            attinstSave.exec(UuidCreator.getTimeOrderedEpoch().toString(), id, item.getAttribute(), item.getValue());
           }
 
         } catch (BasicException ex) {

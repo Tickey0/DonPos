@@ -19,13 +19,13 @@
 
 package com.unicenta.pos.admin;
 
+import com.github.f4b6a3.uuid.UuidCreator;
 import com.unicenta.basic.BasicException;
 import com.unicenta.data.user.DirtyManager;
 import com.unicenta.data.user.EditorRecord;
 import com.unicenta.format.Formats;
 import com.unicenta.pos.forms.AppLocal;
 import java.awt.Component;
-import java.util.UUID;
 
 /**
  *
@@ -111,7 +111,7 @@ public final class RolesView extends javax.swing.JPanel implements EditorRecord 
     public Object createValue() throws BasicException {
 
         Object[] role = new Object[3];
-        role[0] = m_oId == null ? UUID.randomUUID().toString() : m_oId;
+        role[0] = m_oId == null ? UuidCreator.getTimeOrderedEpoch().toString() : m_oId;
         role[1] = m_jName.getText();
         role[2] = Formats.BYTEA.parseValue(m_jText.getText());
         return role;

@@ -1,5 +1,6 @@
 package dev.resolvedor.pos.inventory.lot;
 
+import com.github.f4b6a3.uuid.UuidCreator;
 import com.unicenta.basic.BasicException;
 import com.unicenta.beans.JCalendarDialog;
 import com.unicenta.data.user.DirtyManager;
@@ -10,7 +11,6 @@ import com.unicenta.pos.forms.AppView;
 import dev.joguenco.error.ErrorMessage;
 import java.awt.Component;
 import java.util.Date;
-import java.util.UUID;
 
 import javax.swing.JPanel;
 
@@ -238,7 +238,7 @@ public class LotEditor extends JPanel implements EditorRecord {
 
         Object[] lot = new Object[4];
 
-        lot[0] = id == null ? UUID.randomUUID().toString() : id;
+        lot[0] = id == null ? UuidCreator.getTimeOrderedEpoch().toString() : id;
         lot[1] = txtName.getText();
         lot[2] = Formats.TIMESTAMP.parseValue(txtExpirationDate.getText());
         if (chkStatus.isSelected()) {
