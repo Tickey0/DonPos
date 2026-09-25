@@ -26,6 +26,7 @@ import com.unicenta.pos.suppliers.SupplierInfo;
 import com.unicenta.pos.ticket.ProductInfoExt;
 import com.unicenta.pos.ticket.TaxInfo;
 import com.unicenta.pos.ticket.UserInfo;
+import dev.joguenco.http.client.authorization.ExecuteAuthorization;
 import dev.joguenco.pos.establishment.DataLogicEstablishment;
 import dev.joguenco.pos.establishment.EstablishmentInfo;
 import dev.joguenco.pos.taxpayer.DataLogicTaxpayer;
@@ -670,12 +671,27 @@ public class PurchaseEditor extends JPanel implements JPanelView, BeanFactoryApp
             // proveedor. Si la compra es liquidacion CON retencion, salen las dos.
             if ("03".equals(purchase.getPurchaseDocument())) {
                 printLiquidation();
+
+                // Igual que la factura en JPanelTicket: una vez guardada, se manda
+                // a autorizar en un hilo aparte para no dejar la pantalla esperando
+                // al SRI. Si la suscripcion Authorize esta apagada no hace nada.
+                log.info("Start authorization in a thread "
+                        + purchase.getCode() + " " + purchase.getSerieNumber());
+                new ExecuteAuthorization(app, purchase.getCode(), purchase.getSerieNumber()).start();
             }
 
             if (pendingWithhold != null) {
                 pendingWithhold.setEstablishment(
                         findEstablishment(pendingWithhold.getSerie()));
                 printWithhold();
+
+                // La retencion se guardo en la misma transaccion que la compra,
+                // asi que aqui ya existe y se puede mandar a autorizar. Va en su
+                // propio hilo, independiente del de la liquidacion.
+                log.info("Start authorization in a thread "
+                        + pendingWithhold.getCode() + " " + pendingWithhold.getSerieNumber());
+                new ExecuteAuthorization(app,
+                        pendingWithhold.getCode(), pendingWithhold.getSerieNumber()).start();
             }
 
             var mensaje = AppLocal.getIntString("label.purchase") + " = " + result;

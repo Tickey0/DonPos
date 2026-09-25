@@ -68,6 +68,30 @@ public class ServiceGenerator {
         return retrofit.create(serviceClass);
     }
     
+    // Igual que el de arriba pero mandando la clave en X-API-KEY en vez de un
+    // Bearer. Asi no hace falta pasar antes por el login.
+    public <S> S createServiceWithApiKey(Class<S> serviceClass, String apiKey, String userAgent) {
+        if (apiKey != null) {
+            httpClient.interceptors().clear();
+            httpClient.addInterceptor(new Interceptor() {
+                @Override
+                public Response intercept(Interceptor.Chain chain) throws IOException {
+                    Request original = chain.request();
+                    Request.Builder builder = original.newBuilder()
+                            .header("User-Agent", userAgent)
+                            .header("Content-Type", "application/json")
+                            .header("Accept", "application/json")
+                            .header("X-API-KEY", apiKey);
+                    Request request = builder.build();
+                    return chain.proceed(request);
+                }
+            });
+            builder.client(httpClient.build());
+            retrofit = builder.build();
+        }
+        return retrofit.create(serviceClass);
+    }
+
     public <S> S createService(Class<S> serviceClass, String userAgent) {
         httpClient.interceptors().clear();
         httpClient.addInterceptor(

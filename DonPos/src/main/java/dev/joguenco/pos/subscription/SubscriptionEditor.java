@@ -53,6 +53,7 @@ public class SubscriptionEditor extends JPanel implements EditorRecord {
         modelAuthenticationMethod.add("None");
         modelAuthenticationMethod.add("Token");
         modelAuthenticationMethod.add("Password");
+        modelAuthenticationMethod.add("X-API-KEY");
 
         cbxAuthenticationMethod.setModel(modelAuthenticationMethod);
 
@@ -121,7 +122,8 @@ public class SubscriptionEditor extends JPanel implements EditorRecord {
 
         txtName.setEnabled(true);
         txtUrl.setEnabled(true);
-        if ("Token".equals(modelAuthenticationMethod.getSelectedText())) {
+        if ("Token".equals(modelAuthenticationMethod.getSelectedText())
+                || "X-API-KEY".equals(modelAuthenticationMethod.getSelectedText())) {
             txtToken.setText(Formats.STRING.formatValue(subscription[4]));
             txtUsername.setText(null);
             txtPassword.setText(null);
@@ -379,7 +381,8 @@ public class SubscriptionEditor extends JPanel implements EditorRecord {
     }//GEN-LAST:event_cmdPingActionPerformed
 
     private void cbxAuthenticationMethodActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cbxAuthenticationMethodActionPerformed
-        if ("Token".equals(modelAuthenticationMethod.getSelectedText())) {
+        if ("Token".equals(modelAuthenticationMethod.getSelectedText())
+                || "X-API-KEY".equals(modelAuthenticationMethod.getSelectedText())) {
             txtToken.setEnabled(true);
             txtUsername.setEnabled(false);
             txtPassword.setEnabled(false);

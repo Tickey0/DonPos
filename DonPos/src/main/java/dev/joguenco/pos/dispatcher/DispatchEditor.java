@@ -14,6 +14,7 @@ import com.unicenta.pos.forms.JPanelView;
 import com.unicenta.pos.printer.TicketParser;
 import com.unicenta.pos.scripting.ScriptEngine;
 import com.unicenta.pos.scripting.ScriptFactory;
+import dev.joguenco.http.client.authorization.ExecuteAuthorization;
 import dev.joguenco.pos.establishment.DataLogicEstablishment;
 import dev.joguenco.pos.establishment.EstablishmentInfo;
 import dev.joguenco.pos.taxpayer.DataLogicTaxpayer;
@@ -364,6 +365,13 @@ public class DispatchEditor extends JPanel implements JPanelView, BeanFactoryApp
             var serieNumber = dlDispatch.saveDispatch(dispatch);
 
             printDeliveryNote();
+
+            // Igual que la factura y la liquidacion: guardada la guia, se manda a
+            // autorizar en un hilo aparte. Uso el numero que devolvio saveDispatch,
+            // que es el que quedo grabado de verdad.
+            log.info("Start authorization in a thread "
+                    + dispatch.getCode() + " " + serieNumber);
+            new ExecuteAuthorization(app, dispatch.getCode(), serieNumber).start();
 
             JOptionPane.showMessageDialog(this,
                     AppLocal.getIntString("message.dispatch.saved") + "\n"

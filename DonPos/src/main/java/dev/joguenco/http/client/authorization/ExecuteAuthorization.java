@@ -10,12 +10,20 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ExecuteAuthorization extends Thread {
 
-    private AppView app;
-    private TicketInfo ticket;
+    private final AppView app;
+    private final String code;
+    private final String number;
 
     public ExecuteAuthorization(AppView app, TicketInfo ticket) {
+        this(app, ticket.getCode(), ticket.getSerieNumber());
+    }
+
+    // La liquidacion, la retencion y la guia no son tickets, asi que entran por
+    // aqui con el codigo y el numero, que es lo unico que se usaba del ticket.
+    public ExecuteAuthorization(AppView app, String code, String number) {
         this.app = app;
-        this.ticket = ticket;
+        this.code = code;
+        this.number = number;
     }
 
     @Override
@@ -38,8 +46,8 @@ public class ExecuteAuthorization extends Thread {
     public Boolean send() {
         try {
             AuthorizeClient a = new AuthorizeClient(app);
-            final var response = a.post(ticket);
-            log.info(ticket.getCode() + " " + ticket.getSerieNumber() + " -> " + response.getStatus());
+            final var response = a.post(code, number);
+            log.info(code + " " + number + " -> " + response.getStatus());
 
             if ("ERROR".equalsIgnoreCase(response.getStatus())) {
                 return false;

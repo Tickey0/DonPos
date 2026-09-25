@@ -26,6 +26,12 @@ public class HttpClientSubscription {
         return new ServiceGenerator(subscription.getUrl(), subscription.getTimeout());
     }
 
+    // Dice como se autentica este servicio: Password hace login y trae un token,
+    // X-API-KEY manda la clave en la cabecera y se ahorra el viaje del login.
+    public String getAuthenticationMethod() {
+        return subscription.getAuthenticationMethod();
+    }
+
     public String getToken() {
         return subscription.getToken();
     }
