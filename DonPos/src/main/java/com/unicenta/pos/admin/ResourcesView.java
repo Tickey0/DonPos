@@ -19,6 +19,7 @@
 
 package com.unicenta.pos.admin;
 
+import com.github.f4b6a3.uuid.UuidCreator;
 import com.unicenta.basic.BasicException;
 import com.unicenta.data.gui.ComboBoxValModel;
 import com.unicenta.data.loader.ImageUtils;
@@ -33,7 +34,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.UUID;
 import javax.swing.JFileChooser;
 import javax.swing.JPanel;
 
@@ -184,7 +184,7 @@ public final class ResourcesView extends JPanel implements EditorRecord {
     public Object createValue() throws BasicException {
         Object[] resource = new Object[4];
 
-        resource[0] = m_oId == null ? UUID.randomUUID().toString() : m_oId;
+        resource[0] = m_oId == null ? UuidCreator.getTimeOrderedEpoch().toString() : m_oId;
         resource[1] = m_jName.getText();
         
         ResourceType restype = (ResourceType) m_ResourceModel.getSelectedItem();

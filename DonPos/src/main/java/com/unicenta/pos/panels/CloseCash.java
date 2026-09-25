@@ -17,6 +17,7 @@
  */
 package com.unicenta.pos.panels;
 
+import com.github.f4b6a3.uuid.UuidCreator;
 import com.unicenta.basic.BasicException;
 import com.unicenta.data.gui.MessageInf;
 import com.unicenta.data.loader.Datas;
@@ -40,7 +41,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Date;
-import java.util.UUID;
 import javax.swing.JComponent;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -223,7 +223,7 @@ public class CloseCash extends JPanel implements JPanelView, BeanFactoryApp {
 
             try {
                 // Creamos una nueva caja
-                app.setActiveCash(UUID.randomUUID().toString(),
+                app.setActiveCash(UuidCreator.getTimeOrderedEpoch().toString(),
                         app.getActiveCashSequence() + 1, dNow, null);
 
                 // creamos la caja activa

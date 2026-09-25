@@ -20,6 +20,7 @@
 
 package com.unicenta.pos.inventory;
 
+import com.github.f4b6a3.uuid.UuidCreator;
 import com.unicenta.basic.BasicException;
 import com.unicenta.data.user.DirtyManager;
 import com.unicenta.data.user.EditorRecord;
@@ -29,7 +30,6 @@ import java.awt.Component;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
-import java.util.UUID;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
@@ -70,7 +70,7 @@ public final class TaxCustCategoriesEditor extends JPanel implements EditorRecor
      */
     @Override
     public void writeValueInsert() {
-        m_oId = UUID.randomUUID().toString();
+        m_oId = UuidCreator.getTimeOrderedEpoch().toString();
         txtId.setText(null);
         m_jName.setText(null);
         

@@ -18,6 +18,7 @@
 //    along with uniCenta oPOS.  If not, see <http://www.gnu.org/licenses/>.
 package com.unicenta.pos.forms;
 
+import com.github.f4b6a3.uuid.UuidCreator;
 import com.unicenta.basic.BasicException;
 import com.unicenta.data.loader.*;
 import com.unicenta.data.model.Field;
@@ -42,7 +43,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Date;
 import java.util.List;
-import java.util.UUID;
 import java.util.logging.Logger;
 import java.io.File;
 
@@ -1835,7 +1835,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
 
                     if (l.getProductID() != null && l.isProductService() != true) {
                         getStockDiaryInsert().exec(new Object[]{
-                            UUID.randomUUID().toString(),
+                            UuidCreator.getTimeOrderedEpoch().toString(),
                             ticket.getDate(),
                             l.getMultiply() < 0.0
                             ? MovementReason.IN_REFUND.getKey()
@@ -1878,7 +1878,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                             }
                             payments.removeFirst(pName);
 
-                            setString(1, UUID.randomUUID().toString());
+                            setString(1, UuidCreator.getTimeOrderedEpoch().toString());
                             setString(2, ticket.getId());
                             setString(3, pName);
                             setDouble(4, getTotal);
@@ -1920,7 +1920,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                         taxlinesinsert.exec(new DataParams() {
                             @Override
                             public void writeValues() throws BasicException {
-                                setString(1, UUID.randomUUID().toString());
+                                setString(1, UuidCreator.getTimeOrderedEpoch().toString());
                                 setString(2, ticket.getId());
                                 setString(3, tickettax.getTaxInfo().getId());
                                 setDouble(4, tickettax.getSubTotal());
@@ -1955,7 +1955,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                     if (ticket.getLine(i).getProductID() != null) {
                         // Hay que actualizar el stock si el hay producto
                         getStockDiaryInsert().exec(new Object[]{
-                            UUID.randomUUID().toString(),
+                            UuidCreator.getTimeOrderedEpoch().toString(),
                             d,
                             ticket.getLine(i).getMultiply() >= 0.0
                             ? MovementReason.IN_REFUND.getKey()
@@ -1975,7 +1975,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                             ProductInfoExt bundleProduct = getProductInfo(bundleComponent.getProductBundleId());
 
                             getStockDiaryInsert().exec(new Object[]{
-                                UUID.randomUUID().toString(),
+                                UuidCreator.getTimeOrderedEpoch().toString(),
                                 d,
                                 ticket.getLine(i).getMultiply() * bundleComponent.getQuantity() >= 0.0
                                 ? MovementReason.IN_REFUND.getKey()

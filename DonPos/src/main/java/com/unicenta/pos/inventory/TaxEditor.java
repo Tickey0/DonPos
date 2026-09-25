@@ -19,6 +19,7 @@
 
 package com.unicenta.pos.inventory;
 
+import com.github.f4b6a3.uuid.UuidCreator;
 import com.unicenta.basic.BasicException;
 import com.unicenta.data.gui.ComboBoxValModel;
 import com.unicenta.data.gui.MessageInf;
@@ -39,7 +40,6 @@ import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import lombok.extern.slf4j.Slf4j;
@@ -181,7 +181,7 @@ public class TaxEditor extends JPanel implements EditorRecord {
      */
     @Override
     public void writeValueInsert() {
-        m_oId = UUID.randomUUID().toString();
+        m_oId = UuidCreator.getTimeOrderedEpoch().toString();
         txtId.setText(null);
         m_jName.setText(null);
         taxcatmodel.setSelectedKey(null);

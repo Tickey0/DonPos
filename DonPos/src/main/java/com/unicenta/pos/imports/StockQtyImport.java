@@ -19,6 +19,7 @@
 package com.unicenta.pos.imports;
 
 import com.csvreader.CsvReader;
+import com.github.f4b6a3.uuid.UuidCreator;
 import com.unicenta.basic.BasicException;
 import com.unicenta.data.loader.Datas;
 import com.unicenta.data.loader.PreparedSentence;
@@ -42,7 +43,6 @@ import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
-import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -444,7 +444,7 @@ public class StockQtyImport extends JPanel implements JPanelView {
                 Datas.STRING, Datas.STRING};
 
             Object params = new Object[]{
-                UUID.randomUUID().toString(),
+                UuidCreator.getTimeOrderedEpoch().toString(),
                 new Date(),
                 (Integer) reason.getKey(),
                 LocationID,
@@ -508,7 +508,7 @@ public class StockQtyImport extends JPanel implements JPanelView {
                 Datas.STRING, Datas.STRING};
 
             Object params = new Object[]{
-                UUID.randomUUID().toString(),
+                UuidCreator.getTimeOrderedEpoch().toString(),
                 new Date(),
                 (Integer) reason.getKey(),
                 LocationID,
@@ -556,7 +556,7 @@ public class StockQtyImport extends JPanel implements JPanelView {
     public void CSVStockUpdate(String LocationID, String Code, Double Units) {
 
         Object[] myprod = new Object[6];
-        myprod[0] = UUID.randomUUID().toString();                               // ID string
+        myprod[0] = UuidCreator.getTimeOrderedEpoch().toString();                               // ID string
         myprod[1] = Integer.toString(currentRecord);                            // Record number
         myprod[2] = "Qty update";                                               // Error description
         myprod[3] = Location;                                                   // Location ID

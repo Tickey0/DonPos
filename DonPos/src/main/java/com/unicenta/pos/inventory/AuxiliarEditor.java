@@ -19,6 +19,7 @@
 
 package com.unicenta.pos.inventory;
 
+import com.github.f4b6a3.uuid.UuidCreator;
 import com.unicenta.basic.BasicException;
 import com.unicenta.data.gui.MessageInf;
 import com.unicenta.data.user.DirtyManager;
@@ -31,7 +32,6 @@ import com.unicenta.pos.panels.JProductFinder;
 import com.unicenta.pos.ticket.ProductInfoExt;
 import java.awt.Component;
 import java.awt.Toolkit;
-import java.util.UUID;
 
 /**
  *
@@ -108,7 +108,7 @@ public class AuxiliarEditor extends javax.swing.JPanel implements EditorRecord {
     @Override
     public void writeValueInsert() {
         
-        id = UUID.randomUUID().toString();
+        id = UuidCreator.getTimeOrderedEpoch().toString();
         product = insertproduct;
         product2 = null;
         name = null;

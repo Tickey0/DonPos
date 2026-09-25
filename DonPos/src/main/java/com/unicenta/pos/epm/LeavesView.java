@@ -19,6 +19,7 @@
 
 package com.unicenta.pos.epm;
 
+import com.github.f4b6a3.uuid.UuidCreator;
 import com.unicenta.basic.BasicException;
 import com.unicenta.beans.JCalendarDialog;
 import com.unicenta.data.gui.MessageInf;
@@ -31,7 +32,6 @@ import com.unicenta.pos.forms.AppView;
 import java.awt.Component;
 import java.util.Date;
 import java.util.List;
-import java.util.UUID;
 import java.util.Calendar;
 
 /**
@@ -163,7 +163,7 @@ public final class LeavesView extends javax.swing.JPanel implements EditorRecord
     @Override
     public Object createValue() throws BasicException {
         Object[] leaves = new Object[6];
-        leaves[0] = m_oId == null ? UUID.randomUUID().toString() : m_oId;
+        leaves[0] = m_oId == null ? UuidCreator.getTimeOrderedEpoch().toString() : m_oId;
         leaves[1] = m_employeeid;
         leaves[2] = m_jEmployeeName.getText();
         leaves[3] = (Date) Formats.TIMESTAMP.parseValue(m_jStartDate.getText());

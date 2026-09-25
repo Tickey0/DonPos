@@ -1,5 +1,6 @@
 package com.unicenta.pos.inventory;
 
+import com.github.f4b6a3.uuid.UuidCreator;
 import com.unicenta.basic.BasicException;
 import com.unicenta.data.user.DirtyManager;
 import com.unicenta.data.user.EditorRecord;
@@ -10,7 +11,6 @@ import java.awt.Component;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
-import java.util.UUID;
 import javax.swing.JOptionPane;
 
 public final class UomEditor extends javax.swing.JPanel implements EditorRecord {
@@ -107,7 +107,7 @@ public final class UomEditor extends javax.swing.JPanel implements EditorRecord 
     @Override
     public void writeValueInsert() {
 
-        m_id = UUID.randomUUID().toString();
+        m_id = UuidCreator.getTimeOrderedEpoch().toString();
         m_jName.setText(null);
         m_jName.setEnabled(true);
         

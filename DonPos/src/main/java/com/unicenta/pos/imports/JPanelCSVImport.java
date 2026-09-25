@@ -19,6 +19,7 @@
 package com.unicenta.pos.imports;
 
 import com.csvreader.CsvReader;
+import com.github.f4b6a3.uuid.UuidCreator;
 import com.unicenta.basic.BasicException;
 import com.unicenta.data.gui.ComboBoxValModel;
 import com.unicenta.data.loader.*;
@@ -41,7 +42,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -522,7 +522,7 @@ public class JPanelCSVImport extends JPanel implements JPanelView {
 
         if (!Category.equals("")) {
             Object[] newcat = new Object[3];
-            newcat[0] = UUID.randomUUID().toString();
+            newcat[0] = UuidCreator.getTimeOrderedEpoch().toString();
             newcat[1] = Category;
             newcat[2] = true;
 
@@ -566,7 +566,7 @@ public class JPanelCSVImport extends JPanel implements JPanelView {
 
         if (!Supplier.equals("")) {
             Object[] newsupp = new Object[4];
-            newsupp[0] = UUID.randomUUID().toString();
+            newsupp[0] = UuidCreator.getTimeOrderedEpoch().toString();
             newsupp[1] = Supplier;
             newsupp[2] = Supplier;
             newsupp[3] = true;
@@ -829,7 +829,7 @@ public class JPanelCSVImport extends JPanel implements JPanelView {
     public void createCategory(String cType) {
 
         Object[] mycat = new Object[7];
-        mycat[0] = UUID.randomUUID().toString();                                // ID string
+        mycat[0] = UuidCreator.getTimeOrderedEpoch().toString();                                // ID string
         mycat[1] = categoryName;                                                // Name string
         mycat[2] = categoryParentid;                                            // Parent String     
         mycat[3] = null;                                                        // Image
@@ -855,7 +855,7 @@ public class JPanelCSVImport extends JPanel implements JPanelView {
     public void createSupplier(String sType) {
 
         Object[] mysupp = new Object[4];
-        mysupp[0] = UUID.randomUUID().toString();                               // ID string
+        mysupp[0] = UuidCreator.getTimeOrderedEpoch().toString();                               // ID string
         mysupp[1] = supplierName;                                               // SearchKey
         mysupp[2] = supplierName;                                               // Name string
         mysupp[3] = true;                                                       // Visible     
@@ -879,7 +879,7 @@ public class JPanelCSVImport extends JPanel implements JPanelView {
 
         Object[] myprod = new Object[32];
         if ("new".equals(pType)) {
-            myprod[0] = UUID.randomUUID().toString();
+            myprod[0] = UuidCreator.getTimeOrderedEpoch().toString();
         } else {
             myprod[0] = prodInfo.getID();
         }                                                                       // ID string
@@ -956,7 +956,7 @@ public class JPanelCSVImport extends JPanel implements JPanelView {
     public void createCSVEntry(String csvError, Double previousBuy, Double previousSell) {
 
         Object[] myprod = new Object[13];
-        myprod[0] = UUID.randomUUID().toString();                               // ID string
+        myprod[0] = UuidCreator.getTimeOrderedEpoch().toString();                               // ID string
         myprod[1] = Integer.toString(currentRecord);                            // Record number
         myprod[2] = csvError;                                                   // Error description
         myprod[3] = productReference;                                           // Reference string

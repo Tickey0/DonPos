@@ -19,6 +19,7 @@
 
 package com.unicenta.pos.customers;
 
+import com.github.f4b6a3.uuid.UuidCreator;
 import com.unicenta.basic.BasicException;
 import com.unicenta.beans.JCalendarDialog;
 import com.unicenta.data.gui.ComboBoxValModel;
@@ -54,7 +55,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.UUID;
 
 /**
  *
@@ -533,7 +533,7 @@ public void resetTranxTable() {
 
         Object[] customer = new Object[28];
         
-        customer[0] = m_oId == null ? UUID.randomUUID().toString() : m_oId;
+        customer[0] = m_oId == null ? UuidCreator.getTimeOrderedEpoch().toString() : m_oId;
         //Hide m_jSearchkey and set m_jTaxID
         customer[1] = m_jTaxID.getText();//m_jSearchkey.getText();
         customer[2] = m_jTaxID.getText();

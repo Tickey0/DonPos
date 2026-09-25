@@ -18,6 +18,7 @@
 //    along with uniCenta oPOS.  If not, see <http://www.gnu.org/licenses/>.
 package com.unicenta.pos.forms;
 
+import com.github.f4b6a3.uuid.UuidCreator;
 import com.unicenta.basic.BasicException;
 import com.unicenta.data.loader.*;
 import com.unicenta.format.Formats;
@@ -561,7 +562,7 @@ public class DataLogicSystem extends BeanFactoryDataSingle {
     public final void setResource(String name, int type, byte[] data) {
 
         Object[] value = new Object[]{
-            UUID.randomUUID().toString(),
+            UuidCreator.getTimeOrderedEpoch().toString(),
             name,
             type,
             data

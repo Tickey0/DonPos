@@ -19,6 +19,7 @@
 
 package com.unicenta.pos.inventory;
 
+import com.github.f4b6a3.uuid.UuidCreator;
 import com.unicenta.data.user.DirtyManager;
 import com.unicenta.data.user.EditorRecord;
 import com.unicenta.pos.forms.AppLocal;
@@ -46,7 +47,6 @@ import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Date;
-import java.util.UUID;
 import javax.swing.JOptionPane;
 
 public final class StockDiaryEditor extends javax.swing.JPanel implements EditorRecord {
@@ -209,7 +209,7 @@ public final class StockDiaryEditor extends javax.swing.JPanel implements Editor
      */
     @Override
     public void writeValueInsert() {
-        m_sID = UUID.randomUUID().toString();
+        m_sID = UuidCreator.getTimeOrderedEpoch().toString();
         m_jdate.setText(Formats.TIMESTAMP.formatValue(DateUtils.getTodayMinutes()));
         m_ReasonModel.setSelectedItem(MovementReason.IN_PURCHASE);
         m_LocationsModel.setSelectedKey(m_App.getInventoryLocation());

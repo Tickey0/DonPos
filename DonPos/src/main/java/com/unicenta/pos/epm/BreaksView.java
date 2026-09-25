@@ -19,6 +19,7 @@
 
 package com.unicenta.pos.epm;
 
+import com.github.f4b6a3.uuid.UuidCreator;
 import com.unicenta.basic.BasicException;
 import com.unicenta.data.loader.SentenceList;
 import com.unicenta.data.user.DirtyManager;
@@ -27,7 +28,6 @@ import com.unicenta.pos.forms.AppLocal;
 import com.unicenta.pos.forms.AppView;
 import java.awt.Component;
 import java.util.List;
-import java.util.UUID;
 
 /**
  *
@@ -143,7 +143,7 @@ public final class BreaksView extends javax.swing.JPanel implements EditorRecord
     @Override
     public Object createValue() throws BasicException {
         Object[] breaks = new Object[4];
-        breaks[0] = m_oId == null ? UUID.randomUUID().toString() : m_oId;
+        breaks[0] = m_oId == null ? UuidCreator.getTimeOrderedEpoch().toString() : m_oId;
         breaks[1] = m_jBreakName.getText();
         breaks[2] = m_jBreakDescription.getText();
         breaks[3] = Boolean.valueOf(m_jVisible.isSelected());

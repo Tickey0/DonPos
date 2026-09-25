@@ -18,6 +18,7 @@
 //    along with uniCenta oPOS.  If not, see <http://www.gnu.org/licenses/>.
 package com.unicenta.pos.suppliers;
 
+import com.github.f4b6a3.uuid.UuidCreator;
 import com.unicenta.basic.BasicException;
 import com.unicenta.data.gui.ComboBoxValModel;
 import com.unicenta.data.gui.MessageInf;
@@ -32,7 +33,6 @@ import java.awt.Component;
 import java.awt.Dialog;
 import java.awt.Frame;
 import java.awt.Window;
-import java.util.UUID;
 import javax.swing.JFrame;
 import lombok.extern.slf4j.Slf4j;
 
@@ -404,7 +404,7 @@ public class JDialogNewSupplier extends javax.swing.JDialog {
 
     private void m_jBtnOKActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_m_jBtnOKActionPerformed
         try {
-            m_oId = UUID.randomUUID().toString();
+            m_oId = UuidCreator.getTimeOrderedEpoch().toString();
             Object supplier = createValue() ;            
            int status = tsuppliers.getInsertSentence().exec(supplier);
             if (status>0){

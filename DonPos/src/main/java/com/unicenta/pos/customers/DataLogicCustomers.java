@@ -19,6 +19,7 @@
 
 package com.unicenta.pos.customers;
 
+import com.github.f4b6a3.uuid.UuidCreator;
 import com.unicenta.basic.BasicException;
 import com.unicenta.data.loader.*;
 import com.unicenta.format.Formats;
@@ -26,7 +27,6 @@ import com.unicenta.pos.forms.AppLocal;
 import com.unicenta.pos.forms.BeanFactoryDataSingle;
 import com.unicenta.pos.voucher.VoucherInfo;
 import dev.resolvedor.util.ExtractNames;
-import java.util.UUID;
 
 /**
  * @author JG uniCenta
@@ -448,7 +448,7 @@ public class DataLogicCustomers extends BeanFactoryDataSingle {
         ).exec(new DataParams() {
             @Override
             public void writeValues() throws BasicException {
-                setString(1, UUID.randomUUID().toString());
+                setString(1, UuidCreator.getTimeOrderedEpoch().toString());
                 setString(2, customer.getTaxid());
                 setString(3, customer.getTaxid());
                 setString(4, customer.getName());

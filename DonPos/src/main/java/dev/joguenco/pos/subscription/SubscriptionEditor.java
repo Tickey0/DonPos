@@ -15,6 +15,7 @@
 //    along with Mestizo Pos.  If not, see <http://www.gnu.org/licenses/>.
 package dev.joguenco.pos.subscription;
 
+import com.github.f4b6a3.uuid.UuidCreator;
 import com.unicenta.basic.BasicException;
 import com.unicenta.data.gui.ComboBoxValModel;
 import com.unicenta.data.user.DirtyManager;
@@ -29,7 +30,6 @@ import dev.joguenco.http.client.ping.PingService;
 import java.awt.Component;
 import java.awt.HeadlessException;
 import java.io.IOException;
-import java.util.UUID;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import lombok.extern.slf4j.Slf4j;
@@ -181,7 +181,7 @@ public class SubscriptionEditor extends JPanel implements EditorRecord {
         String password = new String(passwordChars);
         AltEncrypter cypher = new AltEncrypter(key);
 
-        subscription[0] = oId == null ? UUID.randomUUID().toString() : oId;
+        subscription[0] = oId == null ? UuidCreator.getTimeOrderedEpoch().toString() : oId;
         subscription[1] = txtName.getText();
         subscription[2] = txtUrl.getText();
         subscription[3] = modelAuthenticationMethod.getSelectedText();

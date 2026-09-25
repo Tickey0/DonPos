@@ -18,6 +18,7 @@
 //    along with uniCenta oPOS.  If not, see <http://www.gnu.org/licenses/>.
 package com.unicenta.pos.inventory;
 
+import com.github.f4b6a3.uuid.UuidCreator;
 import com.unicenta.basic.BasicException;
 import com.unicenta.beans.DateUtils;
 import com.unicenta.beans.JCalendarDialog;
@@ -52,7 +53,6 @@ import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.UUID;
 
 /**
  * Date : Aug 2017 Updated : Dec 2016 §
@@ -610,7 +610,7 @@ public class StockManagement extends JPanel implements JPanelView {
 
             if (inv.isService() != true) {
                 sent.exec(new Object[]{
-                    UUID.randomUUID().toString(),
+                    UuidCreator.getTimeOrderedEpoch().toString(),
                     rec.getDate(),
                     rec.getReason().getKey(),
                     rec.getLocation().getID(),

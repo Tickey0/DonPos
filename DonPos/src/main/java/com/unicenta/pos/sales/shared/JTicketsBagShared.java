@@ -18,6 +18,7 @@
 //    along with uniCenta oPOS.  If not, see <http://www.gnu.org/licenses/>.
 package com.unicenta.pos.sales.shared;
 
+import com.github.f4b6a3.uuid.UuidCreator;
 import com.unicenta.basic.BasicException;
 import com.unicenta.beans.JNumberPop;
 import com.unicenta.data.gui.MessageInf;
@@ -35,7 +36,6 @@ import com.unicenta.pos.ticket.TicketInfo;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import javax.swing.*;
@@ -245,7 +245,7 @@ public class JTicketsBagShared extends JTicketsBag {
         saveCurrentTicket();
 
         TicketInfo ticket = new TicketInfo();
-        m_sCurrentTicket = UUID.randomUUID().toString();
+        m_sCurrentTicket = UuidCreator.getTimeOrderedEpoch().toString();
         m_panelticket.setActiveTicket(ticket, null);
 
         updateCount();

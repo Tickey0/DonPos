@@ -19,6 +19,7 @@
 
 package com.unicenta.pos.mant;
 
+import com.github.f4b6a3.uuid.UuidCreator;
 import com.unicenta.basic.BasicException;
 import com.unicenta.data.gui.ComboBoxValModel;
 import com.unicenta.data.loader.SentenceList;
@@ -28,7 +29,6 @@ import com.unicenta.format.Formats;
 import com.unicenta.pos.forms.AppLocal;
 import com.unicenta.pos.forms.DataLogicSales;
 import java.awt.Component;
-import java.util.UUID;
 import javax.swing.JPanel;
 
 /**
@@ -112,7 +112,7 @@ public final class PlacesEditor extends JPanel implements EditorRecord {
     @Override
     public void writeValueInsert() {
 
-        m_sID = UUID.randomUUID().toString(); 
+        m_sID = UuidCreator.getTimeOrderedEpoch().toString(); 
         m_jName.setText(null);
         m_jSeats.setText(null);        
         m_FloorModel.setSelectedKey(null);

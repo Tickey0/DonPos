@@ -19,6 +19,7 @@
 
 package com.unicenta.pos.sales.restaurant;
 
+import com.github.f4b6a3.uuid.UuidCreator;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.beans.*;
@@ -274,7 +275,7 @@ public class JTicketsBagRestaurantRes extends javax.swing.JPanel implements Edit
         
         Object[] res = new Object[10];
         
-        res[0] = m_sID == null ? UUID.randomUUID().toString() : m_sID; 
+        res[0] = m_sID == null ? UuidCreator.getTimeOrderedEpoch().toString() : m_sID; 
         res[1] = m_dCreated == null ? new Date() : m_dCreated; 
         res[2] = m_timereservation.getDate();
         res[3] = customer.getId();
