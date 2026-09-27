@@ -1,5 +1,4 @@
 delete from products_lots;
-delete from lots;
 delete from products_cat;
 delete from products;
 delete from categories;
@@ -35,3 +34,4 @@ select * from establishments;
 -- Ambiente de facturación electrónica: Test -> 1; Production -> 2
 -- resources '92', 'Electronic.Environment'
 select * from ele_documents;
+select * from ele_parameters

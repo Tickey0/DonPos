@@ -18,7 +18,7 @@
 
 CREATE or REPLACE FUNCTION `fun_tip`(`p_ticket` varchar(90)) RETURNS decimal(19,2) BEGIN DECLARE `v_tip` decimal(19, 2); SELECT nvl(sum(`units` * `price` ), 0) into `v_tip` from `ticketlines` where `ticket` = `p_ticket` and `product` = 'xxx998_998xxx_x8x8x8'; return v_tip; END;
 
-delete from taxpayer;
+delete from taxpayer where identification = '000000000';
 
 -- text_1 -> forced_accounting
 -- text_2 -> special_taxpayer

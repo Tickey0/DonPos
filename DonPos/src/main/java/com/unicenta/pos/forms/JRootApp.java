@@ -208,16 +208,7 @@ public class JRootApp extends JPanel implements AppView {
         webMemoryBar1.setShowMaximumMemory(true);
     }
 
- 
-
-
-
-
-
-
     final static int UNIQUE_KEY_FAMILY = 0x01;
-
-
 
     /**
      * @param props
@@ -251,6 +242,8 @@ public class JRootApp extends JPanel implements AppView {
                     ? m_dlSystem.getInitScript() + "-create.sql"
                     : m_dlSystem.getInitScript() + "-upgrade_master.sql";
 
+            String actionDb = sDBVersion == null ? "create" : "upgrade";
+
             if (JRootApp.class.getResource(sScript) == null) {
                 JMessageDialog.showMessage(this, new MessageInf(MessageInf.SGN_DANGER, sDBVersion == null
                         ? AppLocal.getIntString("message.databasenotsupported", session.DB.getName() + " " + sDBVersion)
@@ -277,19 +270,21 @@ public class JRootApp extends JPanel implements AppView {
                         if (l.size() > 0) {
                             showMessageWarning(l);
                         } else {
-                            final var country = getCountry();
-                            String dataScript = m_dlSystem.getInitScript() + "-data-" + country + ".sql";
+                            if ("create".equals(actionDb)) {
+                                final var country = getCountry();
+                                String dataScript = m_dlSystem.getInitScript() + "-data-" + country + ".sql";
 
-                            InputStream in = BatchSentenceResource.class.getResourceAsStream(dataScript);
-                            if (in == null) {
-                                dataScript = m_dlSystem.getInitScript() + "-data.sql";
-                            }
+                                InputStream in = BatchSentenceResource.class.getResourceAsStream(dataScript);
+                                if (in == null) {
+                                    dataScript = m_dlSystem.getInitScript() + "-data.sql";
+                                }
 
-                            BatchSentence sentenceData = new BatchSentenceResource(session, dataScript);
-                            sentenceData.putParameter("COUNTRY_CODE", Matcher.quoteReplacement(country));
-                            java.util.List resultList = sentenceData.list();
-                            if (!resultList.isEmpty()) {
-                                showMessageWarning(resultList);
+                                BatchSentence sentenceData = new BatchSentenceResource(session, dataScript);
+                                sentenceData.putParameter("COUNTRY_CODE", Matcher.quoteReplacement(country));
+                                java.util.List resultList = sentenceData.list();
+                                if (!resultList.isEmpty()) {
+                                    showMessageWarning(resultList);
+                                }
                             }
                         }
                     } catch (BasicException e) {
@@ -467,7 +462,7 @@ public class JRootApp extends JPanel implements AppView {
 
         String ibutton = m_props.getProperty("machine.iButton");
         if (ibutton.equals("true")) {
-            
+
         }
         return true;
     }
@@ -524,7 +519,6 @@ public class JRootApp extends JPanel implements AppView {
 
         if (closeAppView()) {
             m_TP.getDeviceDisplay().clearVisor();
-            
 
 // delete the open.db tracking file
             String sUserPath = System.getProperty("user.home");
