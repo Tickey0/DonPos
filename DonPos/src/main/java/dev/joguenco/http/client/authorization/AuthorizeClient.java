@@ -51,7 +51,7 @@ public class AuthorizeClient {
 
             final var document = new Document(code, number);
 
-            return resultado(authorizeWithApiKey(httpClient, document), document.getCode());
+            return buildResponse(authorizeWithApiKey(httpClient, document), document.getCode());
 
         } catch (IllegalArgumentException | HeadlessException | IOException | BasicException ex) {
             log.error(this.getClass().getName() + " " + ex.getMessage());
@@ -61,7 +61,7 @@ public class AuthorizeClient {
 
     // Traduce la respuesta del servidor al mensaje que ve el cajero. Un null aqui
     // significa que el tipo de documento no es de los que se autorizan.
-    private StatusResponse resultado(Response<StatusResponse> response, String code) {
+    private StatusResponse buildResponse(Response<StatusResponse> response, String code) {
         if (response == null) {
             return new StatusResponse("Tipo de documento no soportado para autorizar");
         }
@@ -70,12 +70,12 @@ public class AuthorizeClient {
             return response.body();
         }
 
-        return new StatusResponse("Error al procesar " + nombreDocumento(code));
+        return new StatusResponse("Error al procesar " + getDocumentName(code));
     }
 
     // El nombre que ve el cajero. Antes solo habia dos documentos y salia con un
     // ternario; ahora son seis y asi no hay que tocarlo cada vez.
-    private String nombreDocumento(String code) {
+    private String getDocumentName(String code) {
         if (code == null) {
             return "el documento";
         }
