@@ -42,24 +42,16 @@ public class AuthorizeClient {
                 return new StatusResponse("Service is disable");
             }
 
+            // Autorizar solo va por X-API-KEY. La clave viaja en la cabecera, asi
+            // que nos ahorramos una llamada al servidor, dos lecturas y una escritura
+            // en su base de datos por cada documento.
+            if (!API_KEY_METHOD.equals(httpClient.getAuthenticationMethod())) {
+                return new StatusResponse("La suscripción Authorize debe usar X-API-KEY");
+            }
+
             final var document = new Document(code, number);
 
-            // Con X-API-KEY no hace falta el login. La clave viaja en la cabecera, asi
-            // que nos ahorramos una llamada al servidor, dos lecturas y una escritura en
-            // su base de datos por cada documento.
-            if (API_KEY_METHOD.equals(httpClient.getAuthenticationMethod())) {
-                return resultado(authorizeWithApiKey(httpClient, document), document.getCode());
-            }
-
-            Response<AuthTokens> responseLogin = login(httpClient);
-            if (!responseLogin.isSuccessful()) {
-                return new StatusResponse("Error al iniciar sesión en el servicio de autorización");
-            }
-
-            AuthTokens auth = responseLogin.body();
-            return resultado(
-                    authorize(httpClient, auth.getAccessToken(), document),
-                    document.getCode());
+            return buildResponse(authorizeWithApiKey(httpClient, document), document.getCode());
 
         } catch (IllegalArgumentException | HeadlessException | IOException | BasicException ex) {
             log.error(this.getClass().getName() + " " + ex.getMessage());
@@ -69,7 +61,7 @@ public class AuthorizeClient {
 
     // Traduce la respuesta del servidor al mensaje que ve el cajero. Un null aqui
     // significa que el tipo de documento no es de los que se autorizan.
-    private StatusResponse resultado(Response<StatusResponse> response, String code) {
+    private StatusResponse buildResponse(Response<StatusResponse> response, String code) {
         if (response == null) {
             return new StatusResponse("Tipo de documento no soportado para autorizar");
         }
@@ -78,12 +70,12 @@ public class AuthorizeClient {
             return response.body();
         }
 
-        return new StatusResponse("Error al procesar " + nombreDocumento(code));
+        return new StatusResponse("Error al procesar " + getDocumentName(code));
     }
 
     // El nombre que ve el cajero. Antes solo habia dos documentos y salia con un
     // ternario; ahora son seis y asi no hay que tocarlo cada vez.
-    private String nombreDocumento(String code) {
+    private String getDocumentName(String code) {
         if (code == null) {
             return "el documento";
         }
@@ -97,37 +89,6 @@ public class AuthorizeClient {
             case "GUI": return "la guía de remisión";
             default:    return "el documento";
         }
-    }
-
-    private Response<AuthTokens> login(HttpClientSubscription httpClient) throws IOException {
-        final var service = httpClient.generator()
-                .createService(AuthorizationService.class, userAgent);
-
-        final var callSync = service.login(
-                new Login(
-                        httpClient.getUsername(),
-                        httpClient.getPassword())
-        );
-
-        return callSync.execute();
-    }
-
-    private Response<StatusResponse> authorize(HttpClientSubscription httpClient, String accessToken, Document document) throws IOException {
-        var service = httpClient.generator().createService(
-                AuthorizationService.class,
-                accessToken,
-                userAgent);
-
-        if ("FV".equals(document.getCode())) {
-            var callAuthorize = service.autorizeInvoice(document);
-            return callAuthorize.execute();
-        }
-        else if ("DV".equals(document.getCode())) {
-            var callAuthorize = service.autorizeCreditNote(document);
-            return callAuthorize.execute();
-        }
-
-        return null;
     }
 
     private Response<StatusResponse> authorizeWithApiKey(HttpClientSubscription httpClient, Document document) throws IOException {
