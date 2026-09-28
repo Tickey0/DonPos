@@ -9,16 +9,7 @@ import retrofit2.http.POST;
  */
 public interface AuthorizationService {
 
-    @POST("roqui/v1/login")
-    public Call<AuthTokens> login(@Body Login login);
-
-    @POST("roqui/v1/invoice/authorize")
-    public Call<StatusResponse> autorizeInvoice(@Body Document document);
-    
-    @POST("roqui/v1/credit/note/authorize")
-    public Call<StatusResponse> autorizeCreditNote(@Body Document document);
-
-    // Rutas v2: llevan la clave en la cabecera y no necesitan login previo.
+    // La clave viaja en la cabecera, asi que no hace falta login previo.
     @POST("roqui/v2/invoice/authorize")
     public Call<StatusResponse> autorizeInvoiceV2(@Body Document document);
 

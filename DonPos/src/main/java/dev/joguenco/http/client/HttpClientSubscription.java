@@ -2,7 +2,6 @@ package dev.joguenco.http.client;
 
 import com.unicenta.basic.BasicException;
 import com.unicenta.pos.forms.AppView;
-import com.unicenta.pos.util.AltEncrypter;
 import dev.joguenco.pos.subscription.DataLogicSubscription;
 import dev.joguenco.pos.subscription.SubscriptionInfo;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +14,6 @@ public class HttpClientSubscription {
 
     private final DataLogicSubscription dlSubscription;
     private SubscriptionInfo subscription;
-    private final String key = "cypherkey";
 
     public HttpClientSubscription(AppView app, String serviceName)  throws BasicException {
         dlSubscription = (DataLogicSubscription) app.getBean("dev.joguenco.pos.subscription.DataLogicSubscription");        
@@ -26,8 +24,8 @@ public class HttpClientSubscription {
         return new ServiceGenerator(subscription.getUrl(), subscription.getTimeout());
     }
 
-    // Dice como se autentica este servicio: Password hace login y trae un token,
-    // X-API-KEY manda la clave en la cabecera y se ahorra el viaje del login.
+    // Dice como se autentica este servicio: Token lo usa ReIdi, y X-API-KEY
+    // manda la clave en la cabecera para autorizar documentos.
     public String getAuthenticationMethod() {
         return subscription.getAuthenticationMethod();
     }
@@ -35,16 +33,7 @@ public class HttpClientSubscription {
     public String getToken() {
         return subscription.getToken();
     }
-    
-    public String getUsername() {
-        return subscription.getUsername();
-    }
 
-    public String getPassword() {
-        AltEncrypter cypher = new AltEncrypter(key);
-        return cypher.decrypt(subscription.getPassword());
-    }
-    
     public Boolean isActive(String serviceName) {
         try {
             var isActive = dlSubscription.getSubscriptionStatusByName(serviceName);

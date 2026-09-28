@@ -42,24 +42,16 @@ public class AuthorizeClient {
                 return new StatusResponse("Service is disable");
             }
 
+            // Autorizar solo va por X-API-KEY. La clave viaja en la cabecera, asi
+            // que nos ahorramos una llamada al servidor, dos lecturas y una escritura
+            // en su base de datos por cada documento.
+            if (!API_KEY_METHOD.equals(httpClient.getAuthenticationMethod())) {
+                return new StatusResponse("La suscripción Authorize debe usar X-API-KEY");
+            }
+
             final var document = new Document(code, number);
 
-            // Con X-API-KEY no hace falta el login. La clave viaja en la cabecera, asi
-            // que nos ahorramos una llamada al servidor, dos lecturas y una escritura en
-            // su base de datos por cada documento.
-            if (API_KEY_METHOD.equals(httpClient.getAuthenticationMethod())) {
-                return resultado(authorizeWithApiKey(httpClient, document), document.getCode());
-            }
-
-            Response<AuthTokens> responseLogin = login(httpClient);
-            if (!responseLogin.isSuccessful()) {
-                return new StatusResponse("Error al iniciar sesión en el servicio de autorización");
-            }
-
-            AuthTokens auth = responseLogin.body();
-            return resultado(
-                    authorize(httpClient, auth.getAccessToken(), document),
-                    document.getCode());
+            return resultado(authorizeWithApiKey(httpClient, document), document.getCode());
 
         } catch (IllegalArgumentException | HeadlessException | IOException | BasicException ex) {
             log.error(this.getClass().getName() + " " + ex.getMessage());
@@ -97,37 +89,6 @@ public class AuthorizeClient {
             case "GUI": return "la guía de remisión";
             default:    return "el documento";
         }
-    }
-
-    private Response<AuthTokens> login(HttpClientSubscription httpClient) throws IOException {
-        final var service = httpClient.generator()
-                .createService(AuthorizationService.class, userAgent);
-
-        final var callSync = service.login(
-                new Login(
-                        httpClient.getUsername(),
-                        httpClient.getPassword())
-        );
-
-        return callSync.execute();
-    }
-
-    private Response<StatusResponse> authorize(HttpClientSubscription httpClient, String accessToken, Document document) throws IOException {
-        var service = httpClient.generator().createService(
-                AuthorizationService.class,
-                accessToken,
-                userAgent);
-
-        if ("FV".equals(document.getCode())) {
-            var callAuthorize = service.autorizeInvoice(document);
-            return callAuthorize.execute();
-        }
-        else if ("DV".equals(document.getCode())) {
-            var callAuthorize = service.autorizeCreditNote(document);
-            return callAuthorize.execute();
-        }
-
-        return null;
     }
 
     private Response<StatusResponse> authorizeWithApiKey(HttpClientSubscription httpClient, Document document) throws IOException {
