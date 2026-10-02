@@ -1476,6 +1476,8 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
                                 default:
                                     break;
                             }
+                            
+                            oProduct = findLot(oProduct);
 
                             if (m_jaddtax.isSelected()) {
                                 addTicketLine(oProduct,
