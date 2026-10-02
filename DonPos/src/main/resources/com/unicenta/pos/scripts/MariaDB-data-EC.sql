@@ -909,12 +909,9 @@ CREATE VIEW `v_ele_report_delivery_notes` AS select `j`.`id` AS `id`,
     `j`.`number` AS `number`,
     `j`.`access_key` AS `access_key`,
     `j`.`date` AS `date`,
-    cast(ifnull((select count(0) from `v_ele_delivery_notes_receiver` `n`
-        where `n`.`code` = `j`.`code` and `n`.`number` = `j`.`number`), 0)
-        as decimal(38, 2)) AS `total`,
     `j`.`carrier_identification` AS `identification`,
     `j`.`carrier_legal_name` AS `legal_name`,
-    cast(NULL as char(255)) AS `email`,
+    `j`.`plate` AS `plate`,
     ifnull((select `e`.`status` from `ele_documents` `e`
         where `e`.`code` = `j`.`code` and `e`.`number` = `j`.`number`), 'NO ENVIADO') AS `status`
 from `v_ele_delivery_notes` `j`
