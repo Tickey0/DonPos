@@ -16,23 +16,23 @@
 //
 //    You should have received a copy of the GNU General Public License
 //    along with uniCenta oPOS.  If not, see <http://www.gnu.org/licenses/>.
-
 package com.unicenta.pos.payment;
 
 import com.unicenta.pos.forms.AppProperties;
 
-
 /**
-     * Creates a new instance of PaymentGatewayFac
+ * Creates a new instance of PaymentGatewayFac
  */
 public class PaymentGatewayFac {
-    
-    /** Creates a new instance of PaymentGatewayFac */
+
+    /**
+     * Creates a new instance of PaymentGatewayFac
+     */
     private PaymentGatewayFac() {
     }
-    
-    public static PaymentGateway getPaymentGateway(AppProperties props) {    
-        
+
+    public static PaymentGateway getPaymentGateway(AppProperties props) {
+
         String sReader = props.getProperty("payment.gateway");
         switch (sReader) {
             case "external":
@@ -41,8 +41,10 @@ public class PaymentGatewayFac {
                 return new PaymentGatewayPaymentSense();
             case "Teya":
                 return new PaymentGatewayTeya();
+            case "MediaPayments":
+                return new PaymentGatewayMediaPayments();
             default:
                 return null;
         }
-    }      
+    }
 }

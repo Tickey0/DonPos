@@ -28,7 +28,7 @@ docker run --name mariadb -e MYSQL_ROOT_PASSWORD=R00t -p 3306:3306 -d mariadb:11
 ```
 ## Create database and user
 ```
-CREATE SCHEMA donpos;
+CREATE database donpos;
 ```
 ```
 CREATE USER 'donpos'@'%' IDENTIFIED BY 'd';

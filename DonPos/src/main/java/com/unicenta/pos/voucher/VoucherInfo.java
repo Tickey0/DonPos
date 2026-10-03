@@ -16,16 +16,17 @@
 //
 //    You should have received a copy of the GNU General Public License
 //    along with uniCenta oPOS.  If not, see <http://www.gnu.org/licenses/>.
-
 package com.unicenta.pos.voucher;
 
 import com.unicenta.basic.BasicException;
 import com.unicenta.data.loader.DataRead;
 import com.unicenta.data.loader.IKeyed;
 import com.unicenta.data.loader.SerializerRead;
+import lombok.extern.slf4j.Slf4j;
 
-
+@Slf4j
 public class VoucherInfo implements IKeyed {
+
     private String id;
     private String voucherNumber;
     private String customerName;
@@ -36,19 +37,17 @@ public class VoucherInfo implements IKeyed {
     }
 
     public VoucherInfo(
-        String id, 
-        String voucherNumber, 
-        String customerName,
-        double amount, 
-        String status) 
-    {
+            String id,
+            String voucherNumber,
+            String customerName,
+            double amount,
+            String status) {
         this.id = id;
         this.voucherNumber = voucherNumber;
         this.customerName = customerName;
         this.amount = amount;
         this.status = status;
     }
-      
 
     @Override
     public Object getKey() {
@@ -82,7 +81,7 @@ public class VoucherInfo implements IKeyed {
     public void setVoucherNumber(String voucherNumber) {
         this.voucherNumber = voucherNumber;
     }
-    
+
     /**
      * @return the customerName
      */
@@ -110,13 +109,12 @@ public class VoucherInfo implements IKeyed {
     public void setAmount(double amount) {
         this.amount = amount;
     }
-    
-    
-     @Override
+
+    @Override
     public String toString() {
         return voucherNumber;
     }
-    
+
     /**
      * @return the status
      */
@@ -132,16 +130,25 @@ public class VoucherInfo implements IKeyed {
     }
 
     public static SerializerRead getSerializerRead() {
-        return new SerializerRead() 
-        {
+        return new SerializerRead() {
             @Override
-        public Object readValues(DataRead dr) throws BasicException {
-            return new VoucherInfo(
-                    dr.getString(1), 
-                    dr.getString(2), 
-                    dr.getString(3),
-                    dr.getDouble(4),
-                    dr.getString(5));            
-        }};
-    }    
+            public Object readValues(DataRead dr) throws BasicException {
+                VoucherInfo voucherInfo = null;
+
+                try {
+                    voucherInfo = new VoucherInfo(
+                            dr.getString(1),
+                            dr.getString(2),
+                            dr.getString(3),
+                            dr.getDouble(4),
+                            dr.getString(5));
+                } catch (Exception e) {
+                    log.error("Error reading voucher info: {}", e.getMessage());
+                    log.error(dr.getString(2));
+                }
+
+                return voucherInfo;
+            }
+        };
+    }
 }

@@ -30,7 +30,7 @@ public class AppLocal {
 
     public static final String APP_NAME = "Don POS";
     public static final String APP_ID = "donpos";
-    public static final String APP_VERSION = "5.4.0";
+    public static final String APP_VERSION = "5.5.0";
 
     private static final LocaleResources m_resources;
 

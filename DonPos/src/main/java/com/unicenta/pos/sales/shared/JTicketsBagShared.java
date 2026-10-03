@@ -83,7 +83,7 @@ public class JTicketsBagShared extends JTicketsBag {
         log.debug("Loading Sales screen! " + this.getClass());
 
         ExecutorService customExecutor = Executors.newCachedThreadPool();
-        SwingWorker<String, String> reloadLayaway = new SwingWorker<String, String>() {
+        SwingWorker<String, String> reloadLayaway = new SwingWorker() {
             @Override
             protected String doInBackground() throws Exception {
                 while (true) {
