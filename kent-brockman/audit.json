@@ -1,0 +1,16 @@
+{
+    "keepSettings": {
+        "type": 2,
+        "amount": 10
+    },
+    "auditFilename": "audit.json",
+    "hashType": "md5",
+    "extension": "",
+    "files": [
+        {
+            "date": 1791059443145,
+            "name": "./logs/kent.log",
+            "hash": "4c0d7d18d39b9c792cf8d5c6bbc16f09"
+        }
+    ]
+}

@@ -1,0 +1,25 @@
+{
+  "tasks": {
+    "dev": "deno run --allow-net --allow-read --allow-env --allow-write --watch main.ts"
+  },
+  "imports": {
+    "@loglayer/transport-log-file-rotation": "npm:@loglayer/transport-log-file-rotation@3.3.0",
+    "@oak/oak": "jsr:@oak/oak@17.2.0",
+    "@std/assert": "jsr:@std/assert@1",
+    "@std/dotenv": "jsr:@std/dotenv@0.225.8",
+    "@types/pg": "npm:@types/pg@^8.23.1",
+    "drizzle-kit": "npm:drizzle-kit@^0.31.11",
+    "drizzle-orm": "npm:drizzle-orm@^0.45.3",
+    "loglayer": "npm:loglayer@latest",
+    "mysql2": "npm:mysql2@^3.24.5",
+    "pg": "npm:pg@^8.23.1",
+    "serialize-error": "npm:serialize-error@13.0.2"
+  },
+  "fmt": {
+    "include": ["src"],
+    "lineWidth": 120,
+    "singleQuote": true,
+    "semiColons": false,
+    "exclude": ["**/*.yaml", "**/*.md"]
+  }
+}
