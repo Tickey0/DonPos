@@ -45,6 +45,7 @@ ALTER USER 'donpos'@'%' IDENTIFIED BY 'd';
 REVOKE ALL ON donpos.* FROM 'donpos'@'%';
 ```
 ## Load libraries on local maven repository
+Load libraries when unicenta-repo not fount or is offline
 ### GNU/Linux or MacOS
 ```
 mvn install:install-file -Dfile=./lib/AbsoluteLayout-RELEASE82.jar -DgroupId=org.netbeans.external -DartifactId=AbsoluteLayout -Dversion=RELEASE82 -Dpackaging=jar

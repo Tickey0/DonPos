@@ -4,7 +4,7 @@
 
     <groupId>dev.joguenco</groupId>
     <artifactId>donpos</artifactId>
-    <version>5.5.0</version>
+    <version>5.5.1</version>
     <packaging>jar</packaging>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -522,10 +522,15 @@
             <layout>default</layout>
         </repository>
         <repository>
+            <id>unicenta-repo</id>
+            <url>https://repo.unicenta.io/api/packages/maven2/maven</url>
+        </repository>
+<!--        Uncomment local repository when unicenta-repo not found-->
+        <!--        <repository>
             <id>project.local</id>
             <name>project</name>
             <url>file:${project.basedir}/repo</url>
-        </repository>
+        </repository>-->
     </repositories>
     <name>donpos</name>
 </project>
