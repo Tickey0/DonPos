@@ -79,7 +79,7 @@ public class JPanelCSVImport extends JPanel implements JPanelView {
 
     protected SaveProvider spr;
 
-    private String Category;
+    private String category;
     private String categoryName;
     private String categoryParentid;
     private Integer categoryCatorder;
@@ -371,7 +371,7 @@ public class JPanelCSVImport extends JPanel implements JPanelView {
                 String SellPrice = products.get((String) jComboSell.getSelectedItem());
                 productTax = products.get((String) jComboTax.getSelectedItem());
 
-                Category = products.get((String) jComboCategory.getSelectedItem());
+                category = products.get((String) jComboCategory.getSelectedItem());
                 Supplier = products.get((String) jComboSupplier.getSelectedItem());
 
                 currentRecord++;
@@ -513,17 +513,17 @@ public class JPanelCSVImport extends JPanel implements JPanelView {
     private String getCategory() {
 
         if (jComboCategory.getSelectedItem() != category_default) {
-            String cat = (String) cat_list.get(Category);
+            String cat = (String) cat_list.get(category);
 
             if (cat != null) {
                 return (cat);
             }
         }
 
-        if (!Category.equals("")) {
+        if (!category.equals("")) {
             Object[] newcat = new Object[3];
             newcat[0] = UuidCreator.getTimeOrderedEpoch().toString();
-            newcat[1] = Category;
+            newcat[1] = category;
             newcat[2] = true;
 
             try {
@@ -534,15 +534,15 @@ public class JPanelCSVImport extends JPanel implements JPanelView {
                     m_CategoryModel.setSelectedItem(category);
                     cat_list.put(category.toString(), m_CategoryModel.getSelectedKey().toString());
                 }
-                String cat = (String) cat_list.get(Category);
+                String cat = (String) cat_list.get(category);
                 return (cat);
             } catch (BasicException ex) {
                 log.error(ex.getMessage());
             }
         }
 
-        if (!badCategories.contains(Category)) {
-            badCategories.add(Category.trim());                                 // Save a list of the bad categories
+        if (!badCategories.contains(category)) {
+            badCategories.add(category.trim());                                 // Save a list of the bad categories
         }
         return ((jComboDefaultCategory.getSelectedItem()
                 == reject_bad_category)
@@ -966,7 +966,7 @@ public class JPanelCSVImport extends JPanel implements JPanelView {
         myprod[7] = productSellPrice;                                           // Sell price
         myprod[8] = previousBuy;                                                // Previous Buy price double
         myprod[9] = previousSell;                                               // Previous Sell price double
-        myprod[10] = Category;                                                  // Category
+        myprod[10] = category;                                                  // Category
         myprod[11] = productTax;                                                // Tax
         myprod[12] = Supplier;                                                  // Supplier
         try {

@@ -16,8 +16,8 @@
 //
 //    You should have received a copy of the GNU General Public License
 //    along with uniCenta oPOS.  If not, see <http://www.gnu.org/licenses/>.
-
 package com.unicenta.pos.sales;
+
 import com.unicenta.basic.BasicException;
 import com.unicenta.pos.catalog.CatalogSelector;
 import com.unicenta.pos.catalog.JCatalog;
@@ -30,29 +30,33 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  *
  * @author JG uniCenta
  */
+@Slf4j
 public class JPanelTicketSales extends JPanelTicket {
 
     private CatalogSelector m_cat;
-   
-    /** Creates a new instance of JPanelTicketSales */
-    public JPanelTicketSales() {        
+
+    /**
+     * Creates a new instance of JPanelTicketSales
+     */
+    public JPanelTicketSales() {
     }
-    
+
     /**
      *
      * @param app
      */
     @Override
-    public void init(AppView app) {        
-        super.init(app);        
+    public void init(AppView app) {
+        super.init(app);
         m_ticketlines.addListSelectionListener(new CatalogSelectionListener());
     }
-    
+
     /**
      *
      * @return
@@ -61,7 +65,7 @@ public class JPanelTicketSales extends JPanelTicket {
     public String getTitle() {
         return null;
     }
-    
+
     /**
      *
      * @return
@@ -71,12 +75,12 @@ public class JPanelTicketSales extends JPanelTicket {
         m_cat = new JCatalog(dlSales,
                 "true".equals(m_jbtnconfig.getProperty("pricevisible")),
                 "true".equals(m_jbtnconfig.getProperty("taxesincluded")),
-                Integer.parseInt(m_jbtnconfig.getProperty("img-width", "64")),                
+                Integer.parseInt(m_jbtnconfig.getProperty("img-width", "64")),
                 Integer.parseInt(m_jbtnconfig.getProperty("img-height", "54")),
                 true
         );
         //   Integer.parseInt(m_jbtnconfig.getProperty("img-width", "32")),
-               //   Integer.parseInt(m_jbtnconfig.getProperty("img-height", "32")));
+        //   Integer.parseInt(m_jbtnconfig.getProperty("img-height", "32")));
         m_cat.addActionListener(new CatalogListener());
         m_cat.getComponent().setPreferredSize(new Dimension(
                 0,
@@ -91,27 +95,28 @@ public class JPanelTicketSales extends JPanelTicket {
     protected void resetSouthComponent() {
         m_cat.showCatalogPanel(null);
     }
-    
+
     /**
      *
      * @return
      */
     @Override
     protected JTicketsBag getJTicketsBag() {
+        log.debug("Get JTickets Bag");
         return JTicketsBag.createTicketsBag(m_App.getProperties().getProperty("machine.ticketsbag"), m_App, this);
     }
-    
+
     /**
      *
      * @throws BasicException
      */
     @Override
-    public void activate() throws BasicException {      
+    public void activate() throws BasicException {
         super.activate();
         AppUser user = this.m_App.getAppUserView().getUser();
         m_cat.loadCatalog(user);
-    }      
-    
+    }
+
     public void reLoadCatalog() {
         try {
             AppUser user = this.m_App.getAppUserView().getUser();
@@ -122,19 +127,21 @@ public class JPanelTicketSales extends JPanelTicket {
     }
 
     private class CatalogListener implements ActionListener {
+
         @Override
         public void actionPerformed(ActionEvent e) {
             buttonTransition((ProductInfoExt) e.getSource());
-        }  
+        }
     }
-    
+
     private class CatalogSelectionListener implements ListSelectionListener {
+
         @Override
-        public void valueChanged(ListSelectionEvent e) {      
-            
+        public void valueChanged(ListSelectionEvent e) {
+
             if (!e.getValueIsAdjusting()) {
                 int i = m_ticketlines.getSelectedIndex();
-                
+
                 if (i >= 0) {
                     // Look for the first non auxiliar product.
                     while (i >= 0 && m_oTicket.getLine(i).isProductCom()) {
@@ -149,7 +156,7 @@ public class JPanelTicketSales extends JPanelTicket {
                     }
                 }
             }
-        }  
+        }
     }
-       
+
 }

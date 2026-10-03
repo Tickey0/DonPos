@@ -1476,7 +1476,7 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
                                 default:
                                     break;
                             }
-                            
+
                             oProduct = findLot(oProduct);
 
                             if (m_jaddtax.isSelected()) {
@@ -2715,13 +2715,14 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 
                 if (checkProduct != null) {
 
-                    if (checkProduct.getUnits() <= 0) {
+                    if (checkProduct.getUnits() != null && checkProduct.getUnits() <= 0) {
                         jCheckStock.setForeground(Color.magenta);
                     } else {
                         jCheckStock.setForeground(Color.darkGray);
                     }
 
-                    double dUnits = checkProduct.getUnits();
+                    double dUnits = checkProduct.getUnits() == null ? 0.0 : checkProduct.getUnits();
+
                     int iUnits;
                     iUnits = (int) dUnits;
                     jCheckStock.setText(Integer.toString(iUnits));

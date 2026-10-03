@@ -52,6 +52,7 @@ public class JTicketsBagShared extends JTicketsBag {
     private DataLogicSales dlSales = null;
     private final DataLogicSystem dlSystem;
     private Boolean showList;
+    private int existingOrderCount;
 
     /**
      * Creates new form JTicketsBagShared
@@ -82,8 +83,7 @@ public class JTicketsBagShared extends JTicketsBag {
         log.debug("Loading Sales screen! " + this.getClass());
 
         ExecutorService customExecutor = Executors.newCachedThreadPool();
-
-        SwingWorker<String, String> reloadLayaway = new SwingWorker<>() {
+        SwingWorker<String, String> reloadLayaway = new SwingWorker<String, String>() {
             @Override
             protected String doInBackground() throws Exception {
                 while (true) {
@@ -141,12 +141,26 @@ public class JTicketsBagShared extends JTicketsBag {
     }
 
     public void updateCount() {
+
+        /*
+        1. Need to get / set  the existing count
+        2. When count increases show dialog
+         */
         try {
             List<SharedTicketInfo> l = dlReceipts.getSharedTicketList();
             int count = l.size();
 
+            if (count > existingOrderCount) {
+                log.info("New Order Received from the API!");
+                // show Order Window
+//                List<ReprintTicketInfo> ticketInfoList= dlSales.getReprintTicketList();
+//                JTicketsReprintList listDialog = JTicketsReprintList.newJDialog(JTicketsBagShared.this);
+//                String id = listDialog.showTicketsList(ticketInfoList, dlSales);
+            }
+
             if (count > 0) {
                 m_jListTickets.setText(Integer.toString(count));
+                existingOrderCount = count;
             } else {
                 m_jListTickets.setText("");
             }
@@ -424,6 +438,10 @@ public class JTicketsBagShared extends JTicketsBag {
         deactivate();
         ((JRootApp) m_App).closeAppView();
     }//GEN-LAST:event_m_jHoldActionPerformed
+
+    private void showOrderWindow() {
+
+    }
 
     private void m_jReprintTicketsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_m_jReprintTicketsActionPerformed
         SwingUtilities.invokeLater(new Runnable() {

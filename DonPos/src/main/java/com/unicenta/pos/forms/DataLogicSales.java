@@ -197,7 +197,7 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                 new SerializerWriteBasic(new Datas[]{
             Datas.STRING,
             Datas.STRING,
-            Datas.BOOLEAN})
+            Datas.INT})
         );
 
         m_createSupp = new StaticSentence(s,
@@ -648,6 +648,22 @@ public class DataLogicSales extends BeanFactoryDataSingle {
                 null,
                 ProductInfoExt.getSerializerRead()).list();
 
+    }
+
+    public final CategoryInfo getCategoryInfoByName(String name) throws BasicException {
+        return (CategoryInfo) new PreparedSentence(s,
+                 "SELECT "
+                + "ID, "
+                + "NAME, "
+                + "IMAGE, "
+                + "TEXTTIP, "
+                + "CATSHOWNAME, "
+                + "CATORDER "
+                + "FROM categories "
+                + "WHERE NAME = ? "
+                + "ORDER BY CATORDER, NAME",
+                 SerializerWriteString.INSTANCE,
+                 CategoryInfo.getSerializerRead()).find(name);
     }
 
     /**
