@@ -624,6 +624,9 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
                 m_jList.setVisible(false);
             }
 
+            // La devolucion conserva el cliente de la factura original
+            jBtnCustomer.setEnabled(m_oTicket.getTicketType() != TicketInfo.RECEIPT_REFUND);
+
             m_oTicket.getLines().forEach((line) -> {
                 line.setTaxInfo(taxeslogic.getTaxInfo(line
                         .getProductTaxCategoryID(), m_oTicket.getCustomer()));
