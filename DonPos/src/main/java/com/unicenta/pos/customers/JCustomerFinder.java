@@ -44,6 +44,7 @@ public class JCustomerFinder extends javax.swing.JDialog implements EditorCreato
     private CustomerInfo selectedCustomer;
     private ListProvider lpr;
     private AppView appView;
+    private AppView newCustomerApp;
     
     public class Global {
 //        public static String s = "(new SearchKey)";
@@ -78,6 +79,11 @@ public class JCustomerFinder extends javax.swing.JDialog implements EditorCreato
 
     public void setAppView(AppView appView) {
         this.appView = appView;
+    }
+
+    // Si no encuentra el cliente, deja crearlo en la ventana Nuevo cliente
+    public void enableNewCustomerDialog(AppView app) {
+        this.newCustomerApp = app;
     }
 
     /** Creates new form JCustomerFinder */
@@ -208,8 +214,25 @@ public class JCustomerFinder extends javax.swing.JDialog implements EditorCreato
             if (jListCustomers.getModel().getSize() > 0) {
                 jListCustomers.setSelectedIndex(0);
             } else {
+                // Desde Dividir recibo el cliente se crea aqui mismo, sin salir a Clientes
+                if (newCustomerApp != null) {
+                    if (!m_jtxtTaxID.getText().equals("") || !m_jtxtName.getText().equals("")) {
+                        createCustomer();
+                    }
+                    return;
+                }
+
                 if(!m_jtxtName.getText().equals("")) {
                     
+                    // Sin appView no se puede abrir Clientes (por ejemplo desde reportes o vales)
+                    if (appView == null) {
+                        JOptionPane.showMessageDialog(this,
+                                "No se encontró el cliente. Puede crearlo en Clientes",
+                                AppLocal.getIntString("title.editor"),
+                                JOptionPane.INFORMATION_MESSAGE);
+                        return;
+                    }
+
                     int n = JOptionPane.showConfirmDialog(
                         null,
                         AppLocal.getIntString("message.customernotfound"),
@@ -228,6 +251,27 @@ public class JCustomerFinder extends javax.swing.JDialog implements EditorCreato
                 }
             }
         } catch (BasicException e) {
+        }
+    }
+
+    // Abre Nuevo cliente con lo escrito en la busqueda; si se guarda, queda como el elegido
+    private void createCustomer() {
+        int n = JOptionPane.showConfirmDialog(this,
+                AppLocal.getIntString("message.customernotfound"),
+                AppLocal.getIntString("title.editor"),
+                JOptionPane.YES_NO_OPTION);
+        if (n != JOptionPane.YES_OPTION) {
+            return;
+        }
+
+        JDialogNewCustomer dialog = JDialogNewCustomer.getDialog(this, newCustomerApp);
+        dialog.setCustomerData(m_jtxtTaxID.getText(), m_jtxtName.getText(),
+                m_jtxtName2.getText(), m_jtxtPhone.getText());
+        dialog.setVisible(true);
+
+        if (dialog.getSelectedCustomer() != null) {
+            m_ReturnCustomer = dialog.getSelectedCustomer();
+            dispose();
         }
     }
     
