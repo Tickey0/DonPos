@@ -156,6 +156,14 @@ public class JDialogNewCustomer extends javax.swing.JDialog {
     public CustomerInfoExt getSelectedCustomer() {
         return selectedCustomer;
     }
+
+    // Llena el formulario con lo que se escribio en el buscador de clientes
+    public void setCustomerData(String taxId, String name, String email, String phone) {
+        m_jTaxID.setText(taxId);
+        m_jName.setText(name);
+        txtEmail.setText(email);
+        txtPhone.setText(phone);
+    }
     
    
     

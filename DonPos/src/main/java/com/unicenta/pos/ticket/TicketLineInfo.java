@@ -313,6 +313,7 @@ public class TicketLineInfo implements SerializableWrite, SerializableRead, Seri
         l.attributes = (Properties) attributes.clone();
         l.lot = lot;
         l.discount = discount;
+        l.priceNormal = priceNormal;
 
         return l;
     }

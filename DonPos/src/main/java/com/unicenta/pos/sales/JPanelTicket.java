@@ -624,6 +624,9 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
                 m_jList.setVisible(false);
             }
 
+            // La devolucion conserva el cliente de la factura original
+            jBtnCustomer.setEnabled(m_oTicket.getTicketType() != TicketInfo.RECEIPT_REFUND);
+
             m_oTicket.getLines().forEach((line) -> {
                 line.setTaxInfo(taxeslogic.getTaxInfo(line
                         .getProductTaxCategoryID(), m_oTicket.getCustomer()));
@@ -3662,11 +3665,13 @@ public abstract class JPanelTicket extends JPanel implements JPanelView, BeanFac
 
       if (m_oTicket.getLinesCount() > 0) {
           ReceiptSplit splitdialog = ReceiptSplit.getDialog(this,
-                  dlSystem.getResourceAsXML("Ticket.Line"), dlSales, dlCustomers, taxeslogic);
+                  dlSystem.getResourceAsXML("Ticket.Line"), dlSales, dlCustomers, taxeslogic, m_App);
 
           TicketInfo ticket1 = m_oTicket.copyTicket();
           TicketInfo ticket2 = new TicketInfo();
           ticket2.setCustomer(m_oTicket.getCustomer());
+          // El ticket nuevo nace sin cajero y closeTicket lo necesita para buscar la serie
+          ticket2.setUser(m_App.getAppUserView().getUser().getUserInfo());
 
           if (splitdialog.showDialog(ticket1, ticket2, m_oTicketExt)) {
               if (closeTicket(ticket2, m_oTicketExt)) { // already checked  that number of lines > 0

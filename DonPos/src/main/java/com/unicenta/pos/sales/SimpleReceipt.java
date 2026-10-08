@@ -24,12 +24,14 @@ import com.unicenta.data.gui.MessageInf;
 import com.unicenta.pos.customers.DataLogicCustomers;
 import com.unicenta.pos.customers.JCustomerFinder;
 import com.unicenta.pos.forms.AppLocal;
+import com.unicenta.pos.forms.AppView;
 import com.unicenta.pos.forms.DataLogicSales;
 import com.unicenta.pos.ticket.TicketInfo;
 import com.unicenta.pos.ticket.TicketLineInfo;
 import java.awt.BorderLayout;
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.commons.lang.StringEscapeUtils;
 
 /**
  *
@@ -55,6 +57,7 @@ public class SimpleReceipt extends javax.swing.JPanel {
     private JTicketLines ticketlines;
     private TicketInfo ticket;
     private Object ticketext;
+    private AppView app;
     
     /** Creates new form SimpleReceipt
      * @param ticketline
@@ -70,6 +73,9 @@ public class SimpleReceipt extends javax.swing.JPanel {
         this.dlCustomers = dlCustomers;
         this.dlSales = dlSales;
         this.taxeslogic = taxeslogic;
+
+        // Alto para dos lineas: cliente arriba, cajero y hora abajo
+        m_jTicketId.setPreferredSize(new java.awt.Dimension(215, 40));
         
         jPanel2.add(ticketlines, BorderLayout.CENTER);
     }
@@ -80,6 +86,11 @@ public class SimpleReceipt extends javax.swing.JPanel {
      */
     public void setCustomerEnabled(boolean value) {
         btnCustomer.setEnabled(value);
+    }
+
+    // Con la aplicacion, el buscador puede crear el cliente si no existe
+    public void setAppView(AppView app) {
+        this.app = app;
     }
     
     /**
@@ -93,7 +104,7 @@ public class SimpleReceipt extends javax.swing.JPanel {
         this.ticketext = ticketext;
         
         // The ticket name
-        m_jTicketId.setText(ticket.getName(ticketext));        
+        showTicketName();
         
         ticketlines.clearTicketLines();
         for (int i = 0; i < ticket.getLinesCount(); i++) {
@@ -108,6 +119,27 @@ public class SimpleReceipt extends javax.swing.JPanel {
                
     }
     
+    // Cliente arriba en negrita y, abajo, cajero y hora (en una sola linea no cabian)
+    private void showTicketName() {
+        String fullName = ticket.getName(ticketext);
+        m_jTicketId.setToolTipText(fullName);
+
+        String customerName = ticket.getCustomer() == null ? null : ticket.getCustomer().getName();
+        if (customerName == null || customerName.isEmpty()) {
+            m_jTicketId.setText(fullName);
+            return;
+        }
+
+        // getName pone el cliente al final; se quita para mostrarlo en su propia linea
+        String suffix = " - " + customerName;
+        String info = fullName.endsWith(suffix)
+                ? fullName.substring(0, fullName.length() - suffix.length())
+                : fullName;
+
+        m_jTicketId.setText("<html><center><b>" + StringEscapeUtils.escapeHtml(customerName) + "</b><br>"
+                + "<font size='-1'>" + StringEscapeUtils.escapeHtml(info) + "</font></center></html>");
+    }
+
     private void refreshTicketTaxes() {
         
         for (TicketLineInfo line : ticket.getLines()) {
@@ -410,19 +442,20 @@ public class SimpleReceipt extends javax.swing.JPanel {
         
         JCustomerFinder finder = JCustomerFinder.getCustomerFinder(this, dlCustomers);
         finder.search(ticket.getCustomer());
+        if (app != null) {
+            finder.enableNewCustomerDialog(app);
+        }
         finder.setVisible(true);
         
         try {
-            ticket.setCustomer(finder.getSelectedCustomer() == null
-                    ? null
-                    : dlSales.loadCustomerExt(finder.getSelectedCustomer().getId()));
+            // El cobro exige cliente: si no se elige ninguno, se queda el que tenia
+            if (finder.getSelectedCustomer() != null) {
+                ticket.setCustomer(dlSales.loadCustomerExt(finder.getSelectedCustomer().getId()));
+            }
         } catch (BasicException e) {
             MessageInf msg = new MessageInf(MessageInf.SGN_WARNING, AppLocal.getIntString("message.cannotfindcustomer"), e);
             msg.show(this);            
         }
-        
-        // The ticket name
-        m_jTicketId.setText(ticket.getName(ticketext));
         
         refreshTicketTaxes();     
         

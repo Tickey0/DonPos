@@ -91,5 +91,11 @@ public class JPaymentSelectRefund extends JPaymentSelect {
     @Override
     protected PaymentInfo getDefaultPayment(double total) {
         return new PaymentInfoTicket(total, "cashrefund");
-    } 
+    }
+
+    // La nota de credito va al mismo cliente de la factura original
+    @Override
+    protected boolean isCustomerEditable() {
+        return false;
+    }
 }

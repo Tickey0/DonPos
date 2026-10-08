@@ -247,6 +247,11 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
                 txtAddress.setEditable(false);
                 txtPhone.setEditable(false);
             }
+
+            // En la devolucion el cliente solo se muestra, no se cambia
+            if (!isCustomerEditable()) {
+                lockCustomer();
+            }
         } else {
             JOptionPane.showMessageDialog(this,
                     AppLocal.getIntString("message.default.customer"),
@@ -300,6 +305,11 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
     protected abstract void setStatusPanel(boolean isPositive, boolean isComplete);
 
     protected abstract PaymentInfo getDefaultPayment(double total);
+
+    // Las ventas pueden cambiar el cliente; la devolucion lo sobrescribe
+    protected boolean isCustomerEditable() {
+        return true;
+    }
 
     protected void setOKEnabled(boolean value) {
         m_jButtonOK.setEnabled(value);
@@ -1263,6 +1273,11 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
     }//GEN-LAST:event_txtIdentificationFocusGained
 
     private void txtIdentificationActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtIdentificationActionPerformed
+        // Con Enter se volvian a habilitar los campos del cliente bloqueado
+        if (!isCustomerEditable()) {
+            return;
+        }
+
         requestIdentification();
         if (!validateEmpty(txtIdentification, "Identificación")) {
             return;
@@ -1460,6 +1475,16 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
         txtEmail.setEditable(false);
         txtAddress.setEditable(false);
         txtPhone.setEditable(false);
+    }
+
+    // Desactivados (no solo de lectura) para que se vean en gris igual que el combo
+    private void lockCustomer() {
+        txtIdentification.setEnabled(false);
+        txtName.setEnabled(false);
+        txtEmail.setEnabled(false);
+        txtAddress.setEnabled(false);
+        txtPhone.setEnabled(false);
+        cbxIdentificationType.setEnabled(false);
     }
 
     private Boolean existCustomerByTaxId(String identification) {
