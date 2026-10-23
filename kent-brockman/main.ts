@@ -1,4 +1,4 @@
-import { Application, Context, Router } from '@oak/oak'
+import { Application, Context, Next, Router } from '@oak/oak'
 import { drizzle } from 'drizzle-orm/mysql2'
 import ChatServer from './src/chat.server.ts'
 import '@std/dotenv/load'
@@ -17,6 +17,19 @@ const server = new ChatServer()
 router.get('/start_web_socket', (ctx: Context) => server.handleConnection(ctx))
 pingRoutes(router)
 
+app.use(async (ctx: Context, next: Next) => {
+  ctx.response.headers.set('Access-Control-Allow-Origin', '*')
+  ctx.response.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+  ctx.response.headers.set('Access-Control-Allow-Headers', 'Content-Type')
+
+  if (ctx.request.method === 'OPTIONS') {
+    ctx.response.status = 204
+    return
+  }
+
+  await next()
+})
+
 app.use(router.routes())
 app.use(peopleRoutes.routes())
 app.use(router.allowedMethods())
@@ -28,4 +41,7 @@ app.use(async (context) => {
 })
 
 log.info('Listening at http://localhost:' + port)
-await app.listen({ port })
+await app.listen({ 
+    port,
+    hostname: "0.0.0.0" 
+ })
