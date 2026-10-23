@@ -4,7 +4,7 @@ Software de punto de venta basado en uniCenta y OpenBravo.
 
 ## Software
 * Java 11
-* MariaDB 11.4
+* MariaDB 12.3
 * Maven
 * [Netbeans 21](./doc/NETBEANS.md)
 
@@ -21,7 +21,7 @@ Set JAVA_HOME and set jdk path. Not set jre path.
 
 ## Docker database
 ```
-docker pull mariadb:11.4
+docker pull mariadb:12.3
 ```
 ```
 docker run --name mariadb -e MYSQL_ROOT_PASSWORD=R00t -p 3306:3306 -d mariadb:11.4
