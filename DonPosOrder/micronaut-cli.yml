@@ -1,0 +1,6 @@
+applicationType: default
+defaultPackage: dev.joguenco
+testFramework: junit
+sourceLanguage: java
+buildTool: gradle_kotlin
+features: [app-name, gitignore, gradle, http-client-test, java, java-application, jdbc-hikari, junit, logback, lombok, mariadb, micronaut-aot, micronaut-build, micronaut-configuration-validation-gradle-plugin, micronaut-http-validation, netty-server, properties, readme, security-jwt, security-processor, serialization-jackson, shade, static-resources, test-resources]
