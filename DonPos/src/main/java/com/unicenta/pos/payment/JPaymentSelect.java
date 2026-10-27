@@ -32,6 +32,8 @@ import com.unicenta.pos.forms.DataLogicSales;
 import com.unicenta.pos.forms.DataLogicSystem;
 import dev.joguenco.effect.CursorAnimation;
 import dev.joguenco.error.ErrorMessage;
+import dev.joguenco.http.client.kent.KentClient;
+import dev.joguenco.http.client.kent.KentCustomer;
 import dev.joguenco.http.client.reidi.ReIdiClient;
 import dev.joguenco.identification.Validator;
 import dev.joguenco.pos.establishment.DataLogicEstablishment;
@@ -1124,6 +1126,10 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
             }
         }
 
+        if (isCustomerEditable() && !confirmCustomerData()) {
+            return;
+        }
+
         if (!existCustomerByTaxIdAndTaxIdType(txtIdentification.getText(),
                 modelIdentificationType.getSelectedKey().toString())) {
             saveCustomer();
@@ -1183,6 +1189,34 @@ public abstract class JPaymentSelect extends javax.swing.JDialog
             System.out.println(ex.getMessage());
         }
     }
+
+    // Muestra los datos del cliente en la tablet del cajero (Kent) y pregunta si son correctos
+    private boolean confirmCustomerData() {
+        var kentClient = new KentClient(app);
+
+        if (!kentClient.isActive()) {
+            return true;
+        }
+
+        var cashier = app.getAppUserView().getUser().getName();
+        kentClient.send(cashier, new KentCustomer(
+                txtIdentification.getText(),
+                txtName.getText(),
+                txtEmail.getText(),
+                txtAddress.getText(),
+                txtPhone.getText()));
+
+        var answer = JOptionPane.showConfirmDialog(this,
+                "¿Está seguro que los datos del cliente son correctos?",
+                "Confirmación",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE);
+
+        kentClient.clear(cashier);
+
+        return answer == JOptionPane.YES_OPTION;
+    }
+
     private void m_jButtonCancelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_m_jButtonCancelActionPerformed
 
         dispose();
