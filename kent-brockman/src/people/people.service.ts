@@ -1,5 +1,5 @@
 import { and, eq } from 'drizzle-orm'
-import { db } from '../../main.ts'
+import { db } from '../db/connection.ts'
 import { roles, users } from '../db/schema.ts'
 
 export async function getAllPeople() {
