@@ -1,7 +1,7 @@
 package dev.joguenco.product;
 
-import dev.joguenco.product.domain.Category;
-import dev.joguenco.product.domain.Product;
+import dev.joguenco.product.model.Category;
+import dev.joguenco.product.model.Product;
 import dev.joguenco.product.repository.CategoryRepository;
 import dev.joguenco.product.repository.ProductRepository;
 import io.micronaut.data.model.Sort;

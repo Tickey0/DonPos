@@ -1,6 +1,6 @@
 package dev.joguenco.security.repository;
 
-import dev.joguenco.security.domain.RefreshToken;
+import dev.joguenco.security.model.RefreshToken;
 import io.micronaut.core.annotation.NonNull;
 import io.micronaut.data.jdbc.annotation.JdbcRepository;
 import io.micronaut.data.model.query.builder.sql.Dialect;

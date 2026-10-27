@@ -1,6 +1,6 @@
 package dev.joguenco.security.repository;
 
-import dev.joguenco.security.domain.User;
+import dev.joguenco.security.model.User;
 import io.micronaut.data.annotation.Query;
 import io.micronaut.data.jdbc.annotation.JdbcRepository;
 import io.micronaut.data.model.query.builder.sql.Dialect;

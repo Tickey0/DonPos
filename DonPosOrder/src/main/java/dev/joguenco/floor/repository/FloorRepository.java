@@ -1,6 +1,6 @@
 package dev.joguenco.floor.repository;
 
-import dev.joguenco.floor.domain.Floor;
+import dev.joguenco.floor.model.Floor;
 import io.micronaut.data.jdbc.annotation.JdbcRepository;
 import io.micronaut.data.model.query.builder.sql.Dialect;
 import io.micronaut.data.repository.PageableRepository;

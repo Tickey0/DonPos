@@ -1,8 +1,1 @@
-
-
-
-
-
-
 rootProject.name="DonPosOrder"
-

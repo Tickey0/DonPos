@@ -1,4 +1,4 @@
-package dev.joguenco.finder;
+package dev.joguenco.assigner;
 
 import io.micronaut.serde.annotation.Serdeable;
 

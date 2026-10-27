@@ -1,7 +1,7 @@
 package dev.joguenco.floor;
 
-import dev.joguenco.floor.domain.Floor;
-import dev.joguenco.floor.domain.Place;
+import dev.joguenco.floor.model.Floor;
+import dev.joguenco.floor.model.Place;
 import dev.joguenco.floor.repository.FloorRepository;
 import dev.joguenco.floor.repository.PlaceRepository;
 import io.micronaut.http.annotation.Controller;

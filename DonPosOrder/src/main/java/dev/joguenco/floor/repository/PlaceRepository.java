@@ -1,6 +1,6 @@
 package dev.joguenco.floor.repository;
 
-import dev.joguenco.floor.domain.Place;
+import dev.joguenco.floor.model.Place;
 import io.micronaut.core.annotation.NonNull;
 import io.micronaut.data.annotation.Query;
 import io.micronaut.data.jdbc.annotation.JdbcRepository;

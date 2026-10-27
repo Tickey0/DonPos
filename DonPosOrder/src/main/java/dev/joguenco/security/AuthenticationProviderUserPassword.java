@@ -10,7 +10,9 @@ import io.micronaut.security.authentication.AuthenticationRequest;
 import io.micronaut.security.authentication.AuthenticationResponse;
 import io.micronaut.security.authentication.provider.HttpRequestAuthenticationProvider;
 import jakarta.inject.Singleton;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Singleton
 class AuthenticationProviderUserPassword<B> implements HttpRequestAuthenticationProvider<B> {
 
@@ -30,6 +32,7 @@ class AuthenticationProviderUserPassword<B> implements HttpRequestAuthentication
     final var user = userRepository.findByUsername(username).orElse(null);
 
     if (user == null) {
+      log.warn("User not found: {}", username);
       return AuthenticationResponse.failure(AuthenticationFailureReason.USER_NOT_FOUND);
     }
     if (!user.status()) {

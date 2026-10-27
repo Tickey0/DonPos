@@ -1,6 +1,6 @@
 package dev.joguenco.product.repository;
 
-import dev.joguenco.product.domain.Product;
+import dev.joguenco.product.model.Product;
 import io.micronaut.core.annotation.NonNull;
 import io.micronaut.data.annotation.Query;
 import io.micronaut.data.jdbc.annotation.JdbcRepository;

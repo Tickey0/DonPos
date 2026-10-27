@@ -2,7 +2,7 @@ package dev.joguenco.security;
 
 import static io.micronaut.security.errors.IssuingAnAccessTokenErrorCode.INVALID_GRANT;
 
-import dev.joguenco.security.domain.RefreshToken;
+import dev.joguenco.security.model.RefreshToken;
 import dev.joguenco.security.repository.RefreshTokenRepository;
 import io.micronaut.security.authentication.Authentication;
 import io.micronaut.security.errors.OauthErrorResponseException;

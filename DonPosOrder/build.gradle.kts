@@ -3,12 +3,11 @@ plugins {
     id("com.gradleup.shadow") version "9.4.1"
     id("io.micronaut.test-resources") version "5.0.2"
     id("io.micronaut.aot") version "5.0.2"
+    id("com.diffplug.spotless") version "8.10.4"
 }
 
 version = "0.1"
 group = "dev.joguenco"
-
-
 
 repositories {
     mavenCentral()
@@ -35,8 +34,6 @@ dependencies {
     aotPlugins("io.micronaut.security:micronaut-security-aot")
 }
 
-
-
 application {
     mainClass = "dev.joguenco.Application"
 }
@@ -46,9 +43,6 @@ java {
     targetCompatibility = JavaVersion.toVersion("25")
 }
 
-
-
-
 graalvmNative.toolchainDetection = false
 graalvmNative {
     binaries {
@@ -57,9 +51,6 @@ graalvmNative {
         }
     }
 }
-
-
-
 
 micronaut {
     runtime("netty")
@@ -84,8 +75,8 @@ micronaut {
         replaceLogbackXml = true
         configurationProperties.put("micronaut.security.jwks.enabled","false")
     }
-
 }
+
 tasks.withType<io.micronaut.gradle.testresources.StartTestResourcesService>().configureEach {
       useClassDataSharing.set(false)
 }
@@ -95,17 +86,17 @@ tasks.named<io.micronaut.gradle.docker.MicronautDockerfile>("dockerfile") {
     baseImage = "eclipse-temurin:25-jre"
 }
 
-
-
-
-
-
-
 // https://docs.gradle.org/current/userguide/upgrading_major_version_9.html#test_task_fails_when_no_tests_are_discovered
 tasks.withType<AbstractTestTask>().configureEach {
     failOnNoDiscoveredTests = false
 }
 
-
-
+spotless {
+    java {
+        importOrder()
+        removeUnusedImports()
+        googleJavaFormat()
+        formatAnnotations()
+    }
+}
 

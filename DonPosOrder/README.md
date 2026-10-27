@@ -3,7 +3,7 @@ DonPos Order
 
 ## Software
 * Java 25
-* Micronaut
+* Micronaut (View on gradle.properties file)
 * MariaDB
 * Gradle 9.6.0
 
@@ -19,7 +19,7 @@ gradle spotlessApply
 
 ### Run
 ```
-gradle run 
+gradle run
 ```
 ### Run Hot Reload
 ```

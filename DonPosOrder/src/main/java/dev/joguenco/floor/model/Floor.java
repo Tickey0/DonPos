@@ -1,4 +1,4 @@
-package dev.joguenco.floor.domain;
+package dev.joguenco.floor.model;
 
 import io.micronaut.data.annotation.Id;
 import io.micronaut.data.annotation.MappedEntity;

@@ -1,6 +1,6 @@
 package dev.joguenco.product.repository;
 
-import dev.joguenco.product.domain.Category;
+import dev.joguenco.product.model.Category;
 import io.micronaut.data.jdbc.annotation.JdbcRepository;
 import io.micronaut.data.model.query.builder.sql.Dialect;
 import io.micronaut.data.repository.PageableRepository;

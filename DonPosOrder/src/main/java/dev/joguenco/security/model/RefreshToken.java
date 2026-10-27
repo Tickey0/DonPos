@@ -1,4 +1,4 @@
-package dev.joguenco.security.domain;
+package dev.joguenco.security.model;
 
 import io.micronaut.core.annotation.NonNull;
 import io.micronaut.data.annotation.DateCreated;
