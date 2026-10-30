@@ -1029,6 +1029,11 @@ VALUES ('2', 'Authorize', 'http://localhost:8080',
 'X-API-KEY',
 'api__6tpXYCxsXpCs7QeuI44KtoCq',
 30, 0);
+INSERT INTO services (id,name,url,authentication_method,token,timeout,status)
+VALUES ('3', 'Kent', 'http://localhost:8181',
+'X-API-KEY',
+NULL,
+2, 0);
 
 -- Tax Supports
 delete from tax_supports;

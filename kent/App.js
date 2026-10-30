@@ -1,189 +1,371 @@
-import { useEffect, useRef, useState } from 'react';
-import { FlatList, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { FlatList, Modal, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import * as SecureStore from 'expo-secure-store';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 
-// Replace with your own server URL if needed
-const CHAT_SERVER_URL = 'ws://localhost:8181';
-const PEOPLE_URL = 'http://localhost:8181/people';
+// El servidor envia un ping cada 30 s; si no llega nada en este tiempo, la conexion se da por perdida
+const SILENCE_TIMEOUT = 70_000;
+// Si DonPos nunca limpia la tablet, los datos del cliente se borran solos despues de este tiempo
+const CUSTOMER_TIMEOUT = 60_000;
+// Configurar se abre manteniendo presionada la barra negra este tiempo, para que el cliente no lo cambie por accidente
+const SETTINGS_PRESS_DELAY = 6000;
+// Codigo con el que el servidor cierra la conexion cuando la API esta mal
+const UNAUTHORIZED_CLOSE_CODE = 4001;
+const UNAUTHORIZED = 'unauthorized';
+const SETTINGS_KEY = 'settings';
+const CASHIER_KEY = 'cashier';
 
-async function getUsername() {
-  const response = await fetch(PEOPLE_URL);
+const CUSTOMER_FIELDS = [
+  ['identification', 'Identificación'],
+  ['name', 'Nombre'],
+  ['email', 'E-mail'],
+  ['address', 'Dirección'],
+  ['phone', 'Teléfono'],
+];
+
+// Servidor y API se guardan para siempre: en el celular en la caja fuerte (SecureStore),
+// en el navegador en localStorage porque ahi no existe la caja fuerte
+async function readSettings() {
+  const value = Platform.OS === 'web'
+    ? localStorage.getItem(SETTINGS_KEY)
+    : await SecureStore.getItemAsync(SETTINGS_KEY);
+
+  return value ? JSON.parse(value) : null;
+}
+
+async function writeSettings(settings) {
+  const value = JSON.stringify(settings);
+
+  if (Platform.OS === 'web') {
+    localStorage.setItem(SETTINGS_KEY, value);
+  } else {
+    await SecureStore.setItemAsync(SETTINGS_KEY, value);
+  }
+}
+
+// El cajero dura mientras la pagina este abierta: en el navegador sessionStorage aguanta las
+// recargas y se borra al cerrar la pestaña; en el celular basta con la memoria de la app
+function readCashier() {
+  return Platform.OS === 'web' ? sessionStorage.getItem(CASHIER_KEY) : null;
+}
+
+function writeCashier(cashier) {
+  if (Platform.OS === 'web') {
+    sessionStorage.setItem(CASHIER_KEY, cashier);
+  }
+}
+
+// Tambien sirve para probar la API: si esta mal el servidor responde 401
+async function getCashiers(server, apiKey) {
+  const response = await fetch(`http://${server}/people`, { headers: { 'X-API-KEY': apiKey } });
+
+  if (response.status === 401) {
+    throw new Error(UNAUTHORIZED);
+  }
+
   const people = await response.json();
   return people.map((person) => person.name);
 }
 
+// SafeAreaProvider mide cuanto ocupa la barra del celular (hora, bateria, camara) para no tapar nada con ella
 export default function App() {
-  const [username, setUsername] = useState(null);
-  const [people, setPeople] = useState([]);
-  const [peopleError, setPeopleError] = useState(false);
-  const [nameDraft, setNameDraft] = useState('');
-  const [usernames, setUsernames] = useState([]);
-  const [recipient, setRecipient] = useState('all');
-  const [messages, setMessages] = useState([]);
-  const [draft, setDraft] = useState('');
-  const socketRef = useRef(null);
+  return (
+    <SafeAreaProvider>
+      <TabletScreen />
+    </SafeAreaProvider>
+  );
+}
+
+function TabletScreen() {
+  const insets = useSafeAreaInsets();
+  const [settings, setSettings] = useState(null);
+  const [cashier, setCashier] = useState(readCashier);
+  const [editing, setEditing] = useState(false);
+  const [serverDraft, setServerDraft] = useState(Platform.OS === 'web' ? window.location.host : '');
+  const [apiKeyDraft, setApiKeyDraft] = useState('');
+  const [settingsError, setSettingsError] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [cashiers, setCashiers] = useState(null);
+  const [cashiersError, setCashiersError] = useState(false);
+  const [cashierDraft, setCashierDraft] = useState('');
+  const [connected, setConnected] = useState(false);
+  const [customer, setCustomer] = useState(null);
 
   useEffect(() => {
-    getUsername()
-      .then((names) => setPeople(names))
-      .catch(() => setPeopleError(true));
+    readSettings()
+      .then((value) => {
+        if (value) {
+          setSettings(value);
+        } else {
+          setEditing(true);
+        }
+      })
+      .catch(() => setEditing(true));
   }, []);
 
   useEffect(() => {
-    if (!username) {
+    if (settings && !cashier) {
+      loadCashiers();
+    }
+  }, [settings, cashier]);
+
+  useEffect(() => {
+    if (!settings || !cashier) {
       return;
     }
 
-    const socket = new WebSocket(
-      `${CHAT_SERVER_URL}/start_web_socket?username=${encodeURIComponent(username)}`,
-    );
-    socketRef.current = socket;
+    let socket = null;
+    let attempt = 0;
+    let retryTimer = null;
+    let silenceTimer = null;
 
-    socket.onmessage = (event) => {
-      const data = JSON.parse(event.data);
+    const connect = () => {
+      socket = new WebSocket(
+        `ws://${settings.server}/start_web_socket?cashier=${encodeURIComponent(cashier)}`
+          + `&apiKey=${encodeURIComponent(settings.apiKey)}`,
+      );
 
-      switch (data.event) {
-        case 'update-users':
-          setUsernames(data.usernames);
-          break;
+      socket.onopen = () => {
+        attempt = 0;
+        setConnected(true);
+        watchSilence();
+      };
 
-        case 'send-message':
-          setMessages((previous) => [
-            ...previous,
-            { username: data.username, message: data.message, recipient: data.recipient },
-          ]);
-          break;
+      socket.onmessage = (event) => {
+        watchSilence();
+        const data = JSON.parse(event.data);
+
+        switch (data.event) {
+          case 'send-message':
+            setCustomer(data.message);
+            break;
+
+          case 'clear-message':
+            setCustomer(null);
+            break;
+        }
+      };
+
+      socket.onclose = (event) => {
+        if (event.code === UNAUTHORIZED_CLOSE_CODE) {
+          askForNewApiKey();
+        } else {
+          reconnect();
+        }
+      };
+    };
+
+    const watchSilence = () => {
+      clearTimeout(silenceTimer);
+      silenceTimer = setTimeout(reconnect, SILENCE_TIMEOUT);
+    };
+
+    // Espera 1, 2, 4, 8 y despues 10 segundos entre cada intento
+    const reconnect = () => {
+      disconnect();
+      retryTimer = setTimeout(connect, Math.min(1000 * 2 ** attempt, 10_000));
+      attempt++;
+    };
+
+    const disconnect = () => {
+      clearTimeout(retryTimer);
+      clearTimeout(silenceTimer);
+      setConnected(false);
+
+      if (socket) {
+        socket.onclose = null;
+        socket.close();
       }
     };
 
-    return () => {
-      socket.close();
-      socketRef.current = null;
-    };
-  }, [username]);
+    connect();
 
-  const activeUsers = usernames.filter((name) => name !== username);
+    return disconnect;
+  }, [settings, cashier]);
 
   useEffect(() => {
-    if (recipient !== 'all' && !usernames.includes(recipient)) {
-      setRecipient('all');
-    }
-  }, [usernames, recipient]);
-
-  const confirmName = () => {
-    const name = nameDraft.trim();
-    if (!name) {
+    if (!customer) {
       return;
     }
 
-    setUsername(name);
+    const timer = setTimeout(() => setCustomer(null), CUSTOMER_TIMEOUT);
+    return () => clearTimeout(timer);
+  }, [customer]);
+
+  // La API cambio en el servidor: vuelve a Configurar con el mismo servidor para escribir la nueva
+  const askForNewApiKey = () => {
+    setServerDraft(settings.server);
+    setApiKeyDraft('');
+    setSettingsError('La API cambió, ingrese la nueva');
+    setSettings(null);
+    setEditing(true);
   };
 
-  const sendMessage = () => {
-    const message = draft.trim();
-    if (!message) {
+  const loadCashiers = () => {
+    setCashiers(null);
+    setCashiersError(false);
+    getCashiers(settings.server, settings.apiKey)
+      .then((names) => setCashiers(names))
+      .catch((error) => {
+        if (error.message === UNAUTHORIZED) {
+          askForNewApiKey();
+        } else {
+          setCashiers([]);
+          setCashiersError(true);
+        }
+      });
+  };
+
+  // Vacia significa mantener la API que ya estaba guardada
+  const apiKey = apiKeyDraft.trim() || settings?.apiKey;
+  const canSave = serverDraft.trim() !== '' && Boolean(apiKey) && !saving;
+
+  // Antes de guardar prueba la API con el servidor; asi nunca se guarda una API mala
+  const saveSettings = () => {
+    const server = serverDraft.trim().replace(/^\w+:\/\//, '');
+
+    setSaving(true);
+    setSettingsError('');
+    getCashiers(server, apiKey)
+      .then(async () => {
+        const newSettings = { server, apiKey };
+
+        await writeSettings(newSettings);
+        setSettings(newSettings);
+        setEditing(false);
+      })
+      .catch((error) => {
+        setSettingsError(error.message === UNAUTHORIZED ? 'La API no es correcta' : `No se pudo conectar con ${server}`);
+      })
+      .finally(() => setSaving(false));
+  };
+
+  const openSettings = () => {
+    if (!settings) {
       return;
     }
 
-    setDraft('');
-    socketRef.current?.send(JSON.stringify({ event: 'send-message', recipient, message }));
+    setServerDraft(settings.server);
+    setApiKeyDraft('');
+    setSettingsError('');
+    setEditing(true);
   };
+
+  const startCashier = () => {
+    writeCashier(cashierDraft);
+    setCashier(cashierDraft);
+  };
+
+  const cashiersMessage = cashiersError
+    ? `No se pudo conectar con ${settings?.server}`
+    : cashiers === null ? 'Buscando cajeros…' : 'No hay cajeros';
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Deno Chat App</Text>
-      </View>
+      {/* El fondo negro sigue por detras de la barra del celular y el texto empieza debajo de ella */}
+      <Pressable
+        style={[styles.header, { paddingTop: insets.top + 16 }]}
+        onLongPress={openSettings}
+        delayLongPress={SETTINGS_PRESS_DELAY}
+      >
+        <Text style={styles.title}>{settings && cashier ? `Atendido por ${cashier}` : 'Kent'}</Text>
+        {settings && cashier && !connected && <Text style={styles.status}>Reconectando…</Text>}
+      </Pressable>
 
-      <Modal visible={!username} transparent animationType="fade" onRequestClose={() => {}}>
+      <Modal visible={editing} transparent animationType="fade" onRequestClose={() => settings && setEditing(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Please select your name</Text>
-            <FlatList
-              style={styles.nameList}
-              data={people}
-              keyExtractor={(name) => name}
-              renderItem={({ item }) => (
-                <Pressable
-                  onPress={() => setNameDraft(item)}
-                  style={[styles.nameOption, nameDraft === item && styles.nameOptionSelected]}
-                >
-                  <Text style={styles.nameOptionText}>{item}</Text>
-                </Pressable>
-              )}
-              ListEmptyComponent={
-                <Text style={styles.nameEmpty}>
-                  {peopleError ? `Could not load users from ${PEOPLE_URL}` : 'No users available'}
-                </Text>
-              }
+            <Text style={styles.modalTitle}>Configurar tablet</Text>
+            <Text style={styles.modalSubtitle}>Escriba la dirección del servidor y la API.</Text>
+
+            <Text style={styles.sectionTitle}>Servidor</Text>
+            <TextInput
+              style={styles.input}
+              value={serverDraft}
+              onChangeText={setServerDraft}
+              placeholder="192.168.1.8:8181"
+              autoCapitalize="none"
+              autoCorrect={false}
             />
-            <Pressable
-              style={[styles.sendButton, !nameDraft.trim() && styles.sendButtonDisabled]}
-              onPress={confirmName}
-            >
-              <Text style={styles.sendButtonText}>Start chatting</Text>
+
+            <Text style={styles.sectionTitle}>API</Text>
+            <TextInput
+              style={styles.input}
+              value={apiKeyDraft}
+              onChangeText={setApiKeyDraft}
+              placeholder={settings ? 'Mantener la actual' : 'Pegue la API del servidor'}
+              secureTextEntry
+              autoCapitalize="none"
+              autoCorrect={false}
+              autoComplete="off"
+            />
+
+            {settingsError !== '' && <Text style={styles.error}>{settingsError}</Text>}
+
+            <Pressable style={[styles.button, !canSave && styles.buttonDisabled]} disabled={!canSave} onPress={saveSettings}>
+              <Text style={styles.buttonText}>{saving ? 'Probando…' : 'Guardar'}</Text>
             </Pressable>
+            {settings && (
+              <Pressable style={styles.cancelButton} onPress={() => setEditing(false)}>
+                <Text style={styles.cancelButtonText}>Cancelar</Text>
+              </Pressable>
+            )}
           </View>
         </View>
       </Modal>
 
-      <View style={styles.usersSection}>
-        <Text style={styles.sectionTitle}>Users online</Text>
-        <View style={styles.usersRow}>
-          {activeUsers.map((name) => (
-            <Text key={name} style={styles.userChip}>
-              {name}
-            </Text>
-          ))}
-        </View>
-      </View>
+      {settings && !cashier && (
+        <View style={styles.body}>
+          <View style={[styles.modalCard, styles.pickerCard]}>
+            <Text style={styles.modalTitle}>Escoja el cajero</Text>
+            <Text style={styles.modalSubtitle}>¿Quién atiende en esta tablet?</Text>
 
-      <ScrollView style={styles.conversation} contentContainerStyle={styles.conversationContent}>
-        {messages.map((item, index) => (
-          <View key={index} style={styles.message}>
-            <Text style={styles.sender}>
-              {item.recipient !== 'all' && item.recipient !== username
-                ? `${item.username} → ${item.recipient}`
-                : item.username}
-            </Text>
-            <Text style={styles.messageText}>{item.message}</Text>
-          </View>
-        ))}
-      </ScrollView>
+            <FlatList
+              style={styles.nameList}
+              data={cashiers ?? []}
+              keyExtractor={(name) => name}
+              renderItem={({ item }) => (
+                <Pressable
+                  onPress={() => setCashierDraft(item)}
+                  style={[styles.nameOption, cashierDraft === item && styles.nameOptionSelected]}
+                >
+                  <Text style={styles.nameOptionText}>{item}</Text>
+                  {cashierDraft === item && <Text style={styles.check}>✓</Text>}
+                </Pressable>
+              )}
+              ListEmptyComponent={<Text style={styles.nameEmpty}>{cashiersMessage}</Text>}
+            />
+            {cashiersError && (
+              <Pressable style={styles.secondaryButton} onPress={loadCashiers}>
+                <Text style={styles.secondaryButtonText}>Reintentar</Text>
+              </Pressable>
+            )}
 
-      <View style={styles.form}>
-        <Text style={styles.sectionTitle}>Send to</Text>
-        <View style={styles.recipientsRow}>
-          <Pressable
-            onPress={() => setRecipient('all')}
-            style={[styles.recipient, recipient === 'all' && styles.recipientSelected]}
-          >
-            <Text style={styles.recipientText}>Everyone</Text>
-          </Pressable>
-          {activeUsers.map((name) => (
             <Pressable
-              key={name}
-              onPress={() => setRecipient(name)}
-              style={[styles.recipient, recipient === name && styles.recipientSelected]}
+              style={[styles.button, !cashierDraft && styles.buttonDisabled]}
+              disabled={!cashierDraft}
+              onPress={startCashier}
             >
-              <Text style={styles.recipientText}>{name}</Text>
+              <Text style={styles.buttonText}>Empezar</Text>
             </Pressable>
-          ))}
+          </View>
         </View>
+      )}
 
-        <TextInput
-          style={styles.input}
-          value={draft}
-          onChangeText={setDraft}
-          placeholder="send message"
-          autoComplete="off"
-          onSubmitEditing={sendMessage}
-          returnKeyType="send"
-        />
-        <Pressable style={styles.sendButton} onPress={sendMessage}>
-          <Text style={styles.sendButtonText}>Send ᯓ✉︎</Text>
-        </Pressable>
-      </View>
+      {customer && (
+        <View style={styles.body}>
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Por favor, verifique sus datos</Text>
+            {CUSTOMER_FIELDS.map(([key, label]) => (
+              <View key={key} style={styles.row}>
+                <Text style={styles.label}>{label}</Text>
+                <Text style={styles.value}>{customer[key] || '—'}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+      )}
 
       <StatusBar style="light" />
     </View>
@@ -205,131 +387,156 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
   },
+  status: {
+    color: '#75fead',
+    marginTop: 4,
+  },
   modalOverlay: {
     flex: 1,
     justifyContent: 'center',
+    alignItems: 'center',
     padding: 24,
     backgroundColor: 'rgba(11, 13, 17, 0.6)',
   },
   modalCard: {
+    width: '100%',
+    maxWidth: 460,
     backgroundColor: '#ffffff',
-    borderRadius: 12,
-    padding: 20,
+    borderRadius: 16,
+    padding: 24,
+  },
+  pickerCard: {
+    alignSelf: 'center',
   },
   modalTitle: {
-    fontSize: 18,
+    color: '#0b0d11',
+    fontSize: 22,
     fontWeight: 'bold',
-    marginBottom: 12,
   },
-  nameList: {
-    maxHeight: 200,
-    marginBottom: 12,
+  modalSubtitle: {
+    color: '#666666',
+    marginTop: 4,
   },
-  nameOption: {
+  sectionTitle: {
+    color: '#666666',
+    fontSize: 13,
+    fontWeight: 'bold',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginTop: 20,
+    marginBottom: 8,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#c8c8c8',
+    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    fontSize: 16,
+  },
+  error: {
+    color: '#c0392b',
+    marginTop: 12,
+  },
+  secondaryButton: {
+    marginTop: 8,
     borderWidth: 1,
     borderColor: '#0b0d11',
-    borderRadius: 8,
+    borderRadius: 10,
     paddingVertical: 10,
-    paddingHorizontal: 12,
+    alignItems: 'center',
+  },
+  secondaryButtonText: {
+    color: '#0b0d11',
+    fontWeight: 'bold',
+  },
+  nameList: {
+    maxHeight: 280,
+    marginTop: 16,
+  },
+  nameOption: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#c8c8c8',
+    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
     marginBottom: 8,
   },
   nameOptionSelected: {
-    backgroundColor: '#75fead',
-    borderColor: '#75fead',
+    backgroundColor: '#e8fff1',
+    borderColor: '#1f9d55',
   },
   nameOptionText: {
     color: '#0b0d11',
+    fontSize: 16,
+  },
+  check: {
+    color: '#1f9d55',
+    fontSize: 18,
+    fontWeight: 'bold',
   },
   nameEmpty: {
     color: '#666666',
     paddingVertical: 12,
   },
-  usersSection: {
-    backgroundColor: '#ffffff',
-    padding: 16,
+  button: {
+    marginTop: 20,
+    backgroundColor: '#0b0d11',
+    borderRadius: 10,
+    paddingVertical: 14,
+    alignItems: 'center',
   },
-  sectionTitle: {
+  buttonDisabled: {
+    opacity: 0.4,
+  },
+  buttonText: {
+    color: '#ffffff',
     fontSize: 16,
     fontWeight: 'bold',
-    marginTop: 0,
-    marginBottom: 8,
   },
-  usersRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  userChip: {
-    backgroundColor: '#aff5b4',
-    color: '#0b0d11',
-    borderRadius: 8,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    overflow: 'hidden',
-  },
-  conversation: {
-    flex: 1,
-  },
-  conversationContent: {
-    padding: 16,
-  },
-  message: {
-    backgroundColor: '#ffffff',
-    borderRadius: 8,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    marginBottom: 8,
-  },
-  sender: {
-    fontWeight: 'bold',
-    marginBottom: 4,
-  },
-  messageText: {
-    margin: 0,
-  },
-  form: {
-    backgroundColor: '#ffffff',
-    padding: 16,
-  },
-  recipientsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: 12,
-  },
-  recipient: {
-    borderWidth: 1,
-    borderColor: '#0b0d11',
-    borderRadius: 8,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-  },
-  recipientSelected: {
-    backgroundColor: '#75fead',
-    borderColor: '#75fead',
-  },
-  recipientText: {
-    color: '#0b0d11',
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#0b0d11',
-    borderRadius: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-  },
-  sendButton: {
-    marginTop: 12,
-    backgroundColor: '#75fead',
-    borderRadius: 8,
+  cancelButton: {
+    marginTop: 8,
     paddingVertical: 12,
     alignItems: 'center',
   },
-  sendButtonDisabled: {
-    opacity: 0.5,
+  cancelButtonText: {
+    color: '#666666',
   },
-  sendButtonText: {
+  body: {
+    padding: 24,
+  },
+  card: {
+    alignSelf: 'center',
+    width: '100%',
+    maxWidth: 720,
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    padding: 24,
+  },
+  cardTitle: {
     color: '#0b0d11',
+    fontSize: 26,
     fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  row: {
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eeeeee',
+  },
+  label: {
+    color: '#666666',
+    fontSize: 14,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  value: {
+    color: '#0b0d11',
+    fontSize: 26,
+    fontWeight: 'bold',
+    marginTop: 2,
   },
 });

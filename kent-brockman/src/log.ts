@@ -10,6 +10,7 @@ export const log = new LogLayer({
     }),
     new LogFileRotationTransport({
       filename: './logs/kent.log',
+      auditFile: './logs/audit.json',
     }),
   ],
 })

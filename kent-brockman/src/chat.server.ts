@@ -1,88 +1,83 @@
-import { Context } from '@oak/oak'
+import type { IncomingMessage } from 'node:http'
+import type { WebSocket } from 'ws'
 import { log } from './log.ts'
+import { isValidApiKey } from './auth.ts'
 
-type WebSocketWithUsername = WebSocket & { username: string }
-type AppEvent = { event: string; [key: string]: any }
+type AppEvent = { event: string; [key: string]: unknown }
 
 export default class ChatServer {
-  private connectedClients = new Map<string, WebSocketWithUsername>()
+  // Pantallas conectadas, la clave es "<cajero> cliente"; un cajero puede tener varias (tablet, celular, pestañas)
+  private connectedClients = new Map<string, Set<WebSocket>>()
 
-  public async handleConnection(ctx: Context) {
-    const socket = await ctx.upgrade() as WebSocketWithUsername
-    const username = ctx.request.url.searchParams.get('username') as string
+  constructor() {
+    // Cada 30 segundos avisa a las tablets que el servidor sigue vivo
+    setInterval(() => this.broadcast({ event: 'ping' }), 30_000)
+  }
 
-    if (this.connectedClients.has(username)) {
-      socket.close(1008, `Username ${username} is already taken`)
+  public handleConnection(socket: WebSocket, request: IncomingMessage) {
+    const params = new URL(request.url ?? '', 'http://localhost').searchParams
+    const cashier = params.get('cashier')
+
+    // El navegador no deja poner cabeceras en un WebSocket, por eso la API viene en la direccion.
+    // 4001 le avisa a la tablet que su API esta mal, para que vuelva a Configurar en vez de reintentar
+    if (!isValidApiKey(params.get('apiKey'))) {
+      log.withMetadata({ ip: request.socket.remoteAddress }).warn('Unauthorized connection')
+      socket.close(4001, 'Unauthorized')
       return
     }
 
-    socket.username = username
-    socket.onopen = this.broadcastUsernames.bind(this)
-    socket.onclose = () => {
-      this.clientDisconnected(socket.username)
+    if (!cashier) {
+      socket.close(1008, 'Cashier is required')
+      return
     }
-    socket.onmessage = (m) => {
-      this.send(socket.username, m)
-    }
-    this.connectedClients.set(username, socket)
+
+    const username = `${cashier} cliente`
+
+    // Se suma a las pantallas del cajero sin botar a las demas; asi una tablet que se reconecta no pelea con otra
+    const sockets = this.connectedClients.get(username) ?? new Set<WebSocket>()
+    sockets.add(socket)
+    this.connectedClients.set(username, sockets)
+
+    socket.on('close', () => {
+      sockets.delete(socket)
+
+      if (sockets.size === 0) {
+        this.connectedClients.delete(username)
+      }
+
+      log.withMetadata({ username }).info('Client disconnected')
+    })
 
     log.withMetadata({ username }).info('New client connected')
   }
 
-  private send(username: string, message: any) {
-    const data = JSON.parse(message.data)
-    if (data.event !== 'send-message') {
-      return
+  // Envia de "<cajero> cajero" a "<cajero> cliente"; devuelve false si la tablet no esta conectada
+  public send(cashier: string, event: string, message?: unknown) {
+    const username = `${cashier} cajero`
+    const recipient = `${cashier} cliente`
+    const sockets = this.connectedClients.get(recipient)
+
+    if (!sockets) {
+      log.withMetadata({ username, recipient, event }).warn('Recipient is not connected')
+      return false
     }
 
-    const recipient = typeof data.recipient === 'string' ? data.recipient : 'all'
-    const payload = {
-      event: 'send-message',
-      username,
-      recipient,
-      message: data.message,
+    const data = JSON.stringify({ event, username, recipient, message })
+    for (const socket of sockets) {
+      socket.send(data)
     }
 
-    if (recipient === 'all') {
-      this.broadcast(payload)
-      return
-    }
-
-    const sockets = new Set<WebSocketWithUsername>()
-    const senderSocket = this.connectedClients.get(username)
-    const targetSocket = this.connectedClients.get(recipient)
-
-    if (senderSocket) {
-      sockets.add(senderSocket)
-    }
-
-    if (targetSocket) {
-      sockets.add(targetSocket)
-    }
-
-    for (const client of sockets) {
-      client.send(JSON.stringify(payload))
-    }
-  }
-
-  private clientDisconnected(username: string) {
-    this.connectedClients.delete(username)
-    this.broadcastUsernames()
-
-    log.withMetadata({ username }).info('Client disconnected')
-  }
-
-  private broadcastUsernames() {
-    const usernames = [...this.connectedClients.keys()]
-    this.broadcast({ event: 'update-users', usernames })
-
-    log.withMetadata({ usernames }).info('Sent username list')
+    // No se guardan los datos del cliente en el log, solo quien envio a quien
+    log.withMetadata({ username, recipient, event }).info('Sent message')
+    return true
   }
 
   private broadcast(message: AppEvent) {
     const messageString = JSON.stringify(message)
-    for (const client of this.connectedClients.values()) {
-      client.send(messageString)
+    for (const sockets of this.connectedClients.values()) {
+      for (const client of sockets) {
+        client.send(messageString)
+      }
     }
   }
 }

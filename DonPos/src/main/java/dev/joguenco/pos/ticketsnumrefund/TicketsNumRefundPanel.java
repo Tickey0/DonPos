@@ -30,6 +30,9 @@ public class TicketsNumRefundPanel extends JPanelTable2 {
 
         ticketsNumRefundFilter.addActionListener(new ReloadActionListener());
 
+        // Un solo editor: la pantalla usa siempre el primero que recibe, aunque el panel se abra varias veces
+        ticketsNumRefundEditor = new TicketsNumRefundEditor(null, dirty);
+
         DataLogicTicketsNumRefund dataLogicTicketsNumRefund
                 = (DataLogicTicketsNumRefund) app
                 .getBean("dev.joguenco.pos.ticketsnumrefund.DataLogicTicketsNumRefund");
@@ -61,7 +64,7 @@ public class TicketsNumRefundPanel extends JPanelTable2 {
                 .getComboBoxValModelPeople()
                 .getSelectedKey();
 
-        ticketsNumRefundEditor = new TicketsNumRefundEditor(peopleId, dirty);
+        ticketsNumRefundEditor.setPeopleId(peopleId);
 
         super.activate();
     }

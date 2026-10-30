@@ -1,47 +1,41 @@
-import { Application, Context, Next, Router } from '@oak/oak'
-import { drizzle } from 'drizzle-orm/mysql2'
+import express from 'express'
+import type { NextFunction, Request, Response } from 'express'
+import { WebSocketServer } from 'ws'
 import ChatServer from './src/chat.server.ts'
-import '@std/dotenv/load'
 import { log } from './src/log.ts'
-import { poolConnection } from './drizzle.config.ts'
+import { chatRoutes } from './src/chat.routes.ts'
 import { pingRoutes } from './src/ping/ping.routes.ts'
 import { peopleRoutes } from './src/people/people.routes.ts'
 
-export const db = drizzle({ client: poolConnection })
-
-const app = new Application()
-const port = Number(Deno.env.get('PORT')) || 8080
-const router = new Router()
+const app = express()
+const port = Number(process.env.PORT) || 8080
+const router = express.Router()
 const server = new ChatServer()
 
-router.get('/start_web_socket', (ctx: Context) => server.handleConnection(ctx))
 pingRoutes(router)
+chatRoutes(router, server)
 
-app.use(async (ctx: Context, next: Next) => {
-  ctx.response.headers.set('Access-Control-Allow-Origin', '*')
-  ctx.response.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-  ctx.response.headers.set('Access-Control-Allow-Headers', 'Content-Type')
+app.use((request: Request, response: Response, next: NextFunction) => {
+  response.set('Access-Control-Allow-Origin', '*')
+  response.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+  response.set('Access-Control-Allow-Headers', 'Content-Type, X-API-KEY')
 
-  if (ctx.request.method === 'OPTIONS') {
-    ctx.response.status = 204
+  if (request.method === 'OPTIONS') {
+    response.sendStatus(204)
     return
   }
 
-  await next()
+  next()
 })
 
-app.use(router.routes())
-app.use(peopleRoutes.routes())
-app.use(router.allowedMethods())
-app.use(async (context) => {
-  await context.send({
-    root: Deno.cwd(),
-    index: 'public/index.html',
-  })
+app.use(express.json())
+app.use(router)
+app.use(peopleRoutes)
+app.use(express.static('public'))
+
+const httpServer = app.listen(port, '0.0.0.0', () => {
+  log.info('Listening at http://localhost:' + port)
 })
 
-log.info('Listening at http://localhost:' + port)
-await app.listen({ 
-    port,
-    hostname: "0.0.0.0" 
- })
+new WebSocketServer({ server: httpServer, path: '/start_web_socket' })
+  .on('connection', (socket, request) => server.handleConnection(socket, request))
